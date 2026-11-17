@@ -1,0 +1,117 @@
+import React from 'react';
+import { Wind, MapPin, RefreshCw, Languages, Users } from 'lucide-react';
+import { useApp } from '../../context/AppContext';
+
+export const Navbar: React.FC = () => {
+  const {
+    stations,
+    selectedStationId,
+    setSelectedStationId,
+    language,
+    setLanguage,
+    refreshData,
+    loading,
+    familyProfile,
+    isDemoData,
+  } = useApp();
+
+  const activeSensitivitiesCount = [
+    familyProfile.hasChildren,
+    familyProfile.hasSeniors,
+    familyProfile.hasRespiratoryCondition,
+    familyProfile.isPregnant,
+  ].filter(Boolean).length;
+
+  return (
+    <header className="sticky top-0 z-50 glass-panel border-b border-slate-800/80 px-4 lg:px-8 py-3.5">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+        {/* Brand & Logo */}
+        <div className="flex items-center justify-between w-full md:w-auto">
+          <div className="flex items-center gap-3">
+            <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 shadow-lg shadow-emerald-500/20 text-white">
+              <Wind className="w-5 h-5 animate-pulse" />
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              </span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+                  AirSaathi <span className="text-emerald-400 font-semibold text-sm px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">AI</span>
+                </span>
+                {isDemoData && (
+                  <span className="text-[10px] font-medium tracking-wide uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                    Demo Mode
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-400 font-normal">
+                {language === 'hi' ? 'शहरी वायु गुणवत्ता व स्वास्थ्य सहायक' : 'Urban Air Quality & Smog Intelligence'}
+              </p>
+            </div>
+          </div>
+
+          {/* Mobile Refresh Button */}
+          <button
+            onClick={refreshData}
+            disabled={loading}
+            className="md:hidden p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+            title="Refresh AQI Data"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
+          </button>
+        </div>
+
+        {/* Controls: Station Selector, Family Pill, Language, Refresh */}
+        <div className="flex items-center flex-wrap justify-end gap-2.5 w-full md:w-auto">
+          {/* Station Selector Dropdown */}
+          <div className="relative flex items-center bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-1.5 shadow-inner">
+            <MapPin className="w-4 h-4 text-emerald-400 mr-2 shrink-0" />
+            <select
+              value={selectedStationId}
+              onChange={(e) => setSelectedStationId(e.target.value)}
+              className="bg-transparent text-sm text-slate-200 font-medium focus:outline-none cursor-pointer pr-2"
+            >
+              {stations.map((st) => (
+                <option key={st.id} value={st.id} className="bg-slate-900 text-slate-200">
+                  {st.name}, {st.city} {st.is_hotspot ? '🔥 (Hotspot)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Active Family Sensitivity Pill */}
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-xs text-slate-300">
+            <Users className="w-3.5 h-3.5 text-indigo-400" />
+            <span>
+              {language === 'hi' ? 'परिवार सुरक्षा:' : 'Family Profile:'}{' '}
+              <strong className="text-indigo-300">{activeSensitivitiesCount} Active</strong>
+            </span>
+          </div>
+
+          {/* Language Toggle (Hindi / English) */}
+          <button
+            onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-xs font-semibold text-slate-200 transition-colors"
+            title="Switch Language"
+          >
+            <Languages className="w-3.5 h-3.5 text-emerald-400" />
+            <span>{language === 'en' ? 'हिन्दी' : 'English'}</span>
+          </button>
+
+          {/* Desktop Refresh Button */}
+          <button
+            onClick={refreshData}
+            disabled={loading}
+            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700/60 text-xs font-medium text-slate-200 transition-colors disabled:opacity-50"
+            title="Refresh Data"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
+            <span>{language === 'hi' ? 'रिफ्रेश' : 'Refresh'}</span>
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+};
