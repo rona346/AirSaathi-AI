@@ -16,7 +16,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
     ]
 
-    # Secrets and keys strictly on the backend
+    # Secrets and keys strictly on the backend (Never exposed to frontend or Git)
     GEMINI_API_KEY: str = ""
     FIREBASE_PROJECT_ID: str = ""
 
@@ -24,15 +24,15 @@ class Settings(BaseSettings):
     DATAGOVIN_API_KEY: str = ""
     OPENAQ_API_KEY: str = ""
 
-    # Cache duration for ambient measurements (in seconds)
+    # Cache duration for ambient measurements (in seconds, default 15 minutes)
     AQI_CACHE_TTL_SECONDS: int = 900
 
-    # Demonstration mode flag (defaults to True until live API keys are provided)
-    MOCK_MODE: bool = True
+    # Demonstration mode flag (Set to False to enable live provider when credentials exist)
+    MOCK_MODE: bool = False
 
     model_config = SettingsConfigDict(
         case_sensitive=True,
-        env_file=".env",
+        env_file=("backend/.env", ".env"),
         extra="ignore",
     )
 
