@@ -22,6 +22,11 @@ export interface Translations {
   wind: string;
   visibility: string;
   boundaryLayer: string;
+  rainfall: string;
+  weatherSource: string;
+  weatherObserved: string;
+  weatherLive: string;
+  weatherDemo: string;
   trappingPollutants: string;
   naqiScale: string;
   currentValue: string;
@@ -217,6 +222,11 @@ export const translations: Record<SupportedLanguage, Translations> = {
     wind: 'Wind',
     visibility: 'Visibility',
     boundaryLayer: 'Boundary Layer (Inversion Height)',
+    rainfall: 'Rain / Precipitation',
+    weatherSource: 'Weather Telemetry',
+    weatherObserved: 'Observed:',
+    weatherLive: 'Live Open-Meteo',
+    weatherDemo: 'Simulated Weather',
     trappingPollutants: '(Trapping pollutants)',
     naqiScale: 'National Air Quality Scale (NAQI)',
     currentValue: 'Current:',
@@ -422,6 +432,11 @@ export const translations: Record<SupportedLanguage, Translations> = {
     wind: 'हवा की गति',
     visibility: 'दृश्यता',
     boundaryLayer: 'इनवर्जन ऊंचाई (मिश्रण परत)',
+    rainfall: 'वर्षा / बारिश',
+    weatherSource: 'मौसम टेलीमेट्री',
+    weatherObserved: 'मौसम समय:',
+    weatherLive: 'लाइव ओपन-मेटियो',
+    weatherDemo: 'सिम्युलेटेड मौसम',
     trappingPollutants: '(प्रदूषक सतह पर फंसे हुए)',
     naqiScale: 'राष्ट्रीय वायु गुणवत्ता सूचकांक पैमाना (NAQI)',
     currentValue: 'वर्तमान मान:',

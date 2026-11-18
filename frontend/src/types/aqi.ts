@@ -46,6 +46,21 @@ export interface HourlyAqiPoint {
   pm10: number;
 }
 
+export interface WeatherData {
+  temperature_c: number;
+  humidity_percent: number;
+  wind_speed_kmh: number;
+  wind_direction: string;
+  wind_direction_deg?: number;
+  precipitation_mm?: number;
+  weather_condition?: string;
+  visibility_km?: number;
+  mixing_layer_height_m?: number;
+  observed_at?: string;
+  source?: string;
+  is_demo_data?: boolean;
+}
+
 export interface CurrentAqiData {
   station: StationInfo;
   aqi: number;
@@ -53,14 +68,7 @@ export interface CurrentAqiData {
   prominent_pollutant: string;
   pollutants: Record<string, PollutantDetail>;
   health_advisory: HealthAdvisory;
-  weather: {
-    temperature_c: number;
-    humidity_percent: number;
-    wind_speed_kmh: number;
-    wind_direction: string;
-    visibility_km: number;
-    mixing_layer_height_m: number;
-  };
+  weather: WeatherData;
   data_source: string;
   last_updated: string;
   is_demo_data: boolean;

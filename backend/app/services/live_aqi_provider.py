@@ -32,6 +32,7 @@ from backend.app.services.cpcb_calculator import (
     calculate_subindex,
     get_aqi_category_from_value,
 )
+from backend.app.services.weather_service import weather_service
 
 logger = logging.getLogger(__name__)
 
@@ -225,15 +226,13 @@ class DataGovInProvider(BaseAqiProvider):
         overall_category = get_aqi_category_from_value(overall_aqi)
         health_adv = get_health_advisory(overall_category, overall_aqi)
 
-        # Ambient weather telemetry (from station baseline)
-        weather = {
-            "temperature_c": 21.0,
-            "humidity_percent": 68.0,
-            "wind_speed_kmh": 5.4,
-            "wind_direction": "NW",
-            "visibility_km": 1.8,
-            "mixing_layer_height_m": 450.0,
-        }
+        # Ambient weather telemetry (from Open-Meteo external service with graceful fallback)
+        weather_detail = weather_service.get_weather_sync(
+            latitude=station.latitude,
+            longitude=station.longitude,
+            station_id=station.id,
+            station_name=station.name,
+        )
 
         return CurrentAqiResponse(
             station=station,
@@ -242,7 +241,7 @@ class DataGovInProvider(BaseAqiProvider):
             prominent_pollutant=prominent,
             pollutants=pollutant_details,
             health_advisory=health_adv,
-            weather=weather,
+            weather=weather_detail,
             data_source="Central Pollution Control Board (CPCB) - data.gov.in CAAQMS Live",
             last_updated=parsed_timestamp or datetime.utcnow(),
             is_demo_data=False,

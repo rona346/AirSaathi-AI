@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     # Cache duration for ambient measurements (in seconds, default 15 minutes)
     AQI_CACHE_TTL_SECONDS: int = 900
 
+    # Weather Service settings (Open-Meteo)
+    WEATHER_CACHE_TTL_SECONDS: int = 900
+    WEATHER_REQUEST_TIMEOUT_SECONDS: float = 6.0
+
     # Demonstration mode flag (Set to False to enable live provider when credentials exist)
     MOCK_MODE: bool = False
 

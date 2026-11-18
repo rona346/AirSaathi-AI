@@ -1,5 +1,5 @@
 import React from 'react';
-import { Thermometer, Droplets, Compass, Eye, Layers, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Thermometer, Droplets, Compass, Eye, Layers, AlertTriangle, ShieldCheck, CloudRain } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { formatTimestamp, getAqiBadgeClasses, getAqiCategoryLabel, CPCB_AQI_BANDS } from '../../utils/aqiUtils';
 import { translations } from '../../utils/translations';
@@ -91,12 +91,40 @@ export const AqiCard: React.FC = () => {
 
         {/* Right Side: Micro-Meteorology & Atmospheric Dispersion */}
         <div className="w-full lg:w-auto bg-slate-900/80 rounded-2xl p-4 sm:p-5 border border-slate-800/90 shadow-inner">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center justify-between">
-            <span>{t.dispersionConditions}</span>
-            <span className="text-[10px] text-slate-500 lowercase">
-              {isDemoData ? 'CAAQMS (Simulated)' : 'CAAQMS Live'}
-            </span>
+          <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                {t.dispersionConditions}
+              </span>
+              {weather?.weather_condition && (
+                <span className="text-[11px] font-medium text-slate-300 bg-slate-800 border border-slate-700 px-2 py-0.5 rounded-full">
+                  {weather.weather_condition}
+                </span>
+              )}
+            </div>
+            <div>
+              {weather?.is_demo_data === false ? (
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  {weather.source || t.weatherLive}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full">
+                  <ShieldCheck className="w-3 h-3" />
+                  {weather?.source || t.weatherDemo}
+                </span>
+              )}
+            </div>
           </div>
+
+          {weather?.observed_at && (
+            <p className="text-[11px] text-slate-400 mb-3">
+              {t.weatherObserved}{' '}
+              <span className="text-slate-300 font-medium">
+                {formatTimestamp(weather.observed_at)}
+              </span>
+            </p>
+          )}
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-800/50 border border-slate-700/40">
@@ -105,7 +133,9 @@ export const AqiCard: React.FC = () => {
               </div>
               <div>
                 <span className="text-[11px] text-slate-400 block">{t.temperature}</span>
-                <span className="text-sm font-bold text-white">{weather.temperature_c}°C</span>
+                <span className="text-sm font-bold text-white">
+                  {weather?.temperature_c != null ? `${weather.temperature_c}°C` : '--'}
+                </span>
               </div>
             </div>
 
@@ -115,7 +145,9 @@ export const AqiCard: React.FC = () => {
               </div>
               <div>
                 <span className="text-[11px] text-slate-400 block">{t.humidity}</span>
-                <span className="text-sm font-bold text-white">{weather.humidity_percent}%</span>
+                <span className="text-sm font-bold text-white">
+                  {weather?.humidity_percent != null ? `${weather.humidity_percent}%` : '--'}
+                </span>
               </div>
             </div>
 
@@ -126,7 +158,21 @@ export const AqiCard: React.FC = () => {
               <div>
                 <span className="text-[11px] text-slate-400 block">{t.wind}</span>
                 <span className="text-sm font-bold text-white">
-                  {weather.wind_speed_kmh} km/h {weather.wind_direction}
+                  {weather?.wind_speed_kmh != null
+                    ? `${weather.wind_speed_kmh} km/h ${weather?.wind_direction || ''}`
+                    : '--'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-800/50 border border-slate-700/40">
+              <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400">
+                <CloudRain className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-[11px] text-slate-400 block">{t.rainfall}</span>
+                <span className="text-sm font-bold text-white">
+                  {weather?.precipitation_mm != null ? `${weather.precipitation_mm} mm` : '0 mm'}
                 </span>
               </div>
             </div>
@@ -137,21 +183,22 @@ export const AqiCard: React.FC = () => {
               </div>
               <div>
                 <span className="text-[11px] text-slate-400 block">{t.visibility}</span>
-                <span className="text-sm font-bold text-white">{weather.visibility_km} km</span>
+                <span className="text-sm font-bold text-white">
+                  {weather?.visibility_km != null ? `${weather.visibility_km} km` : '--'}
+                </span>
               </div>
             </div>
 
-            <div className="col-span-2 sm:col-span-2 flex items-center gap-2.5 p-2 rounded-xl bg-slate-800/50 border border-slate-700/40">
+            <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-800/50 border border-slate-700/40">
               <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400">
                 <Layers className="w-4 h-4" />
               </div>
               <div>
                 <span className="text-[11px] text-slate-400 block">{t.boundaryLayer}</span>
                 <span className="text-sm font-bold text-white">
-                  {weather.mixing_layer_height_m} m{' '}
-                  <span className="text-[10px] text-amber-400 font-normal">
-                    {t.trappingPollutants}
-                  </span>
+                  {weather?.mixing_layer_height_m != null
+                    ? `${weather.mixing_layer_height_m} m`
+                    : '--'}
                 </span>
               </div>
             </div>

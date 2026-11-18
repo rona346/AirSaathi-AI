@@ -1,7 +1,9 @@
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, Field
+
+from backend.app.models.weather import WeatherDetail
 
 
 class AqiCategory(str, Enum):
@@ -60,7 +62,7 @@ class CurrentAqiResponse(BaseModel):
     prominent_pollutant: str
     pollutants: Dict[str, PollutantDetail]
     health_advisory: HealthAdvisory
-    weather: Dict[str, float | str]
+    weather: Union[WeatherDetail, Dict[str, Any]]
     data_source: str
     last_updated: datetime
     is_demo_data: bool = True

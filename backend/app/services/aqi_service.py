@@ -14,6 +14,7 @@ from backend.app.services.cpcb_calculator import (
     calculate_subindex,
     get_aqi_category_from_value,
 )
+from backend.app.services.weather_service import weather_service
 
 STATIONS: List[StationInfo] = [
     StationInfo(
@@ -317,14 +318,12 @@ class AqiService:
 
         health_adv = get_health_advisory(category, aqi)
 
-        weather = {
-            "temperature_c": 19.5,
-            "humidity_percent": 74.0,
-            "wind_speed_kmh": 4.2,
-            "wind_direction": "NW",
-            "visibility_km": 1.4,
-            "mixing_layer_height_m": 420.0,
-        }
+        weather_detail = weather_service.get_weather_sync(
+            latitude=station.latitude,
+            longitude=station.longitude,
+            station_id=station.id,
+            station_name=station.name,
+        )
 
         source_label = (
             "Demonstration Baseline (Unverified Station)"
@@ -339,7 +338,7 @@ class AqiService:
             prominent_pollutant="PM2.5",
             pollutants=pollutants,
             health_advisory=health_adv,
-            weather=weather,
+            weather=weather_detail,
             data_source=source_label,
             last_updated=datetime.utcnow(),
             is_demo_data=True,
