@@ -9,6 +9,11 @@ from backend.app.models.aqi import (
     PollutantDetail,
     StationInfo,
 )
+from backend.app.services.cpcb_calculator import (
+    calculate_concentration_for_subindex,
+    calculate_subindex,
+    get_aqi_category_from_value,
+)
 
 STATIONS: List[StationInfo] = [
     StationInfo(
@@ -96,20 +101,8 @@ STATIONS: List[StationInfo] = [
 
 
 def get_aqi_category(aqi: int) -> AqiCategory:
-    if aqi <= 50:
-        return AqiCategory.GOOD
-    elif aqi <= 100:
-        return AqiCategory.SATISFACTORY
-    elif aqi <= 200:
-        return AqiCategory.MODERATE
-    elif aqi <= 300:
-        return AqiCategory.POOR
-    elif aqi <= 400:
-        return AqiCategory.VERY_POOR
-    elif aqi <= 500:
-        return AqiCategory.SEVERE
-    else:
-        return AqiCategory.SEVERE_PLUS
+    """Convenience wrapper for CPCB NAQI category lookup."""
+    return get_aqi_category_from_value(aqi)
 
 
 def get_health_advisory(category: AqiCategory, aqi: int) -> HealthAdvisory:
@@ -195,68 +188,81 @@ class AqiService:
         }
 
         aqi = base_aqi_map.get(station.id, 320)
-        category = get_aqi_category(aqi)
+        category = get_aqi_category_from_value(aqi)
 
-        # Compute proportionate pollutant breakdown
-        pm25_val = round(aqi * 0.72, 1)
-        pm10_val = round(aqi * 1.25, 1)
-        no2_val = round(55.0 + (aqi * 0.12), 1)
-        so2_val = round(16.5 + (aqi * 0.02), 1)
-        co_val = round(1.2 + (aqi * 0.005), 2)
-        o3_val = round(38.0 + (aqi * 0.04), 1)
+        # Compute concentrations derived from official CPCB breakpoint formulas
+        pm25_conc = calculate_concentration_for_subindex("PM2.5", aqi)
+        pm10_sub = min(500, int(aqi * 0.88))
+        pm10_conc = calculate_concentration_for_subindex("PM10", pm10_sub)
+        no2_sub = min(300, int(50 + (aqi * 0.2)))
+        no2_conc = calculate_concentration_for_subindex("NO2", no2_sub)
+        so2_sub = min(150, int(20 + (aqi * 0.08)))
+        so2_conc = calculate_concentration_for_subindex("SO2", so2_sub)
+        co_sub = min(200, int(35 + (aqi * 0.12)))
+        co_conc = calculate_concentration_for_subindex("CO", co_sub)
+        o3_sub = min(150, int(30 + (aqi * 0.1)))
+        o3_conc = calculate_concentration_for_subindex("O3", o3_sub)
+
+        # Calculate exact sub-indices via CPCB formula
+        pm25_sub = calculate_subindex("PM2.5", pm25_conc)
+        pm10_sub_actual = calculate_subindex("PM10", pm10_conc)
+        no2_sub_actual = calculate_subindex("NO2", no2_conc)
+        so2_sub_actual = calculate_subindex("SO2", so2_conc)
+        co_sub_actual = calculate_subindex("CO", co_conc)
+        o3_sub_actual = calculate_subindex("O3", o3_conc)
 
         pollutants: Dict[str, PollutantDetail] = {
             "PM2.5": PollutantDetail(
                 name="PM2.5",
-                value=pm25_val,
+                value=pm25_conc,
                 unit="µg/m³",
-                sub_index=aqi,
-                category=category,
+                sub_index=pm25_sub,
+                category=get_aqi_category_from_value(pm25_sub),
                 standard_limit=60.0,
                 who_limit=15.0,
             ),
             "PM10": PollutantDetail(
                 name="PM10",
-                value=pm10_val,
+                value=pm10_conc,
                 unit="µg/m³",
-                sub_index=min(500, int(aqi * 0.9)),
-                category=get_aqi_category(int(aqi * 0.9)),
+                sub_index=pm10_sub_actual,
+                category=get_aqi_category_from_value(pm10_sub_actual),
                 standard_limit=100.0,
                 who_limit=45.0,
             ),
             "NO2": PollutantDetail(
                 name="NO2",
-                value=no2_val,
+                value=no2_conc,
                 unit="µg/m³",
-                sub_index=int(no2_val * 1.1),
-                category=get_aqi_category(int(no2_val * 1.1)),
+                sub_index=no2_sub_actual,
+                category=get_aqi_category_from_value(no2_sub_actual),
                 standard_limit=80.0,
                 who_limit=25.0,
             ),
             "SO2": PollutantDetail(
                 name="SO2",
-                value=so2_val,
+                value=so2_conc,
                 unit="µg/m³",
-                sub_index=int(so2_val * 1.2),
-                category=get_aqi_category(int(so2_val * 1.2)),
+                sub_index=so2_sub_actual,
+                category=get_aqi_category_from_value(so2_sub_actual),
                 standard_limit=80.0,
                 who_limit=40.0,
             ),
             "CO": PollutantDetail(
                 name="CO",
-                value=co_val,
+                value=co_conc,
                 unit="mg/m³",
-                sub_index=int(co_val * 35),
-                category=get_aqi_category(int(co_val * 35)),
+                sub_index=co_sub_actual,
+                category=get_aqi_category_from_value(co_sub_actual),
                 standard_limit=2.0,
                 who_limit=4.0,
             ),
             "O3": PollutantDetail(
                 name="O3",
-                value=o3_val,
+                value=o3_conc,
                 unit="µg/m³",
-                sub_index=int(o3_val * 0.8),
-                category=get_aqi_category(int(o3_val * 0.8)),
+                sub_index=o3_sub_actual,
+                category=get_aqi_category_from_value(o3_sub_actual),
                 standard_limit=100.0,
                 who_limit=100.0,
             ),
@@ -292,8 +298,7 @@ class AqiService:
         current_data = cls.get_current_aqi(station_id)
         base_aqi = current_data.aqi
 
-        # Realistic diurnal pattern multipliers for winter in Northern India
-        # Midnight: high; 6 AM - 9 AM: severe peak; 1 PM - 4 PM: trough; 9 PM: rises again
+        # Diurnal multipliers reflecting winter nocturnal boundary layer inversion
         hour_multipliers = [
             0.98, 0.95, 0.92, 0.90, 0.95, 1.05, 1.18, 1.24, 1.20, 1.10, 0.98, 0.85,
             0.76, 0.72, 0.74, 0.80, 0.88, 0.98, 1.08, 1.15, 1.20, 1.18, 1.10, 1.02,
@@ -307,7 +312,10 @@ class AqiService:
             hour_idx = t.hour
             multiplier = hour_multipliers[hour_idx]
             calculated_aqi = max(35, min(495, int(base_aqi * multiplier)))
-            point_category = get_aqi_category(calculated_aqi)
+            point_category = get_aqi_category_from_value(calculated_aqi)
+            pm25 = calculate_concentration_for_subindex("PM2.5", calculated_aqi)
+            pm10_sub = min(500, int(calculated_aqi * 0.88))
+            pm10 = calculate_concentration_for_subindex("PM10", pm10_sub)
 
             points.append(
                 HourlyAqiPoint(
@@ -315,8 +323,8 @@ class AqiService:
                     time=t,
                     aqi=calculated_aqi,
                     category=point_category,
-                    pm25=round(calculated_aqi * 0.72, 1),
-                    pm10=round(calculated_aqi * 1.25, 1),
+                    pm25=pm25,
+                    pm10=pm10,
                 )
             )
 

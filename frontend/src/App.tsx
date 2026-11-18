@@ -10,9 +10,11 @@ import { VulnerabilityAlerts } from './components/dashboard/VulnerabilityAlerts'
 import { QuickModuleNav } from './components/dashboard/QuickModuleNav';
 import { Footer } from './components/layout/Footer';
 import { AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
+import { translations } from './utils/translations';
 
 const DashboardContent: React.FC = () => {
   const { loading, error, refreshData, currentAqi, language } = useApp();
+  const t = translations[language];
 
   // Loading State
   if (loading && !currentAqi) {
@@ -24,12 +26,10 @@ const DashboardContent: React.FC = () => {
         </div>
         <div>
           <h2 className="text-lg font-bold text-white">
-            {language === 'hi' ? 'वायु गुणवत्ता डेटा लोड हो रहा है...' : 'Calibrating Air Quality Intelligence...'}
+            {t.loadingTitle}
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            {language === 'hi'
-              ? 'CPCB मॉनिटरिंग स्टेशन टेलीमेट्री व मौसम डेटा एकत्र किया जा रहा है'
-              : 'Synchronizing micro-meteorological telemetry and particulate sub-indices'}
+            {t.loadingSubtitle}
           </p>
         </div>
       </div>
@@ -45,7 +45,7 @@ const DashboardContent: React.FC = () => {
         </div>
         <div className="max-w-md">
           <h2 className="text-lg font-bold text-white">
-            {language === 'hi' ? 'डेटा लोड करने में त्रुटि' : 'Unable to Retrieve Sensor Feed'}
+            {t.errorTitle}
           </h2>
           <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">{error}</p>
         </div>
@@ -54,7 +54,7 @@ const DashboardContent: React.FC = () => {
           className="mt-2 flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs shadow-lg shadow-emerald-500/20 transition-all"
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          <span>{language === 'hi' ? 'पुनः प्रयास करें' : 'Retry Connection'}</span>
+          <span>{t.retryBtn}</span>
         </button>
       </div>
     );

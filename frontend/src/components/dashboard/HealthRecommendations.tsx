@@ -1,12 +1,14 @@
 import React from 'react';
 import { HeartPulse, Shield, Wind, Fan, Home } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { translations } from '../../utils/translations';
 
 export const HealthRecommendations: React.FC = () => {
   const { currentAqi, language } = useApp();
 
   if (!currentAqi) return null;
 
+  const t = translations[language];
   const { health_advisory, aqi } = currentAqi;
 
   return (
@@ -14,12 +16,10 @@ export const HealthRecommendations: React.FC = () => {
       <div>
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
           <HeartPulse className="w-5 h-5 text-emerald-400" />
-          <span>{language === 'hi' ? 'स्वास्थ्य सलाह एवं सुरक्षा निर्देश' : 'Health Advisory & Action Guidelines'}</span>
+          <span>{t.healthAdvisoryTitle}</span>
         </h2>
         <p className="text-xs text-slate-400 mt-0.5">
-          {language === 'hi'
-            ? 'वर्तमान वायु गुणवत्ता के आधार पर व्यक्तिगत एवं पारिवारिक सुरक्षा उपाय'
-            : 'Evidence-based mitigation tailored to current exposure severity'}
+          {t.healthAdvisorySubtitle}
         </p>
       </div>
 
@@ -32,7 +32,7 @@ export const HealthRecommendations: React.FC = () => {
             </div>
             <div>
               <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold block">
-                {language === 'hi' ? 'मास्क अनुशंसा' : 'Mask Recommendation'}
+                {t.maskRecommendation}
               </span>
               <h3 className="text-sm font-bold text-white">N95 / N99 / FFP2</h3>
             </div>
@@ -41,7 +41,7 @@ export const HealthRecommendations: React.FC = () => {
             {health_advisory.mask_recommendation}
           </p>
           <div className="pt-2 border-t border-slate-800/80 text-[11px] text-indigo-300 font-medium">
-            Cloth & surgical masks do not filter PM2.5 aerosols.
+            {t.maskNote}
           </div>
         </div>
 
@@ -53,7 +53,7 @@ export const HealthRecommendations: React.FC = () => {
             </div>
             <div>
               <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold block">
-                {language === 'hi' ? 'एयर प्यूरीफायर मोड' : 'Air Purifier Setting'}
+                {t.purifierRecommendation}
               </span>
               <h3 className="text-sm font-bold text-white">HEPA H13 Filtration</h3>
             </div>
@@ -62,7 +62,7 @@ export const HealthRecommendations: React.FC = () => {
             {health_advisory.purifier_recommendation}
           </p>
           <div className="pt-2 border-t border-slate-800/80 text-[11px] text-emerald-300 font-medium">
-            Maintain CADR ≥ 2.5 air changes per hour (ACH).
+            {t.purifierNote}
           </div>
         </div>
 
@@ -74,10 +74,10 @@ export const HealthRecommendations: React.FC = () => {
             </div>
             <div>
               <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold block">
-                {language === 'hi' ? 'आउटडोर गतिविधि' : 'Outdoor Exercise'}
+                {t.outdoorExercise}
               </span>
               <h3 className="text-sm font-bold text-white">
-                {aqi > 300 ? 'Indoor Transition' : 'Moderate Exposure'}
+                {aqi > 300 ? (language === 'hi' ? 'इनडोर व्यायाम' : 'Indoor Transition') : (language === 'hi' ? 'सीमित समय' : 'Moderate Exposure')}
               </h3>
             </div>
           </div>
@@ -85,7 +85,7 @@ export const HealthRecommendations: React.FC = () => {
             {health_advisory.outdoor_activity}
           </p>
           <div className="pt-2 border-t border-slate-800/80 text-[11px] text-amber-300 font-medium">
-            Deep breathing increases ultrafine particulate deposition by 4x.
+            {t.outdoorNote}
           </div>
         </div>
 
@@ -97,16 +97,16 @@ export const HealthRecommendations: React.FC = () => {
             </div>
             <div>
               <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold block">
-                {language === 'hi' ? 'घर की खिड़कियां व वेंटिलेशन' : 'Ventilation Window'}
+                {t.ventilationWindow}
               </span>
-              <h3 className="text-sm font-bold text-white">Safe Air Exchange</h3>
+              <h3 className="text-sm font-bold text-white">{language === 'hi' ? 'सुरक्षित वायु विनिमय' : 'Safe Air Exchange'}</h3>
             </div>
           </div>
           <p className="text-xs text-slate-300 leading-relaxed">
             {health_advisory.ventilation_window}
           </p>
           <div className="pt-2 border-t border-slate-800/80 text-[11px] text-sky-300 font-medium">
-            Do not aerate before 11:30 AM or after sunset in smog season.
+            {t.ventilationNote}
           </div>
         </div>
       </div>

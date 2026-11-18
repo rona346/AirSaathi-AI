@@ -11,24 +11,28 @@ import {
 } from 'recharts';
 import { TrendingUp, Clock, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { getAqiCategoryLabel } from '../../utils/aqiUtils';
+import { translations } from '../../utils/translations';
 
 export const HourlyTrendChart: React.FC = () => {
-  const { forecast, language } = useApp();
+  const { forecast, language, isDemoData } = useApp();
 
   if (!forecast || !forecast.forecast_24h || forecast.forecast_24h.length === 0) {
     return null;
   }
 
+  const t = translations[language];
   const { forecast_24h, peak_aqi_window, safest_outdoor_window } = forecast;
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
+      const localizedCat = getAqiCategoryLabel(data.category, language);
       return (
         <div className="glass-panel p-3 rounded-xl border border-slate-700 shadow-xl text-xs space-y-1">
           <p className="font-bold text-slate-200">{label}</p>
           <p className="text-emerald-400 font-extrabold text-sm">
-            AQI: <span className="font-mono">{data.aqi}</span> ({data.category})
+            AQI: <span className="font-mono">{data.aqi}</span> ({localizedCat})
           </p>
           <div className="pt-1 border-t border-slate-700/60 text-slate-300 flex justify-between gap-4">
             <span>PM2.5: {data.pm25} µg/m³</span>
@@ -44,14 +48,20 @@ export const HourlyTrendChart: React.FC = () => {
     <div className="glass-panel rounded-3xl p-6 lg:p-8 border border-slate-800 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-emerald-400" />
-            <span>{language === 'hi' ? '24-घंटे का वायु गुणवत्ता पूर्वानुमान व दैनिक चक्र' : '24-Hour Diurnal AQI Projection'}</span>
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-emerald-400" />
+              <span>{t.diurnalTitle}</span>
+            </h2>
+            {isDemoData && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                <ShieldCheck className="w-3 h-3" />
+                {t.demoMode}
+              </span>
+            )}
+          </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            {language === 'hi'
-              ? 'तापीय व्युत्क्रमण (Inversion) एवं वायुमंडलीय फैलाव के आधार पर 24 घंटे की प्रवृत्ति'
-              : 'Hourly progression reflecting morning smog inversion vs. afternoon atmospheric dispersion'}
+            {t.diurnalSubtitle}
           </p>
         </div>
 
@@ -60,7 +70,7 @@ export const HourlyTrendChart: React.FC = () => {
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-300">
             <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
             <div>
-              <span className="text-[10px] text-rose-400 block font-semibold uppercase">Peak Danger Window</span>
+              <span className="text-[10px] text-rose-400 block font-semibold uppercase">{t.peakDangerWindow}</span>
               <strong className="text-rose-200">{peak_aqi_window}</strong>
             </div>
           </div>
@@ -68,7 +78,7 @@ export const HourlyTrendChart: React.FC = () => {
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             <div>
-              <span className="text-[10px] text-emerald-400 block font-semibold uppercase">Safest Outdoor Window</span>
+              <span className="text-[10px] text-emerald-400 block font-semibold uppercase">{t.safestOutdoorWindow}</span>
               <strong className="text-emerald-200">{safest_outdoor_window}</strong>
             </div>
           </div>
@@ -105,9 +115,9 @@ export const HourlyTrendChart: React.FC = () => {
             />
             <Tooltip content={<CustomTooltip />} />
             {/* National threshold reference line */}
-            <ReferenceLine y={200} stroke="#EAB308" strokeDasharray="3 3" label={{ value: 'Moderate Limit (200)', fill: '#EAB308', fontSize: 10 }} />
-            <ReferenceLine y={300} stroke="#F97316" strokeDasharray="3 3" label={{ value: 'Poor Limit (300)', fill: '#F97316', fontSize: 10 }} />
-            <ReferenceLine y={400} stroke="#EF4444" strokeDasharray="3 3" label={{ value: 'Severe Threshold (400)', fill: '#EF4444', fontSize: 10 }} />
+            <ReferenceLine y={200} stroke="#EAB308" strokeDasharray="3 3" label={{ value: t.moderateLimit, fill: '#EAB308', fontSize: 10 }} />
+            <ReferenceLine y={300} stroke="#F97316" strokeDasharray="3 3" label={{ value: t.poorLimit, fill: '#F97316', fontSize: 10 }} />
+            <ReferenceLine y={400} stroke="#EF4444" strokeDasharray="3 3" label={{ value: t.severeLimit, fill: '#EF4444', fontSize: 10 }} />
             <Area
               type="monotone"
               dataKey="aqi"
@@ -123,10 +133,10 @@ export const HourlyTrendChart: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-2 pt-2 text-xs text-slate-400 border-t border-slate-800/80">
         <span className="flex items-center gap-1.5">
           <Clock className="w-3.5 h-3.5 text-slate-500" />
-          <span>Nocturnal surface radiation inversion typically lifts around 11:30 AM in winter</span>
+          <span>{t.inversionFootnote}</span>
         </span>
         <span className="text-[11px] text-slate-500">
-          Source: Diurnal CAAQMS model calibrated for Northern Plain winter conditions
+          {t.diurnalSource}
         </span>
       </div>
     </div>

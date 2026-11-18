@@ -1,9 +1,11 @@
 import React from 'react';
 import { Wind, ShieldCheck, HeartHandshake, Database } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { translations } from '../../utils/translations';
 
 export const Footer: React.FC = () => {
   const { currentAqi, language } = useApp();
+  const t = translations[language];
 
   return (
     <footer className="border-t border-slate-800/80 mt-16 py-8 px-4 lg:px-8 text-xs text-slate-400">
@@ -13,11 +15,9 @@ export const Footer: React.FC = () => {
             <Wind className="w-4 h-4" />
           </div>
           <div>
-            <span className="font-bold text-slate-200">AirSaathi AI</span>
+            <span className="font-bold text-slate-200">{t.appName}</span>
             <p className="text-[11px] text-slate-500">
-              {language === 'hi'
-                ? 'स्वच्छ वायु और स्वस्थ परिवार के लिए एक गैर-लाभकारी तकनीकी पहल'
-                : 'Dedicated to urban health intelligence, winter smog navigation & clean air.'}
+              {t.footerMission}
             </p>
           </div>
         </div>
@@ -25,22 +25,25 @@ export const Footer: React.FC = () => {
         <div className="flex items-center flex-wrap gap-4 text-[11px]">
           <div className="flex items-center gap-1.5 text-slate-400">
             <Database className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Benchmark: {currentAqi?.data_source || 'Central Pollution Control Board'}</span>
+            <span>
+              {language === 'hi' ? 'बेंचमार्क संदर्भ:' : 'Benchmark:'}{' '}
+              {currentAqi?.data_source || 'Central Pollution Control Board'}
+            </span>
           </div>
 
           <div className="flex items-center gap-1.5 text-slate-400">
             <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Strict Zero Hallucination Protocol</span>
+            <span>{t.footerZeroHallucination}</span>
           </div>
 
           <div className="flex items-center gap-1.5 text-slate-400">
             <HeartHandshake className="w-3.5 h-3.5 text-rose-400" />
-            <span>National NAQI & WHO Compliant</span>
+            <span>{t.footerCompliance}</span>
           </div>
         </div>
 
         <div className="text-[11px] text-slate-500 text-center md:text-right">
-          <span>FastAPI + Vite React + Cloud Run Architecture</span>
+          <span>{t.footerStack}</span>
         </div>
       </div>
     </footer>

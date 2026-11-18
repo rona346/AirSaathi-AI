@@ -1,6 +1,7 @@
 import React from 'react';
 import { Wind, MapPin, RefreshCw, Languages, Users } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { translations } from '../../utils/translations';
 
 export const Navbar: React.FC = () => {
   const {
@@ -14,6 +15,8 @@ export const Navbar: React.FC = () => {
     familyProfile,
     isDemoData,
   } = useApp();
+
+  const t = translations[language];
 
   const activeSensitivitiesCount = [
     familyProfile.hasChildren,
@@ -38,17 +41,18 @@ export const Navbar: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-                  AirSaathi <span className="text-emerald-400 font-semibold text-sm px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">AI</span>
+                  {t.appName}{' '}
+                  <span className="text-emerald-400 font-semibold text-xs px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
+                    AI
+                  </span>
                 </span>
                 {isDemoData && (
                   <span className="text-[10px] font-medium tracking-wide uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                    Demo Mode
+                    {t.demoMode}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-400 font-normal">
-                {language === 'hi' ? 'शहरी वायु गुणवत्ता व स्वास्थ्य सहायक' : 'Urban Air Quality & Smog Intelligence'}
-              </p>
+              <p className="text-xs text-slate-400 font-normal">{t.appSubtitle}</p>
             </div>
           </div>
 
@@ -57,7 +61,7 @@ export const Navbar: React.FC = () => {
             onClick={refreshData}
             disabled={loading}
             className="md:hidden p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
-            title="Refresh AQI Data"
+            title={t.refreshBtn}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
           </button>
@@ -66,16 +70,16 @@ export const Navbar: React.FC = () => {
         {/* Controls: Station Selector, Family Pill, Language, Refresh */}
         <div className="flex items-center flex-wrap justify-end gap-2.5 w-full md:w-auto">
           {/* Station Selector Dropdown */}
-          <div className="relative flex items-center bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-1.5 shadow-inner">
+          <div className="relative flex items-center bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-1.5 shadow-inner w-full sm:w-auto">
             <MapPin className="w-4 h-4 text-emerald-400 mr-2 shrink-0" />
             <select
               value={selectedStationId}
               onChange={(e) => setSelectedStationId(e.target.value)}
-              className="bg-transparent text-sm text-slate-200 font-medium focus:outline-none cursor-pointer pr-2"
+              className="bg-transparent text-sm text-slate-200 font-medium focus:outline-none cursor-pointer pr-2 w-full sm:w-auto"
             >
               {stations.map((st) => (
                 <option key={st.id} value={st.id} className="bg-slate-900 text-slate-200">
-                  {st.name}, {st.city} {st.is_hotspot ? '🔥 (Hotspot)' : ''}
+                  {st.name}, {st.city} {st.is_hotspot ? `🔥 (${t.hotspot})` : ''}
                 </option>
               ))}
             </select>
@@ -85,8 +89,10 @@ export const Navbar: React.FC = () => {
           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-xs text-slate-300">
             <Users className="w-3.5 h-3.5 text-indigo-400" />
             <span>
-              {language === 'hi' ? 'परिवार सुरक्षा:' : 'Family Profile:'}{' '}
-              <strong className="text-indigo-300">{activeSensitivitiesCount} Active</strong>
+              {t.familyPillLabel}{' '}
+              <strong className="text-indigo-300">
+                {activeSensitivitiesCount} {t.activeCount}
+              </strong>
             </span>
           </div>
 
@@ -105,10 +111,10 @@ export const Navbar: React.FC = () => {
             onClick={refreshData}
             disabled={loading}
             className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700/60 text-xs font-medium text-slate-200 transition-colors disabled:opacity-50"
-            title="Refresh Data"
+            title={t.refreshBtn}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
-            <span>{language === 'hi' ? 'रिफ्रेश' : 'Refresh'}</span>
+            <span>{t.refreshBtn}</span>
           </button>
         </div>
       </div>

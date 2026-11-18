@@ -20,13 +20,20 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     FIREBASE_PROJECT_ID: str = ""
 
-    # Flag for demonstration / mock mode (defaults to True until live API credentials configured)
+    # Live AQI Provider API Keys (Strictly backend-only)
+    DATAGOVIN_API_KEY: str = ""
+    OPENAQ_API_KEY: str = ""
+
+    # Cache duration for ambient measurements (in seconds)
+    AQI_CACHE_TTL_SECONDS: int = 900
+
+    # Demonstration mode flag (defaults to True until live API keys are provided)
     MOCK_MODE: bool = True
 
     model_config = SettingsConfigDict(
         case_sensitive=True,
         env_file=".env",
-        extra="ignore"
+        extra="ignore",
     )
 
 

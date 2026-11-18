@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Query
 from backend.app.models.aqi import CurrentAqiResponse, ForecastResponse, StationInfo
 from backend.app.models.response import ApiResponse
 from backend.app.services.aqi_service import AqiService

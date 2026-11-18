@@ -1,13 +1,28 @@
-import { AqiCategory } from '../types/aqi';
+import { AqiCategory, SupportedLanguage } from '../types/aqi';
+export { getAqiCategory, calculateSubindex, concentrationFromSubindex, CPCB_BREAKPOINTS } from './cpcbCalculator';
 
-export function getAqiCategory(aqi: number): AqiCategory {
-  if (aqi <= 50) return 'Good';
-  if (aqi <= 100) return 'Satisfactory';
-  if (aqi <= 200) return 'Moderate';
-  if (aqi <= 300) return 'Poor';
-  if (aqi <= 400) return 'Very Poor';
-  if (aqi <= 500) return 'Severe';
-  return 'Severe+';
+export function getAqiCategoryLabel(category: AqiCategory, language: SupportedLanguage): string {
+  if (language === 'hi') {
+    switch (category) {
+      case 'Good':
+        return 'अच्छा (Good)';
+      case 'Satisfactory':
+        return 'संतोषजनक (Satisfactory)';
+      case 'Moderate':
+        return 'मध्यम (Moderate)';
+      case 'Poor':
+        return 'खराब (Poor)';
+      case 'Very Poor':
+        return 'बहुत खराब (Very Poor)';
+      case 'Severe':
+        return 'गंभीर (Severe)';
+      case 'Severe+':
+        return 'अति-गंभीर (Severe+)';
+      default:
+        return category;
+    }
+  }
+  return category;
 }
 
 export function getAqiColorHex(category: AqiCategory): string {
@@ -107,10 +122,10 @@ export function formatTimestamp(isoString: string): string {
 }
 
 export const CPCB_AQI_BANDS = [
-  { label: 'Good', min: 0, max: 50, color: '#10B981' },
-  { label: 'Satisfactory', min: 51, max: 100, color: '#84CC16' },
-  { label: 'Moderate', min: 101, max: 200, color: '#EAB308' },
-  { label: 'Poor', min: 201, max: 300, color: '#F97316' },
-  { label: 'Very Poor', min: 301, max: 400, color: '#EF4444' },
-  { label: 'Severe', min: 401, max: 500, color: '#991B1B' },
+  { label: 'Good', min: 0, max: 50, color: '#10B981', labelHi: 'अच्छा' },
+  { label: 'Satisfactory', min: 51, max: 100, color: '#84CC16', labelHi: 'संतोषजनक' },
+  { label: 'Moderate', min: 101, max: 200, color: '#EAB308', labelHi: 'मध्यम' },
+  { label: 'Poor', min: 201, max: 300, color: '#F97316', labelHi: 'खराब' },
+  { label: 'Very Poor', min: 301, max: 400, color: '#EF4444', labelHi: 'बहुत खराब' },
+  { label: 'Severe', min: 401, max: 500, color: '#991B1B', labelHi: 'गंभीर' },
 ];

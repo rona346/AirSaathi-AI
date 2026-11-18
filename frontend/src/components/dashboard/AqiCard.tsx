@@ -1,15 +1,18 @@
 import React from 'react';
-import { Thermometer, Droplets, Compass, Eye, Layers, AlertTriangle } from 'lucide-react';
+import { Thermometer, Droplets, Compass, Eye, Layers, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { formatTimestamp, getAqiBadgeClasses } from '../../utils/aqiUtils';
+import { formatTimestamp, getAqiBadgeClasses, getAqiCategoryLabel, CPCB_AQI_BANDS } from '../../utils/aqiUtils';
+import { translations } from '../../utils/translations';
 
 export const AqiCard: React.FC = () => {
-  const { currentAqi, language } = useApp();
+  const { currentAqi, language, isDemoData } = useApp();
 
   if (!currentAqi) return null;
 
+  const t = translations[language];
   const { aqi, category, prominent_pollutant, station, weather, last_updated } = currentAqi;
   const badgeClasses = getAqiBadgeClasses(category);
+  const localizedCategory = getAqiCategoryLabel(category, language);
 
   // Calculate percentage along 0-500 scale for the indicator pointer (capped at 100%)
   const percentage = Math.min(100, Math.max(0, (aqi / 500) * 100));
@@ -34,14 +37,20 @@ export const AqiCard: React.FC = () => {
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
         {/* Left Side: Station & Big AQI Score */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs uppercase tracking-wider font-semibold text-slate-400">
               {station.city} • {station.state}
             </span>
             {station.is_hotspot && (
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-400 bg-rose-500/10 border border-rose-500/30 px-2 py-0.5 rounded-full">
                 <AlertTriangle className="w-3 h-3" />
-                {language === 'hi' ? 'स्मॉग हॉटस्पॉट' : 'Pollution Hotspot'}
+                {t.hotspot}
+              </span>
+            )}
+            {isDemoData && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                <ShieldCheck className="w-3 h-3" />
+                {t.demoMode}
               </span>
             )}
           </div>
@@ -51,7 +60,7 @@ export const AqiCard: React.FC = () => {
               {station.name}
             </h1>
             <p className="text-xs text-slate-400 mt-1">
-              {language === 'hi' ? 'अंतिम अपडेट:' : 'Last Updated:'}{' '}
+              {t.lastUpdated}{' '}
               <span className="text-slate-300 font-medium">{formatTimestamp(last_updated)}</span>
             </p>
           </div>
@@ -70,10 +79,10 @@ export const AqiCard: React.FC = () => {
               <span
                 className={`text-sm sm:text-base font-bold px-3.5 py-1 rounded-xl border ${badgeClasses.bg} ${badgeClasses.text} ${badgeClasses.border} shadow-lg ${badgeClasses.glow}`}
               >
-                {category}
+                {localizedCategory}
               </span>
               <span className="text-xs text-slate-400 font-medium">
-                {language === 'hi' ? 'प्रमुख प्रदूषक:' : 'Prominent:'}{' '}
+                {t.prominentPollutant}{' '}
                 <strong className="text-slate-200">{prominent_pollutant}</strong>
               </span>
             </div>
@@ -83,8 +92,10 @@ export const AqiCard: React.FC = () => {
         {/* Right Side: Micro-Meteorology & Atmospheric Dispersion */}
         <div className="w-full lg:w-auto bg-slate-900/80 rounded-2xl p-4 sm:p-5 border border-slate-800/90 shadow-inner">
           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center justify-between">
-            <span>{language === 'hi' ? 'मौसम व फैलाव स्थितियां' : 'Atmospheric Dispersion'}</span>
-            <span className="text-[10px] text-slate-500 lowercase">CAAQMS telemetry</span>
+            <span>{t.dispersionConditions}</span>
+            <span className="text-[10px] text-slate-500 lowercase">
+              {isDemoData ? 'CAAQMS (Simulated)' : 'CAAQMS Live'}
+            </span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -93,7 +104,7 @@ export const AqiCard: React.FC = () => {
                 <Thermometer className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[11px] text-slate-400 block">Temperature</span>
+                <span className="text-[11px] text-slate-400 block">{t.temperature}</span>
                 <span className="text-sm font-bold text-white">{weather.temperature_c}°C</span>
               </div>
             </div>
@@ -103,7 +114,7 @@ export const AqiCard: React.FC = () => {
                 <Droplets className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[11px] text-slate-400 block">Humidity</span>
+                <span className="text-[11px] text-slate-400 block">{t.humidity}</span>
                 <span className="text-sm font-bold text-white">{weather.humidity_percent}%</span>
               </div>
             </div>
@@ -113,8 +124,10 @@ export const AqiCard: React.FC = () => {
                 <Compass className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[11px] text-slate-400 block">Wind</span>
-                <span className="text-sm font-bold text-white">{weather.wind_speed_kmh} km/h {weather.wind_direction}</span>
+                <span className="text-[11px] text-slate-400 block">{t.wind}</span>
+                <span className="text-sm font-bold text-white">
+                  {weather.wind_speed_kmh} km/h {weather.wind_direction}
+                </span>
               </div>
             </div>
 
@@ -123,7 +136,7 @@ export const AqiCard: React.FC = () => {
                 <Eye className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[11px] text-slate-400 block">Visibility</span>
+                <span className="text-[11px] text-slate-400 block">{t.visibility}</span>
                 <span className="text-sm font-bold text-white">{weather.visibility_km} km</span>
               </div>
             </div>
@@ -133,11 +146,11 @@ export const AqiCard: React.FC = () => {
                 <Layers className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[11px] text-slate-400 block">Boundary Layer (Inversion Height)</span>
+                <span className="text-[11px] text-slate-400 block">{t.boundaryLayer}</span>
                 <span className="text-sm font-bold text-white">
                   {weather.mixing_layer_height_m} m{' '}
                   <span className="text-[10px] text-amber-400 font-normal">
-                    (Trapping pollutants)
+                    {t.trappingPollutants}
                   </span>
                 </span>
               </div>
@@ -149,9 +162,9 @@ export const AqiCard: React.FC = () => {
       {/* CPCB Scale Bar with Dynamic Needle */}
       <div className="mt-8 pt-6 border-t border-slate-800/80">
         <div className="flex items-center justify-between text-xs text-slate-400 mb-2 font-medium">
-          <span>{language === 'hi' ? 'राष्ट्रीय वायु गुणवत्ता सूचकांक पैमाना (NAQI)' : 'National Air Quality Scale (NAQI)'}</span>
+          <span>{t.naqiScale}</span>
           <span className="font-semibold text-slate-300">
-            {language === 'hi' ? `वर्तमान मान: ${aqi} (0-500)` : `Current: ${aqi} (Scale 0-500)`}
+            {t.currentValue} {aqi} ({t.scale0500})
           </span>
         </div>
 
@@ -180,12 +193,16 @@ export const AqiCard: React.FC = () => {
 
         {/* Band Legend */}
         <div className="grid grid-cols-6 gap-1 text-[10px] sm:text-xs text-center text-slate-400 mt-4 font-medium">
-          <div className="truncate">Good (0-50)</div>
-          <div className="truncate">Satisfactory (51-100)</div>
-          <div className="truncate">Moderate (101-200)</div>
-          <div className="truncate">Poor (201-300)</div>
-          <div className="truncate text-red-400 font-semibold">Very Poor (301-400)</div>
-          <div className="truncate text-rose-500 font-bold">Severe (401-500)</div>
+          {CPCB_AQI_BANDS.map((b) => (
+            <div
+              key={b.label}
+              className={`truncate ${
+                b.label === 'Very Poor' ? 'text-red-400 font-semibold' : b.label === 'Severe' ? 'text-rose-500 font-bold' : ''
+              }`}
+            >
+              {language === 'hi' ? b.labelHi : b.label} ({b.min}-{b.max})
+            </div>
+          ))}
         </div>
       </div>
     </div>

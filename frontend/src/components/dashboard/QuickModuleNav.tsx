@@ -1,9 +1,11 @@
 import React from 'react';
 import { Calendar, Home, MessageSquare, Navigation, Leaf, UserCheck, ArrowRight, Sparkles } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { translations } from '../../utils/translations';
 
 export const QuickModuleNav: React.FC = () => {
   const { language } = useApp();
+  const t = translations[language];
 
   const modules = [
     {
@@ -12,7 +14,7 @@ export const QuickModuleNav: React.FC = () => {
       desc: language === 'hi' ? 'स्मॉग से बचाव हेतु सुरक्षित सैर, स्कूल व ऑफिस समय सारणी' : 'Dynamic smog-adjusted school, transit, and workout schedules generated with Gemini',
       icon: Calendar,
       color: 'from-blue-500/20 to-indigo-500/10 text-blue-400 border-blue-500/30',
-      status: 'Next In Pipeline',
+      status: t.statusNext,
     },
     {
       id: 'indoor',
@@ -20,7 +22,7 @@ export const QuickModuleNav: React.FC = () => {
       desc: language === 'hi' ? 'स्मार्ट HEPA प्यूरीफायर नियंत्रण, खिड़की वेंटिलेशन समय' : 'CADR requirements, filter health tracking, and optimal natural aeration hours',
       icon: Home,
       color: 'from-emerald-500/20 to-teal-500/10 text-emerald-400 border-emerald-500/30',
-      status: 'Next In Pipeline',
+      status: t.statusNext,
     },
     {
       id: 'chat',
@@ -28,7 +30,7 @@ export const QuickModuleNav: React.FC = () => {
       desc: language === 'hi' ? 'हिंदी व अंग्रेजी में तात्कालिक परामर्श व वायु प्रदूषण प्रश्नोत्तरी' : 'Conversational intelligence for real-time smog queries, masks, and pediatric care',
       icon: MessageSquare,
       color: 'from-purple-500/20 to-pink-500/10 text-purple-400 border-purple-500/30',
-      status: 'Next In Pipeline',
+      status: t.statusNext,
     },
     {
       id: 'mobility',
@@ -36,7 +38,7 @@ export const QuickModuleNav: React.FC = () => {
       desc: language === 'hi' ? 'कम उत्सर्जन मार्ग, मेट्रो/ई-बस विकल्प व उत्सर्जन तुलना' : 'Low-exposure commuting routes, metro/EV transit planning, and fleet alerts',
       icon: Navigation,
       color: 'from-amber-500/20 to-orange-500/10 text-amber-400 border-amber-500/30',
-      status: 'Planned',
+      status: t.statusPlanned,
     },
     {
       id: 'impact',
@@ -44,7 +46,7 @@ export const QuickModuleNav: React.FC = () => {
       desc: language === 'hi' ? 'पारिवारिक कार्बन फुटप्रिंट, वायु उत्सर्जन बचत और लक्ष्य' : 'Community emission savings, carbon avoided, and collective green milestones',
       icon: Leaf,
       color: 'from-teal-500/20 to-emerald-500/10 text-teal-400 border-teal-500/30',
-      status: 'Planned',
+      status: t.statusPlanned,
     },
     {
       id: 'family',
@@ -52,7 +54,7 @@ export const QuickModuleNav: React.FC = () => {
       desc: language === 'hi' ? 'सदस्यों के अनुसार कस्टम अलर्ट व संवेदनशील स्वास्थ्य रिकॉर्ड' : 'Multi-generational clinical vulnerability tracking and emergency contacts',
       icon: UserCheck,
       color: 'from-sky-500/20 to-cyan-500/10 text-sky-400 border-sky-500/30',
-      status: 'Configured',
+      status: t.statusActive,
     },
   ];
 
@@ -61,12 +63,10 @@ export const QuickModuleNav: React.FC = () => {
       <div>
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-emerald-400" />
-          <span>{language === 'hi' ? 'एयरसाथी AI मॉड्यूलर सुइट' : 'AirSaathi AI Modular Architecture'}</span>
+          <span>{t.modularSuiteTitle}</span>
         </h2>
         <p className="text-xs text-slate-400 mt-0.5">
-          {language === 'hi'
-            ? 'उत्पादन-तैयार 7-मॉड्यूल संरचना - अगला कदम: AI रूटीन प्लानर एवं इनडोर वायु सहायक'
-            : 'Production-ready 7-module urban defense platform. Modules initialize sequentially.'}
+          {t.modularSuiteSubtitle}
         </p>
       </div>
 
@@ -96,7 +96,7 @@ export const QuickModuleNav: React.FC = () => {
               </div>
 
               <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 group-hover:text-slate-200 transition-colors">
-                <span>View Architecture</span>
+                <span>{t.viewArchitecture}</span>
                 <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
               </div>
             </div>

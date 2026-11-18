@@ -1,7 +1,6 @@
-import pytest
 from backend.app.api.v1.endpoints.health import check_health
 from backend.app.api.v1.endpoints.aqi import list_stations, get_current_aqi, get_forecast
-from backend.app.services.aqi_service import AqiService, get_aqi_category
+from backend.app.services.aqi_service import get_aqi_category
 
 
 def test_aqi_category_logic():
@@ -40,6 +39,8 @@ def test_current_aqi_endpoint():
     assert data.category.value == "Very Poor"
     assert "PM2.5" in data.pollutants
     assert data.pollutants["PM2.5"].value > 0
+    # Ensure CPCB sub-index was computed correctly
+    assert data.pollutants["PM2.5"].sub_index == 368
     assert data.is_demo_data is True
     assert "Central Pollution Control Board" in data.data_source
 

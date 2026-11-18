@@ -1,5 +1,5 @@
 import { CurrentAqiData, ForecastData, StationInfo } from '../types/aqi';
-import { getAqiCategory } from '../utils/aqiUtils';
+import { getAqiCategory, concentrationFromSubindex, calculateSubindex } from '../utils/aqiUtils';
 
 export const MOCK_STATIONS: StationInfo[] = [
   {
@@ -100,7 +100,18 @@ export const getMockCurrentAqi = (stationId: string = 'delhi-anand-vihar'): Curr
   };
 
   const aqi = aqiMap[station.id] || 320;
-  
+  const pm25Conc = concentrationFromSubindex('PM2.5', aqi);
+  const pm10Sub = Math.min(500, Math.round(aqi * 0.88));
+  const pm10Conc = concentrationFromSubindex('PM10', pm10Sub);
+  const no2Sub = Math.min(300, Math.round(50 + aqi * 0.2));
+  const no2Conc = concentrationFromSubindex('NO2', no2Sub);
+  const so2Sub = Math.min(150, Math.round(20 + aqi * 0.08));
+  const so2Conc = concentrationFromSubindex('SO2', so2Sub);
+  const coSub = Math.min(200, Math.round(35 + aqi * 0.12));
+  const coConc = concentrationFromSubindex('CO', coSub);
+  const o3Sub = Math.min(150, Math.round(30 + aqi * 0.1));
+  const o3Conc = concentrationFromSubindex('O3', o3Sub);
+
   return {
     station,
     aqi,
@@ -109,55 +120,55 @@ export const getMockCurrentAqi = (stationId: string = 'delhi-anand-vihar'): Curr
     pollutants: {
       'PM2.5': {
         name: 'PM2.5',
-        value: Math.round(aqi * 0.72),
+        value: pm25Conc,
         unit: 'µg/m³',
-        sub_index: aqi,
-        category: 'Very Poor',
+        sub_index: calculateSubindex('PM2.5', pm25Conc),
+        category: getAqiCategory(calculateSubindex('PM2.5', pm25Conc)),
         standard_limit: 60.0,
         who_limit: 15.0,
       },
       'PM10': {
         name: 'PM10',
-        value: Math.round(aqi * 1.25),
+        value: pm10Conc,
         unit: 'µg/m³',
-        sub_index: Math.min(500, Math.round(aqi * 0.9)),
-        category: 'Very Poor',
+        sub_index: calculateSubindex('PM10', pm10Conc),
+        category: getAqiCategory(calculateSubindex('PM10', pm10Conc)),
         standard_limit: 100.0,
         who_limit: 45.0,
       },
       'NO2': {
         name: 'NO2',
-        value: Math.round(55 + aqi * 0.12),
+        value: no2Conc,
         unit: 'µg/m³',
-        sub_index: Math.round(55 + aqi * 0.12),
-        category: 'Moderate',
+        sub_index: calculateSubindex('NO2', no2Conc),
+        category: getAqiCategory(calculateSubindex('NO2', no2Conc)),
         standard_limit: 80.0,
         who_limit: 25.0,
       },
       'SO2': {
         name: 'SO2',
-        value: Math.round(16.5 + aqi * 0.02),
+        value: so2Conc,
         unit: 'µg/m³',
-        sub_index: Math.round(16.5 + aqi * 0.02),
-        category: 'Good',
+        sub_index: calculateSubindex('SO2', so2Conc),
+        category: getAqiCategory(calculateSubindex('SO2', so2Conc)),
         standard_limit: 80.0,
         who_limit: 40.0,
       },
       'CO': {
         name: 'CO',
-        value: Number((1.2 + aqi * 0.005).toFixed(2)),
+        value: coConc,
         unit: 'mg/m³',
-        sub_index: Math.round((1.2 + aqi * 0.005) * 35),
-        category: 'Moderate',
+        sub_index: calculateSubindex('CO', coConc),
+        category: getAqiCategory(calculateSubindex('CO', coConc)),
         standard_limit: 2.0,
         who_limit: 4.0,
       },
       'O3': {
         name: 'O3',
-        value: Math.round(38.0 + aqi * 0.04),
+        value: o3Conc,
         unit: 'µg/m³',
-        sub_index: Math.round(38.0 + aqi * 0.04),
-        category: 'Good',
+        sub_index: calculateSubindex('O3', o3Conc),
+        category: getAqiCategory(calculateSubindex('O3', o3Conc)),
         standard_limit: 100.0,
         who_limit: 100.0,
       },
@@ -207,8 +218,8 @@ export const getMockForecast = (stationId: string = 'delhi-anand-vihar'): Foreca
       time: date.toISOString(),
       aqi: aqiVal,
       category: getAqiCategory(aqiVal),
-      pm25: Math.round(aqiVal * 0.72),
-      pm10: Math.round(aqiVal * 1.25),
+      pm25: concentrationFromSubindex('PM2.5', aqiVal),
+      pm10: concentrationFromSubindex('PM10', Math.min(500, Math.round(aqiVal * 0.88))),
     };
   });
 
