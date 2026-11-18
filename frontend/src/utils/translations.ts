@@ -149,6 +149,23 @@ export interface Translations {
   actionChecklistTitle: string;
   recalculateBtn: string;
   calculating: string;
+  // Module 4 Chatbot Translations
+  chatTabTitle: string;
+  chatSubtitle: string;
+  chatPlaceholder: string;
+  chatSendBtn: string;
+  chatSending: string;
+  chatClearTitle: string;
+  chatDisclaimerNote: string;
+  chatStarterTitle: string;
+  chatStarter1: string;
+  chatStarter2: string;
+  chatStarter3: string;
+  chatStarter4: string;
+  chatContextBadge: string;
+  chatAiBadge: string;
+  chatRulesBadge: string;
+  chatEmptyState: string;
 }
 
 export const translations: Record<SupportedLanguage, Translations> = {
@@ -313,6 +330,24 @@ export const translations: Record<SupportedLanguage, Translations> = {
     actionChecklistTitle: 'Actionable Clean Air Checklist',
     recalculateBtn: 'Recalculate Assessment',
     calculating: 'Analyzing Indoor Hazards...',
+    // Module 4 Chatbot Translations
+    chatTabTitle: 'Environmental Chatbot',
+    chatSubtitle: 'Gemini-Powered Smog & Air Quality Assistant',
+    chatPlaceholder: 'Ask about smog protection, AQI, masks, purifiers, or daily habits...',
+    chatSendBtn: 'Send',
+    chatSending: 'AirSaathi is thinking...',
+    chatClearTitle: 'Clear Conversation',
+    chatDisclaimerNote:
+      'Medical Disclaimer: AirSaathi AI provides environmental mitigation insights, not medical advice or prescriptions. Consult a doctor for health emergencies.',
+    chatStarterTitle: 'Suggested Questions to Ask',
+    chatStarter1: 'What is the difference between PM2.5 and PM10?',
+    chatStarter2: 'How should I protect children during peak morning smog?',
+    chatStarter3: 'Is running or morning walking safe in current AQI?',
+    chatStarter4: 'Can indoor snake plants replace a HEPA air purifier?',
+    chatContextBadge: 'CPCB Context Active',
+    chatAiBadge: 'Google Gemini 2.5 Flash',
+    chatRulesBadge: 'Expert Rules Fallback',
+    chatEmptyState: 'Ask AirSaathi anything about smog, AQI, masks, indoor air, or family precautions.',
   },
   hi: {
     appName: 'एयरसाथी AI',
@@ -475,6 +510,24 @@ export const translations: Record<SupportedLanguage, Translations> = {
     actionChecklistTitle: 'स्वच्छ वायु कार्य सूची (Checklist)',
     recalculateBtn: 'मूल्यांकन अपडेट करें',
     calculating: 'इनडोर जोखिम विश्लेषण जारी है...',
+    // Module 4 Chatbot Translations
+    chatTabTitle: 'पर्यावरण चैटबॉट',
+    chatSubtitle: 'जेमिनी AI-संचालित वायु गुणवत्ता व स्मॉग सहायक',
+    chatPlaceholder: 'स्मॉग सुरक्षा, AQI, मास्क, प्यूरीफायर या आदतों के बारे में पूछें...',
+    chatSendBtn: 'भेजें',
+    chatSending: 'एयरसाथी विचार कर रहा है...',
+    chatClearTitle: 'बातचीत रीसेट करें',
+    chatDisclaimerNote:
+      'चिकित्सीय अस्वीकरण: एयरसाथी AI केवल पर्यावरणीय जोखिम न्यूनीकरण सुझाव देता है, चिकित्सीय परामर्श या दवा का नुस्खा नहीं। सांस संबंधी आपातकाल में डॉक्टर से मिलें।',
+    chatStarterTitle: 'सुझाए गए प्रश्न',
+    chatStarter1: 'PM2.5 और PM10 में क्या अंतर है?',
+    chatStarter2: 'आज बच्चों को स्मॉग से कैसे बचाएं?',
+    chatStarter3: 'क्या वर्तमान एक्यूआई में सुबह दौड़ना सुरक्षित है?',
+    chatStarter4: 'क्या घर के पौधे HEPA एयर प्यूरीफायर की जगह ले सकते हैं?',
+    chatContextBadge: 'CPCB डेटा संलग्न',
+    chatAiBadge: 'गूगल जेमिनी 2.5 फ्लैश',
+    chatRulesBadge: 'विशेषज्ञ नियम बैकअप',
+    chatEmptyState: 'स्मॉग, मास्क, इनडोर वायु या परिवार की सुरक्षा को लेकर कोई भी प्रश्न पूछें।',
   },
 };
 

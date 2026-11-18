@@ -4,7 +4,7 @@ import { RoutinePlan, RoutinePreferences } from '../types/routine';
 import { HouseholdInput, IndoorAssessmentResponse } from '../types/indoor';
 import { fetchCurrentAqi, fetchForecast, fetchIndoorAssessment, fetchRoutinePlan, fetchStations } from '../services/api';
 
-export type AppTab = 'dashboard' | 'planner' | 'indoor';
+export type AppTab = 'dashboard' | 'planner' | 'indoor' | 'chat';
 
 interface AppContextType {
   activeTab: AppTab;

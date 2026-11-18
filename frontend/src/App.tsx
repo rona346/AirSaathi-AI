@@ -10,6 +10,7 @@ import { VulnerabilityAlerts } from './components/dashboard/VulnerabilityAlerts'
 import { QuickModuleNav } from './components/dashboard/QuickModuleNav';
 import { DailyPlanner } from './components/planner/DailyPlanner';
 import { IndoorAssistant } from './components/indoor/IndoorAssistant';
+import { ChatAssistant } from './components/chat/ChatAssistant';
 import { Footer } from './components/layout/Footer';
 import { AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
 import { translations } from './utils/translations';
@@ -103,6 +104,14 @@ const MainContent: React.FC = () => {
     return (
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
         <IndoorAssistant />
+      </main>
+    );
+  }
+
+  if (activeTab === 'chat') {
+    return (
+      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
+        <ChatAssistant />
       </main>
     );
   }

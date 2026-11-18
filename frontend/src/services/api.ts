@@ -1,7 +1,15 @@
 import { CurrentAqiData, FamilyProfile, ForecastData, StationInfo, SupportedLanguage } from '../types/aqi';
 import { RoutinePlan, RoutinePreferences } from '../types/routine';
 import { HouseholdInput, IndoorAssessmentResponse } from '../types/indoor';
-import { MOCK_STATIONS, getMockCurrentAqi, getMockForecast, getMockIndoorAssessment, getMockRoutinePlan } from './mockData';
+import { ChatRequest, ChatResponse } from '../types/chat';
+import {
+  MOCK_STATIONS,
+  getMockChatResponse,
+  getMockCurrentAqi,
+  getMockForecast,
+  getMockIndoorAssessment,
+  getMockRoutinePlan,
+} from './mockData';
 
 const API_BASE = '/api/v1';
 
@@ -117,5 +125,30 @@ export async function fetchIndoorAssessment(
   } catch (err) {
     console.info(`Backend unreachable, serving offline fallback indoor assessment for station: ${stationId}`);
     return { data: getMockIndoorAssessment(stationId, language, household), isDemo: true };
+  }
+}
+
+export async function fetchChatMessage(
+  request: ChatRequest
+): Promise<{ data: ChatResponse; isDemo: boolean }> {
+  try {
+    const res = await fetch(`${API_BASE}/chat/message`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const json = await res.json();
+    return { data: json.data, isDemo: json.is_demo_data };
+  } catch (err) {
+    console.info('Backend unreachable, serving offline rule-based chat fallback response.', err);
+    return {
+      data: getMockChatResponse(request.message, request.station_id, request.language),
+      isDemo: true,
+    };
   }
 }

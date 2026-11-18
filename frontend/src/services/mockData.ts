@@ -1,4 +1,5 @@
 import { CurrentAqiData, ForecastData, StationInfo } from '../types/aqi';
+import { ChatResponse } from '../types/chat';
 import { getAqiCategory, concentrationFromSubindex, calculateSubindex } from '../utils/aqiUtils';
 
 export const MOCK_STATIONS: StationInfo[] = [
@@ -575,5 +576,84 @@ export const getMockIndoorAssessment = (
       ? 'चिकित्सीय अस्वीकरण: यह इनडोर वायु सहायक केवल पर्यावरणीय जोखिम न्यूनीकरण सुझाव प्रदान करता है, बीमारी का निदान या उपचार नहीं। HEPA प्यूरीफायर या N95 मास्क 100% सुरक्षा की गारंटी नहीं देते।'
       : 'Medical Disclaimer: This indoor air assistant provides environmental hazard reduction guidance, not medical diagnosis or treatment. Air purifiers and N95 masks reduce particulate mass but do not provide absolute immunity.',
     generated_at: new Date().toISOString(),
+  };
+};
+
+export const getMockChatResponse = (
+  message: string,
+  stationId: string = 'delhi-anand-vihar',
+  language: string = 'en'
+): ChatResponse => {
+  const isHi = language === 'hi';
+  const query = (message || '').toLowerCase();
+  const station = MOCK_STATIONS.find((s) => s.id === stationId) || MOCK_STATIONS[0];
+  const current = getMockCurrentAqi(stationId);
+
+  let replyText = '';
+  let followups: string[] = [];
+
+  if (query.includes('pm2.5') || query.includes('pm10') || query.includes('पार्टिकुलेट') || query.includes('कण')) {
+    if (isHi) {
+      replyText = `**PM2.5 और PM10 में मुख्य अंतर:**\n\n- **PM10** (व्यास <= 10 µm): धूल, पराग और निर्माण कण। ये नाक और ऊपरी श्वसन तंत्र में फंसते हैं।\n- **PM2.5** (व्यास <= 2.5 µm): दहन धुआं, वाहन उत्सर्जन और पराली का धुआं। यह सीधे फेफड़ों की गहराई (एल्वियोली) और रक्तप्रवाह में पहुंचता है।\n\nवर्तमान में **${station.name}** पर प्रमुख प्रदूषक **${current.prominent_pollutant}** (AQI: ${current.aqi}) है।`;
+      followups = ['क्या कपड़े का मास्क PM2.5 रोकता है?', 'घर में PM2.5 कैसे कम करें?', 'N95 मास्क कितने दिन चलता है?'];
+    } else {
+      replyText = `**Key differences between PM2.5 and PM10:**\n\n- **PM10** (<= 10 µm aerodynamic diameter): Coarse dust, pollen, and construction debris. Filtered largely by upper respiratory nasal passages.\n- **PM2.5** (<= 2.5 µm): Ultra-fine combustion aerosols, vehicular exhaust, and secondary nitrates. Bypasses ciliated airways directly into alveolar air-sacs and systemic bloodstream.\n\nCurrently at **${station.name}**, the prominent pollutant is **${current.prominent_pollutant}** with an AQI of **${current.aqi}** (${current.category}).`;
+      followups = ['Does a surgical or cloth mask block PM2.5?', 'How can I lower PM2.5 indoors?', 'How many hours does an N95 mask last?'];
+    }
+  } else if (query.includes('child') || query.includes('kid') || query.includes('pediatric') || query.includes('बच्च') || query.includes('शिशु')) {
+    if (isHi) {
+      replyText = `**बच्चों की स्मॉग से सुरक्षा:**\n\n1. **शारीरिक संवेदनशीलता:** बच्चे प्रति किलोग्राम शरीर वजन वयस्कों की तुलना में दोगुनी तेजी से सांस लेते हैं।\n2. **सुबह का समय:** जब तक एक्यूआई 200 से अधिक हो, सुबह की आउटडोर खेलकूद या असेंबली पूरी तरह टालें।\n3. **मास्क:** यदि बच्चा 4 वर्ष से बड़ा है, तो बाल-आकार (kid-sized) का प्रमाणित N95 मास्क पहनाएं जिसमें नाक के पास कोई गैप न हो।\n4. **आहार:** पर्याप्त गुनगुना पानी और ताजे फल दें। किसी गंभीर खांसी पर डॉक्टर से सलाह लें।`;
+      followups = ['क्या बच्चों के लिए N95 मास्क सुरक्षित है?', 'स्कूल बस में खिड़कियां बंद रखनी चाहिए?', 'कमरे में एयर प्यूरीफायर की गति क्या रखें?'];
+    } else {
+      replyText = `**Pediatric Protection Guidelines during High AQI:**\n\n1. **Biological Vulnerability:** Children inhale ~50% more air per kilogram of body weight compared to adults, accelerating toxin absorption.\n2. **Morning Outdoor Restrictions:** Postpone early outdoor physical activities, school assemblies, and sports when AQI exceeds 200.\n3. **Pediatric Fit Masks:** Cloth and surgical masks leak heavily. Use properly sized pediatric N95/FFP2 respirators without exhalation valves for children over 4 years.\n4. **Hydration & Vigilance:** Maintain consistent hydration and seek clinical attention if dry barking cough or wheezing develops.`;
+      followups = ['Are N95 masks safe for school-age children?', 'Should school bus windows remain shut in winter?', 'What purifier setting is optimal for a nursery?'];
+    }
+  } else if (query.includes('exercise') || query.includes('walk') || query.includes('run') || query.includes('व्यायाम') || query.includes('दौड़') || query.includes('टहल')) {
+    if (isHi) {
+      replyText = `**व्यायाम और मॉर्निंग वॉक संबंधी सलाह:**\n\n- **वर्तमान AQI:** ${station.name} पर AQI **${current.aqi}** (${current.category}) है।\n- **निर्णय:** जब AQI बहुत खराब (300+) या गंभीर हो, तो बाहर दौड़ना या तेज चलना स्वास्थ्य के लिए हानिकारक हो सकता है क्योंकि गहरी सांस लेने से फेफड़ों में 10 गुना अधिक जहरीले कण जाते हैं।\n- **सुझाव:** सुबह 5 से 8 बजे के बजाय दोपहर 12 से 4 बजे हल्की चहलकदमी करें, या घर के अंदर योग/स्ट्रेचिंग करें।`;
+      followups = ['क्या N95 मास्क पहनकर दौड़ना सुरक्षित है?', 'दोपहर में धूप निकलने पर स्मॉग कम क्यों होता है?', 'घर में कौन सा व्यायाम सुरक्षित है?'];
+    } else {
+      replyText = `**Exercise & Morning Walk Advisory:**\n\n- **Current AQI Context:** ${station.name} is recording an AQI of **${current.aqi}** (${current.category}).\n- **Impact:** Intense outdoor cardiovascular workouts during high AQI cause mouth breathing, bypassing nasal filtration and increasing deep alveolar particulate deposition by up to 10-fold.\n- **Action:** Shift strenuous workouts indoors (yoga, bodyweight, treadmill). If walking outside, postpone to 12:00 PM – 4:00 PM during solar inversion lift, wearing an N95 respirator.`;
+      followups = ['Is running with an N95 mask safe?', 'Why does afternoon solar heating reduce smog near ground?', 'What are safe indoor cardio alternatives?'];
+    }
+  } else if (query.includes('plant') || query.includes('पौध') || query.includes('money plant') || query.includes('snake plant')) {
+    if (isHi) {
+      replyText = `**पौधों द्वारा वायु शुद्धिकरण का वैज्ञानिक सच:**\n\n- **नासा अध्ययन (1989):** यह प्रयोग एक सीलबंद छोटे कांच के डिब्बे (sealed chamber) में किया गया था, वास्तविक घर में नहीं।\n- **वास्तविकता:** एक सामान्य घर में प्राकृतिक वायु रिसाव (air exchange) पौधों की गति से 100 गुना अधिक होता है। पौधे सुंदर हैं और मानसिक शांति देते हैं, परंतु वे भारी PM2.5, NO2 या धुएं को साफ नहीं कर सकते।\n- **समाधान:** वास्तविक पार्टिकुलेट प्रदूषण के लिए प्रमाणित True HEPA फिल्टर आवश्यक है।`;
+      followups = ['क्या स्नेक प्लांट रात में ऑक्सीजन देता है?', 'HEPA H13 और साधारण फिल्टर में क्या अंतर है?', 'कमरे के आकार के अनुसार प्यूरीफायर कैसे चुनें?'];
+    } else {
+      replyText = `**Scientific Truth on Indoor Plants & Air Quality:**\n\n- **The 1989 NASA Experiment:** NASA studied plants in sealed, airtight chambers with artificial lighting—conditions entirely detached from residential homes.\n- **Real-World Physics:** Standard homes experience natural air exchange rates (0.5 to 2.0 air changes/hour) that overwhelm plant bio-filtration by over 100x.\n- **Verdict:** While indoor plants are aesthetically pleasant and support mental well-being, they cannot remove PM2.5, sulfur dioxide, or cooking aerosols. Mechanical True HEPA filtration and exhaust ventilation remain essential.`;
+      followups = ['Does snake plant generate enough oxygen to matter?', 'What is CADR in air purifiers?', 'Can carbon filters remove cooking smells?'];
+    }
+  } else {
+    if (isHi) {
+      replyText = `**नमस्ते! मैं एयरसाथी AI सहायक हूँ।**\n\nवर्तमान में **${station.name}** पर AQI **${current.aqi}** (${current.category}) दर्ज है।\n\nमैं आपकी कैसे मदद कर सकता हूँ?\n- बच्चों व बुजुर्गों के लिए स्मॉग सावधानियां\n- N95 मास्क का सही चुनाव और उपयोग\n- घर और रसोई में इनडोर प्रदूषण कम करने के उपाय\n- व्यायाम और आवागमन के लिए सुरक्षित समय`;
+      followups = ['PM2.5 और PM10 में क्या अंतर है?', 'आज बच्चों को स्कूल भेजते समय क्या सावधानी बरतें?', 'कमरे में एयर प्यूरीफायर कैसे रखें?'];
+    } else {
+      replyText = `**Hello! I am your AirSaathi AI Environmental Assistant.**\n\nCurrently, **${station.name}** is reporting an AQI of **${current.aqi}** (${current.category}) with prominent pollutant **${current.prominent_pollutant}**.\n\nHere is how I can assist you:\n- Smog precautions for children, seniors, and sensitive individuals\n- Selecting and fitting certified N95 respirators\n- Lowering indoor particulate matter and kitchen emissions\n- Optimal timing for outdoor commutes and physical activities`;
+      followups = ['What is the difference between PM2.5 and PM10?', 'How should I protect children during peak morning smog?', 'Can indoor plants replace a HEPA air purifier?'];
+    }
+  }
+
+  return {
+    message: replyText,
+    language,
+    ai_provider: 'expert-rules-fallback',
+    ai_generated: false,
+    context_used: {
+      station_id: station.id,
+      station_name: station.name,
+      city: station.city,
+      aqi: current.aqi,
+      category: current.category,
+      prominent_pollutant: current.prominent_pollutant,
+      is_demo_data: true,
+      data_source: 'AirSaathi Baseline Demo',
+      observed_at: new Date().toISOString(),
+    },
+    suggested_followups: followups,
+    disclaimer: isHi
+      ? 'चिकित्सीय अस्वीकरण: एयरसाथी AI केवल पर्यावरणीय दिशानिर्देश प्रदान करता है, कोई चिकित्सकीय परामर्श या दवा का नुस्खा नहीं।'
+      : 'Medical Disclaimer: AirSaathi AI provides environmental risk guidance, not medical diagnosis or prescription. Consult a qualified physician for respiratory distress.',
+    timestamp: new Date().toISOString(),
   };
 };

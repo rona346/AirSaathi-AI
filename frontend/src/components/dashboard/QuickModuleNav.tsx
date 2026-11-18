@@ -32,7 +32,8 @@ export const QuickModuleNav: React.FC = () => {
       desc: language === 'hi' ? 'हिंदी व अंग्रेजी में तात्कालिक परामर्श व वायु प्रदूषण प्रश्नोत्तरी' : 'Conversational intelligence for real-time smog queries, masks, and pediatric care',
       icon: MessageSquare,
       color: 'from-purple-500/20 to-pink-500/10 text-purple-400 border-purple-500/30',
-      status: t.statusNext,
+      status: t.statusActive,
+      isAvailable: true,
     },
     {
       id: 'mobility',
@@ -40,7 +41,7 @@ export const QuickModuleNav: React.FC = () => {
       desc: language === 'hi' ? 'कम उत्सर्जन मार्ग, मेट्रो/ई-बस विकल्प व उत्सर्जन तुलना' : 'Low-exposure commuting routes, metro/EV transit planning, and fleet alerts',
       icon: Navigation,
       color: 'from-amber-500/20 to-orange-500/10 text-amber-400 border-amber-500/30',
-      status: t.statusPlanned,
+      status: t.statusNext,
     },
     {
       id: 'impact',
@@ -82,6 +83,7 @@ export const QuickModuleNav: React.FC = () => {
                 if (m.isAvailable) {
                   if (m.id === 'routine') setActiveTab('planner');
                   if (m.id === 'indoor') setActiveTab('indoor');
+                  if (m.id === 'chat') setActiveTab('chat');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
               }}
