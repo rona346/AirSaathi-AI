@@ -45,18 +45,31 @@ def get_routine_plan_get(
     """
     Convenience GET endpoint for fetching a personalized routine plan with URL query parameters.
     """
+    def _resolve(val, default):
+        if hasattr(val, "default"):
+            return val.default
+        return val if val is not None else default
+
+    resolved_station_id = str(_resolve(station_id, "delhi-anand-vihar"))
+    resolved_lang = str(_resolve(language, "en"))
+    resolved_children = bool(_resolve(has_children, False))
+    resolved_seniors = bool(_resolve(has_seniors, False))
+    resolved_resp = bool(_resolve(has_respiratory, False))
+    resolved_pregnant = bool(_resolve(is_pregnant, False))
+    resolved_exercise = str(_resolve(exercise_type, "walk"))
+
     family = FamilyVulnerabilityInput(
-        has_children=has_children,
-        has_seniors=has_seniors,
-        has_respiratory_condition=has_respiratory,
-        is_pregnant=is_pregnant,
+        has_children=resolved_children,
+        has_seniors=resolved_seniors,
+        has_respiratory_condition=resolved_resp,
+        is_pregnant=resolved_pregnant,
     )
     prefs = RoutinePreferencesInput(
-        preferred_exercise_type=exercise_type,
+        preferred_exercise_type=resolved_exercise,
     )
     request = RoutinePlanRequest(
-        station_id=station_id,
-        language=language,
+        station_id=resolved_station_id,
+        language=resolved_lang,
         family_profile=family,
         preferences=prefs,
     )
