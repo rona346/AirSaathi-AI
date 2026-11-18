@@ -130,12 +130,58 @@ Open `http://localhost:5173` in your browser.
 
 ---
 
+## 🔥 Firebase Authentication & Cloud Firestore Setup
+
+AirSaathi AI supports dual operational modes:
+- **Guest / Demonstration Mode**: Operates out-of-the-box with zero credentials required. User preferences and routine selections are stored in temporary browser memory.
+- **Authenticated Cloud Persistence Mode**: Full user accounts, family vulnerability settings, indoor appliance tracking, and commuting histories are securely persisted in Cloud Firestore under authenticated user tenancy.
+
+### Step 1: Create a Firebase Project
+1. Navigate to the [Firebase Console](https://console.firebase.google.com/).
+2. Click **Add project**, provide a project name (e.g., `airsaathi-ai`), and proceed with creation.
+
+### Step 2: Enable Email/Password Authentication
+1. In your Firebase Console, open **Build** > **Authentication**.
+2. Click **Get Started**, choose **Email/Password** from the Sign-in providers list.
+3. Toggle **Enable** for Email/Password and click **Save**.
+
+### Step 3: Provision Cloud Firestore
+1. In the Firebase Console, open **Build** > **Firestore Database**.
+2. Click **Create database**, select a region (e.g. `asia-south1` for Mumbai, India), and select **Production mode**.
+3. Apply the security rules defined in [firestore.rules](file:///C:/Users/gupta/Desktop/AirSaathi-AI/firestore.rules) either via the Firebase Console **Rules** tab or using the Firebase CLI (`firebase deploy --only firestore:rules`).
+
+### Step 4: Configure Frontend Web Credentials
+1. In Firebase Console, go to **Project Settings** > **General** > **Your apps** and click the **Web** icon (`</>`).
+2. Register the web app and copy the configuration keys.
+3. In `frontend/`, create `.env` (or `.env.local`) using [frontend/.env.example](file:///C:/Users/gupta/Desktop/AirSaathi-AI/frontend/.env.example):
+   ```bash
+   VITE_FIREBASE_API_KEY=AIzaSy...
+   VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your-project
+   VITE_FIREBASE_APP_ID=1:123456789012:web:abcdef...
+   VITE_API_BASE_URL=http://localhost:8000
+   ```
+
+### Step 5: Configure Backend Admin SDK
+1. In Firebase Console, go to **Project Settings** > **Service accounts**.
+2. Click **Generate new private key** and download the JSON key.
+3. Store the key file in a secure local path (outside Git) and configure `backend/.env` using [backend/.env.example](file:///C:/Users/gupta/Desktop/AirSaathi-AI/backend/.env.example):
+   ```bash
+   FIREBASE_PROJECT_ID=your-project
+   FIREBASE_SERVICE_ACCOUNT_PATH=/absolute/path/to/serviceAccountKey.json
+   ```
+   *(Alternatively, for cloud deployments such as Cloud Run, rely on Google Application Default Credentials or stringified `FIREBASE_SERVICE_ACCOUNT_JSON`)*.
+
+---
+
 ## 🗺️ 7-Module Product Roadmap
 
-- [x] **Module 1: Air Quality Dashboard** (Initial implementation complete with responsive UI, pollutant breakdown, diurnal forecast, family vulnerability guard, and CPCB baseline data).
-- [ ] **Module 2: AI Daily Routine Planner** (Smog-adjusted commute, school, and outdoor schedule optimizer powered by Gemini).
-- [ ] **Module 3: Indoor Air Quality Assistant** (CADR calculation, room volume sizing, HEPA filter lifetime tracking, and optimal aeration windows).
-- [ ] **Module 4: Gemini-Powered Hindi/English Chatbot** (Contextual voice/text assistant explaining symptoms, masks, and winter care).
-- [ ] **Module 5: Sustainable Mobility Assistant** (Low-exposure routes, public transit vs. driving emission comparison, EV incentives).
+- [x] **Module 1: Air Quality Dashboard** (Real-time CPCB telemetry, NAQI breakpoint calculations, diurnal inversion modeling, multi-station selection).
+- [x] **Module 2: AI Daily Routine Planner** (Smog-aware commute, school, and outdoor exercise scheduler powered by Google Gemini with expert-rule fallback).
+- [x] **Module 3: Indoor Air Quality Assistant** (Room volume sizing, CADR calculations, HEPA filtration guidance, and safe aeration windows).
+- [x] **Module 4: Gemini-Powered Hindi/English Chatbot** (Bilingual environmental consultation with CPCB context injection).
+- [x] **Module 5: Sustainable Mobility Assistant** (AQI-aware commute planner with city-specific transit verification, passenger-level emission math, and CEA grid factor).
+- [x] **Core Infrastructure: External Weather Service** (Real-time ambient weather via Open-Meteo with caching and graceful demo fallback).
+- [x] **Core Infrastructure: Firebase Authentication & Cloud Firestore** (Email/Password registration, session tokens, tenant-isolated Firestore rules, and guest mode).
 - [ ] **Module 6: Environmental Impact Tracker** (Household emission reductions, carbon avoidance, community milestones).
 - [ ] **Module 7: Family Profile & Preferences** (Multi-generational medical condition tracking and push notification triggers).

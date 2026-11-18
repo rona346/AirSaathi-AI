@@ -1,11 +1,34 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { CurrentAqiData, FamilyProfile, ForecastData, StationInfo, SupportedLanguage } from '../types/aqi';
 import { RoutinePlan, RoutinePreferences } from '../types/routine';
 import { HouseholdInput, IndoorAssessmentResponse } from '../types/indoor';
 import { MobilityPlanResponse, MobilityRequest } from '../types/mobility';
-import { fetchCurrentAqi, fetchForecast, fetchIndoorAssessment, fetchMobilityPlan, fetchRoutinePlan, fetchStations } from '../services/api';
+import { AuthUser, UserProfile } from '../types/user';
+import {
+  fetchAuthServiceStatus,
+  fetchCurrentAqi,
+  fetchForecast,
+  fetchIndoorAssessment,
+  fetchMobilityPlan,
+  fetchRoutinePlan,
+  fetchStations,
+  fetchUserProfile,
+  saveUserRoutine,
+  saveUserRoute,
+  updateUserProfile,
+} from '../services/api';
+import {
+  getCurrentIdToken,
+  isFirebaseConfigured,
+  loginWithEmailPassword,
+  logoutUser,
+  onAuthStateListener,
+  registerWithEmailPassword,
+} from '../services/firebase';
 
 export type AppTab = 'dashboard' | 'planner' | 'indoor' | 'chat' | 'mobility';
+
+export type PersistenceStatus = 'saved' | 'saving' | 'guest' | 'error';
 
 interface AppContextType {
   activeTab: AppTab;
@@ -23,24 +46,41 @@ interface AppContextType {
   updateFamilyProfile: (partial: Partial<FamilyProfile>) => void;
   refreshData: () => Promise<void>;
   isDemoData: boolean;
+
   // Module 2 Routine Planner state
   routinePlan: RoutinePlan | null;
   routineLoading: boolean;
   routinePreferences: RoutinePreferences;
   updateRoutinePreferences: (partial: Partial<RoutinePreferences>) => void;
   refreshRoutinePlan: () => Promise<void>;
+  saveCurrentRoutinePlan: () => Promise<string | null>;
+
   // Module 3 Indoor Assistant state
   indoorAssessment: IndoorAssessmentResponse | null;
   indoorLoading: boolean;
   householdInput: HouseholdInput;
   updateHouseholdInput: (partial: Partial<HouseholdInput>) => void;
   refreshIndoorAssessment: () => Promise<void>;
+
   // Module 5 Sustainable Mobility state
   mobilityPlan: MobilityPlanResponse | null;
   mobilityLoading: boolean;
   mobilityRequest: MobilityRequest;
   updateMobilityRequest: (partial: Partial<MobilityRequest>) => void;
   refreshMobilityPlan: () => Promise<void>;
+  saveCurrentMobilityRoute: (title?: string) => Promise<string | null>;
+
+  // Firebase Authentication & Cloud Firestore Persistence
+  user: AuthUser | null;
+  authLoading: boolean;
+  isGuestMode: boolean;
+  isFirebaseAvailable: boolean;
+  persistenceStatus: PersistenceStatus;
+  login: (email: string, pass: string) => Promise<void>;
+  register: (email: string, pass: string, displayName?: string) => Promise<void>;
+  logout: () => Promise<void>;
+  authModalOpen: boolean;
+  setAuthModalOpen: (open: boolean) => void;
 }
 
 const defaultFamilyProfile: FamilyProfile = {
@@ -112,6 +152,91 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [mobilityPlan, setMobilityPlan] = useState<MobilityPlanResponse | null>(null);
   const [mobilityLoading, setMobilityLoading] = useState<boolean>(false);
   const [mobilityRequest, setMobilityRequest] = useState<MobilityRequest>(defaultMobilityRequest);
+
+  // Authentication & Persistence state
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
+  const [isFirebaseAvailable, setIsFirebaseAvailable] = useState<boolean>(isFirebaseConfigured());
+  const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>('guest');
+  const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
+
+  const tokenRef = useRef<string | null>(null);
+
+  // Check backend Firebase status on startup
+  useEffect(() => {
+    async function checkStatus() {
+      const status = await fetchAuthServiceStatus();
+      if (status.firebase_available && isFirebaseConfigured()) {
+        setIsFirebaseAvailable(true);
+      } else {
+        setIsFirebaseAvailable(false);
+        setPersistenceStatus('guest');
+      }
+    }
+    checkStatus();
+  }, []);
+
+  // Listen for Firebase Auth state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateListener(async (firebaseUser) => {
+      setAuthLoading(true);
+      if (firebaseUser) {
+        try {
+          const token = await firebaseUser.getIdToken();
+          tokenRef.current = token;
+          const authUser: AuthUser = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+            token,
+          };
+          setUser(authUser);
+
+          // Fetch cloud profile from Firestore
+          const profile = await fetchUserProfile(token);
+          if (profile) {
+            if (profile.preferred_language) {
+              setLanguage(profile.preferred_language);
+            }
+            if (profile.location?.default_station_id) {
+              setSelectedStationId(profile.location.default_station_id);
+            }
+            if (profile.family?.vulnerability) {
+              setFamilyProfile(profile.family.vulnerability);
+            }
+            if (profile.routine?.preferences) {
+              setRoutinePreferences(profile.routine.preferences);
+            }
+            if (profile.household) {
+              setHouseholdInput(profile.household);
+            }
+            if (profile.mobility) {
+              setMobilityRequest(profile.mobility);
+            }
+            setPersistenceStatus('saved');
+          } else {
+            setPersistenceStatus('saved');
+          }
+        } catch (err) {
+          console.warn('Error loading user profile after sign-in:', err);
+          setPersistenceStatus('error');
+        }
+      } else {
+        // Logged out / guest mode
+        tokenRef.current = null;
+        setUser(null);
+        setPersistenceStatus('guest');
+        // Reset preferences to default
+        setFamilyProfile(defaultFamilyProfile);
+        setRoutinePreferences(defaultRoutinePreferences);
+        setHouseholdInput(defaultHouseholdInput);
+        setMobilityRequest(defaultMobilityRequest);
+      }
+      setAuthLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Load stations once
   useEffect(() => {
@@ -238,20 +363,148 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await loadMobilityPlan(selectedStationId, language, mobilityRequest);
   };
 
+  // Helper to persist updates to Cloud Firestore if authenticated
+  const syncProfileToCloud = async (update: Partial<UserProfile>) => {
+    const token = tokenRef.current || (await getCurrentIdToken());
+    if (!token) {
+      setPersistenceStatus('guest');
+      return;
+    }
+    setPersistenceStatus('saving');
+    try {
+      const res = await updateUserProfile(token, update);
+      if (res) {
+        setPersistenceStatus('saved');
+      } else {
+        setPersistenceStatus('error');
+      }
+    } catch {
+      setPersistenceStatus('error');
+    }
+  };
+
   const updateFamilyProfile = (partial: Partial<FamilyProfile>) => {
-    setFamilyProfile((prev) => ({ ...prev, ...partial }));
+    setFamilyProfile((prev) => {
+      const updated = { ...prev, ...partial };
+      syncProfileToCloud({
+        family: {
+          vulnerability: updated,
+          members: [],
+          configured_precautions: [],
+        },
+      });
+      return updated;
+    });
   };
 
   const updateRoutinePreferences = (partial: Partial<RoutinePreferences>) => {
-    setRoutinePreferences((prev) => ({ ...prev, ...partial }));
+    setRoutinePreferences((prev) => {
+      const updated = { ...prev, ...partial };
+      syncProfileToCloud({
+        routine: {
+          preferences: updated,
+          indoor_alternatives_enabled: true,
+        },
+      });
+      return updated;
+    });
   };
 
   const updateHouseholdInput = (partial: Partial<HouseholdInput>) => {
-    setHouseholdInput((prev) => ({ ...prev, ...partial }));
+    setHouseholdInput((prev) => {
+      const updated = { ...prev, ...partial };
+      syncProfileToCloud({ household: updated });
+      return updated;
+    });
   };
 
   const updateMobilityRequest = (partial: Partial<MobilityRequest>) => {
-    setMobilityRequest((prev) => ({ ...prev, ...partial }));
+    setMobilityRequest((prev) => {
+      const updated = { ...prev, ...partial };
+      syncProfileToCloud({ mobility: updated });
+      return updated;
+    });
+  };
+
+  const handleSetLanguage = (lang: SupportedLanguage) => {
+    setLanguage(lang);
+    syncProfileToCloud({ preferred_language: lang });
+  };
+
+  const handleSetSelectedStationId = (id: string) => {
+    setSelectedStationId(id);
+    const station = stations.find((s) => s.id === id);
+    syncProfileToCloud({
+      location: {
+        default_station_id: id,
+        default_city: station?.city || 'Delhi',
+      },
+    });
+  };
+
+  const saveCurrentRoutinePlan = async (): Promise<string | null> => {
+    if (!routinePlan) return null;
+    const token = tokenRef.current || (await getCurrentIdToken());
+    if (!token) {
+      setAuthModalOpen(true);
+      return null;
+    }
+    const routineId = `routine_${Date.now()}`;
+    return await saveUserRoutine(token, {
+      routine_id: routineId,
+      station_id: selectedStationId,
+      date_str: new Date().toISOString().split('T')[0],
+      plan: routinePlan,
+    });
+  };
+
+  const saveCurrentMobilityRoute = async (title: string = 'Daily Commute'): Promise<string | null> => {
+    if (!mobilityPlan) return null;
+    const token = tokenRef.current || (await getCurrentIdToken());
+    if (!token) {
+      setAuthModalOpen(true);
+      return null;
+    }
+    const routeId = `route_${Date.now()}`;
+    return await saveUserRoute(token, {
+      route_id: routeId,
+      title,
+      origin: mobilityRequest.starting_area,
+      destination: mobilityRequest.destination_area,
+      distance_km: mobilityRequest.distance_km,
+      current_mode: mobilityRequest.current_mode || 'petrol_car',
+      recommended_option: mobilityPlan.mode_comparisons?.[0] || {
+        mode: mobilityPlan.recommended_mode,
+        label: mobilityPlan.recommended_mode_label,
+      },
+    });
+  };
+
+  const login = async (email: string, pass: string) => {
+    setAuthLoading(true);
+    try {
+      await loginWithEmailPassword(email, pass);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const register = async (email: string, pass: string, displayName?: string) => {
+    setAuthLoading(true);
+    try {
+      await registerWithEmailPassword(email, pass, displayName);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    setAuthLoading(true);
+    try {
+      await logoutUser();
+    } finally {
+      setAuthLoading(false);
+    }
   };
 
   return (
@@ -260,14 +513,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         activeTab,
         setActiveTab,
         selectedStationId,
-        setSelectedStationId,
+        setSelectedStationId: handleSetSelectedStationId,
         stations,
         currentAqi,
         forecast,
         loading,
         error,
         language,
-        setLanguage,
+        setLanguage: handleSetLanguage,
         familyProfile,
         updateFamilyProfile,
         refreshData,
@@ -277,6 +530,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         routinePreferences,
         updateRoutinePreferences,
         refreshRoutinePlan,
+        saveCurrentRoutinePlan,
         indoorAssessment,
         indoorLoading,
         householdInput,
@@ -287,6 +541,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         mobilityRequest,
         updateMobilityRequest,
         refreshMobilityPlan,
+        saveCurrentMobilityRoute,
+        user,
+        authLoading,
+        isGuestMode: !user,
+        isFirebaseAvailable,
+        persistenceStatus,
+        login,
+        register,
+        logout,
+        authModalOpen,
+        setAuthModalOpen,
       }}
     >
       {children}

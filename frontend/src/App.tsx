@@ -12,6 +12,7 @@ import { DailyPlanner } from './components/planner/DailyPlanner';
 import { IndoorAssistant } from './components/indoor/IndoorAssistant';
 import { ChatAssistant } from './components/chat/ChatAssistant';
 import { MobilityAssistant } from './components/mobility/MobilityAssistant';
+import { AuthModal } from './components/auth/AuthModal';
 import { Footer } from './components/layout/Footer';
 import { AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
 import { translations } from './utils/translations';
@@ -128,6 +129,11 @@ const MainContent: React.FC = () => {
   return <DashboardContent />;
 };
 
+const AuthModalWrapper: React.FC = () => {
+  const { authModalOpen, setAuthModalOpen } = useApp();
+  return <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />;
+};
+
 export const App: React.FC = () => {
   return (
     <AppProvider>
@@ -137,6 +143,7 @@ export const App: React.FC = () => {
           <MainContent />
         </div>
         <Footer />
+        <AuthModalWrapper />
       </div>
     </AppProvider>
   );

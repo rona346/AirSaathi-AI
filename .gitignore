@@ -32,13 +32,16 @@ wheels/
 *.egg
 .pytest_cache/
 
-# Environment variables
+# Environment variables and secrets
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 *.env
+*serviceAccount*.json
+*service-account*.json
+*firebase-admin*.json
 
 # Build outputs
 frontend/dist/

@@ -19,7 +19,11 @@ class Settings(BaseSettings):
     # Secrets and keys strictly on the backend (Never exposed to frontend or Git)
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL_ID: str = "gemini-2.5-flash"
+    # Firebase Service Account & Project Configuration (Strictly backend-only)
     FIREBASE_PROJECT_ID: str = ""
+    FIREBASE_SERVICE_ACCOUNT_PATH: str = ""
+    FIREBASE_SERVICE_ACCOUNT_JSON: str = ""
+    FIREBASE_STORAGE_BUCKET: str = ""
 
     # Live AQI Provider API Keys (Strictly backend-only)
     DATAGOVIN_API_KEY: str = ""

@@ -1,5 +1,19 @@
 import React from 'react';
-import { Wind, MapPin, RefreshCw, Languages, Users, LayoutDashboard, Calendar, Home, MessageSquare, Navigation } from 'lucide-react';
+import {
+  Wind,
+  MapPin,
+  RefreshCw,
+  Languages,
+  Users,
+  LayoutDashboard,
+  Calendar,
+  Home,
+  MessageSquare,
+  Navigation,
+  User,
+  Cloud,
+  LogOut,
+} from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../utils/translations';
 
@@ -16,6 +30,11 @@ export const Navbar: React.FC = () => {
     loading,
     familyProfile,
     isDemoData,
+    user,
+    logout,
+    persistenceStatus,
+    isFirebaseAvailable,
+    setAuthModalOpen,
   } = useApp();
 
   const t = translations[language];
@@ -166,6 +185,42 @@ export const Navbar: React.FC = () => {
             <Languages className="w-3.5 h-3.5 text-emerald-400" />
             <span>{language === 'en' ? 'हिन्दी' : 'English'}</span>
           </button>
+
+          {/* User Auth & Cloud Persistence Button */}
+          {user ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 text-xs text-slate-200">
+              <div className="flex items-center gap-1 text-emerald-400 font-medium">
+                <Cloud className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[11px]">
+                  {persistenceStatus === 'saving'
+                    ? t.cloudSaving
+                    : persistenceStatus === 'error'
+                    ? t.cloudError
+                    : t.cloudSynced}
+                </span>
+              </div>
+              <span className="text-slate-600">|</span>
+              <span className="font-semibold text-white max-w-[100px] truncate" title={user.email || ''}>
+                {user.displayName || user.email?.split('@')[0] || 'User'}
+              </span>
+              <button
+                onClick={logout}
+                className="p-1 hover:text-rose-400 rounded transition text-slate-400 ml-0.5"
+                title={t.signOut}
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setAuthModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-xs font-semibold text-emerald-300 transition-colors"
+              title={isFirebaseAvailable ? 'Sign In / Register' : 'Guest Mode Active'}
+            >
+              <User className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{isFirebaseAvailable ? t.signIn : t.guestModeLabel}</span>
+            </button>
+          )}
 
           {/* Desktop Refresh Button */}
           <button

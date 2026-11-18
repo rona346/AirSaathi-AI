@@ -12,9 +12,17 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Helper to verify that client writes do not tamper with privileged administrative flags
+    function hasNoPrivilegedFieldChanges() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'is_admin', 'admin', 'permissions', 'claims']);
+    }
+
     // User profiles & family settings
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && (!request.resource.data.keys().hasAny(['role', 'is_admin', 'admin', 'permissions', 'claims']));
+      allow update: if isOwner(userId) && hasNoPrivilegedFieldChanges();
+      allow delete: if isOwner(userId);
       
       // Subcollections under user
       match /routines/{routineId} {

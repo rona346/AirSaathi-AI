@@ -27,6 +27,13 @@ export interface Translations {
   weatherObserved: string;
   weatherLive: string;
   weatherDemo: string;
+  signIn: string;
+  signOut: string;
+  guestModeLabel: string;
+  cloudSynced: string;
+  cloudSaving: string;
+  cloudError: string;
+  accountLabel: string;
   trappingPollutants: string;
   naqiScale: string;
   currentValue: string;
@@ -227,6 +234,13 @@ export const translations: Record<SupportedLanguage, Translations> = {
     weatherObserved: 'Observed:',
     weatherLive: 'Live Open-Meteo',
     weatherDemo: 'Simulated Weather',
+    signIn: 'Sign In',
+    signOut: 'Sign Out',
+    guestModeLabel: 'Guest Mode',
+    cloudSynced: 'Cloud Synced',
+    cloudSaving: 'Syncing...',
+    cloudError: 'Sync Offline',
+    accountLabel: 'Account',
     trappingPollutants: '(Trapping pollutants)',
     naqiScale: 'National Air Quality Scale (NAQI)',
     currentValue: 'Current:',
@@ -437,6 +451,13 @@ export const translations: Record<SupportedLanguage, Translations> = {
     weatherObserved: 'मौसम समय:',
     weatherLive: 'लाइव ओपन-मेटियो',
     weatherDemo: 'सिम्युलेटेड मौसम',
+    signIn: 'साइन इन करें',
+    signOut: 'साइन आउट',
+    guestModeLabel: 'अतिथि मोड',
+    cloudSynced: 'क्लाउड सिंक',
+    cloudSaving: 'सिंक हो रहा है...',
+    cloudError: 'ऑफ़लाइन',
+    accountLabel: 'खाता',
     trappingPollutants: '(प्रदूषक सतह पर फंसे हुए)',
     naqiScale: 'राष्ट्रीय वायु गुणवत्ता सूचकांक पैमाना (NAQI)',
     currentValue: 'वर्तमान मान:',
