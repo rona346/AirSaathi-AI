@@ -24,11 +24,22 @@ from backend.app.services.live_aqi_provider import get_active_aqi_provider
 
 logger = logging.getLogger(__name__)
 
-GEMINI_API_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
-
 
 class RoutinePlannerService:
     """Orchestrates AI-powered daily routine generation with fallback resilience."""
+
+    @classmethod
+    def _sanitize_json_text(cls, raw: str) -> str:
+        """
+        Strips optional Markdown code fences (e.g. ```json ... ``` or ``` ... ```)
+        from raw model output to prevent JSONDecodeError.
+        """
+        clean = raw.strip()
+        if clean.startswith("```"):
+            clean = clean.split("\n", 1)[-1] if "\n" in clean else clean.lstrip("`")
+        if clean.endswith("```"):
+            clean = clean.rsplit("```", 1)[0]
+        return clean.strip()
 
     @classmethod
     def generate_routine_plan(cls, request: RoutinePlanRequest) -> RoutinePlanResponse:
@@ -69,7 +80,8 @@ class RoutinePlannerService:
         """Calls Google Gemini API requesting strict structured JSON."""
         prompt = cls._build_gemini_prompt(aqi_data, family, preferences, language)
 
-        url = f"{GEMINI_API_ENDPOINT}?key={settings.GEMINI_API_KEY}"
+        model_id = getattr(settings, "GEMINI_MODEL_ID", "gemini-2.5-flash") or "gemini-2.5-flash"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={settings.GEMINI_API_KEY}"
         headers = {"Content-Type": "application/json"}
         payload = {
             "contents": [
@@ -84,46 +96,67 @@ class RoutinePlannerService:
             },
         }
 
-        with httpx.Client(timeout=15.0) as client:
-            res = client.post(url, json=payload, headers=headers)
-            if res.status_code != 200:
-                logger.warning(f"Gemini API returned HTTP {res.status_code}: {res.text[:200]}")
-                return None
+        try:
+            with httpx.Client(timeout=15.0) as client:
+                res = client.post(url, json=payload, headers=headers)
+                if res.status_code != 200:
+                    logger.warning(f"Gemini API returned HTTP {res.status_code}: {res.text[:200]}")
+                    return None
 
-            data = res.json()
-            candidates = data.get("candidates", [])
-            if not candidates:
-                return None
+                data = res.json()
+                candidates = data.get("candidates", [])
+                if not candidates:
+                    logger.warning("Gemini API response contained no candidates.")
+                    return None
 
-            raw_text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-            if not raw_text:
-                return None
+                # Extract text across all parts (supporting reasoning/thinking and multi-part content)
+                raw_text = ""
+                for part in candidates[0].get("content", {}).get("parts", []):
+                    if isinstance(part, dict) and "text" in part and part["text"]:
+                        raw_text += part["text"]
 
-            parsed_json = json.loads(raw_text)
+                raw_text = raw_text.strip()
+                if not raw_text:
+                    logger.warning("Gemini response contained no text content across all parts.")
+                    return None
 
-            # Inject metadata to enforce data provenance
-            parsed_json["station_id"] = aqi_data.station.id
-            parsed_json["station_name"] = aqi_data.station.name
-            parsed_json["city"] = aqi_data.station.city
-            parsed_json["aqi"] = aqi_data.aqi
-            parsed_json["category"] = aqi_data.category.value
-            parsed_json["prominent_pollutant"] = aqi_data.prominent_pollutant
-            parsed_json["is_demo_data"] = aqi_data.is_demo_data
-            parsed_json["data_source"] = aqi_data.data_source
-            parsed_json["observed_at"] = aqi_data.last_updated.isoformat()
-            parsed_json["language"] = language
-            parsed_json["ai_provider"] = "google-gemini"
-            parsed_json["ai_generated"] = True
-            parsed_json["generated_at"] = datetime.utcnow().isoformat()
+                # Strip optional markdown JSON fences before json.loads
+                clean_json_str = cls._sanitize_json_text(raw_text)
+                parsed_json = json.loads(clean_json_str)
 
-            # Ensure disclaimer is always present and medically conservative
-            parsed_json["disclaimer"] = (
-                "चिकित्सीय अस्वीकरण: यह योजना पर्यावरणीय जोखिम न्यूनीकरण सुझाव प्रदान करती है, चिकित्सकीय परामर्श नहीं।"
-                if language == "hi"
-                else "Medical Disclaimer: This routine plan provides environmental exposure mitigation guidance, not medical diagnosis or treatment. Sensitive individuals should follow their physician's action plan."
-            )
+                if not isinstance(parsed_json, dict):
+                    logger.warning(f"Gemini output is not a JSON object (got {type(parsed_json).__name__}).")
+                    return None
 
-            return RoutinePlanResponse.model_validate(parsed_json)
+                # Inject metadata to enforce data provenance
+                parsed_json["station_id"] = aqi_data.station.id
+                parsed_json["station_name"] = aqi_data.station.name
+                parsed_json["city"] = aqi_data.station.city
+                parsed_json["aqi"] = aqi_data.aqi
+                parsed_json["category"] = aqi_data.category.value
+                parsed_json["prominent_pollutant"] = aqi_data.prominent_pollutant
+                parsed_json["is_demo_data"] = aqi_data.is_demo_data
+                parsed_json["data_source"] = aqi_data.data_source
+                parsed_json["observed_at"] = aqi_data.last_updated.isoformat()
+                parsed_json["language"] = language
+                parsed_json["ai_provider"] = "google-gemini"
+                parsed_json["ai_generated"] = True
+                parsed_json["generated_at"] = datetime.utcnow().isoformat()
+
+                # Ensure disclaimer is always present and medically conservative
+                parsed_json["disclaimer"] = (
+                    "चिकित्सीय अस्वीकरण: यह योजना पर्यावरणीय जोखिम न्यूनीकरण सुझाव प्रदान करती है, चिकित्सकीय परामर्श नहीं।"
+                    if language == "hi"
+                    else "Medical Disclaimer: This routine plan provides environmental exposure mitigation guidance, not medical diagnosis or treatment. Sensitive individuals should follow their physician's action plan."
+                )
+
+                return RoutinePlanResponse.model_validate(parsed_json)
+        except json.JSONDecodeError as jde:
+            logger.warning(f"Failed to decode JSON from Gemini output: {jde}")
+            return None
+        except Exception as e:
+            logger.warning(f"Error calling or validating Gemini plan: {e}")
+            return None
 
     @classmethod
     def _build_gemini_prompt(
