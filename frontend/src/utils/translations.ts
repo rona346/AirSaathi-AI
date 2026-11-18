@@ -166,6 +166,31 @@ export interface Translations {
   chatAiBadge: string;
   chatRulesBadge: string;
   chatEmptyState: string;
+  // Module 5 Mobility Assistant Translations
+  mobilityTabTitle: string;
+  mobilitySubtitle: string;
+  commutePlannerTitle: string;
+  distanceKmLabel: string;
+  currentModeLabel: string;
+  commutePurposeLabel: string;
+  commuteFrequencyLabel: string;
+  accessibilityLabel: string;
+  vehicleOccupancyLabel: string;
+  calculateMobilityBtn: string;
+  calculatingMobility: string;
+  recommendedModeTitle: string;
+  activeMobilityAlertTitle: string;
+  modeComparisonTitle: string;
+  carpoolWidgetTitle: string;
+  carpoolWidgetSubtitle: string;
+  soloBaselineLabel: string;
+  shared3PersonLabel: string;
+  dailyAvoidedLabel: string;
+  annualAvoidedLabel: string;
+  co2eSavingsLabel: string;
+  perPassengerEmissionsLabel: string;
+  methodologyNotesTitle: string;
+  mobilityDisclaimerTitle: string;
 }
 
 export const translations: Record<SupportedLanguage, Translations> = {
@@ -348,6 +373,31 @@ export const translations: Record<SupportedLanguage, Translations> = {
     chatAiBadge: 'Google Gemini 2.5 Flash',
     chatRulesBadge: 'Expert Rules Fallback',
     chatEmptyState: 'Ask AirSaathi anything about smog, AQI, masks, indoor air, or family precautions.',
+    // Module 5 Mobility Assistant Translations
+    mobilityTabTitle: 'Sustainable Mobility',
+    mobilitySubtitle: 'AQI-Aware Commute Planning & Urban Transport Emission Benchmark',
+    commutePlannerTitle: 'Sustainable Commute Configuration',
+    distanceKmLabel: 'One-Way Distance (km):',
+    currentModeLabel: 'Current Commute Mode:',
+    commutePurposeLabel: 'Travel Purpose:',
+    commuteFrequencyLabel: 'Commute Frequency:',
+    accessibilityLabel: 'Accessibility Needs:',
+    vehicleOccupancyLabel: 'Vehicle Occupancy:',
+    calculateMobilityBtn: 'Calculate Mobility Strategy',
+    calculatingMobility: 'Optimizing Commute & Computing Emissions...',
+    recommendedModeTitle: 'Recommended Sustainable Transport Option',
+    activeMobilityAlertTitle: 'Active Mobility & Inversion Smog Advisory',
+    modeComparisonTitle: 'Transport Mode Carbon Emission Comparison',
+    carpoolWidgetTitle: 'Carpooling Emission Reductions',
+    carpoolWidgetSubtitle: 'Estimated savings from shared occupancy vs solo car driving',
+    soloBaselineLabel: 'Solo Driver Baseline:',
+    shared3PersonLabel: '3-Person Shared Pool:',
+    dailyAvoidedLabel: 'Daily CO2e Avoided:',
+    annualAvoidedLabel: 'Annual CO2e Avoided (250 work days):',
+    co2eSavingsLabel: 'CO2e Savings:',
+    perPassengerEmissionsLabel: 'Per-Passenger Emissions:',
+    methodologyNotesTitle: 'Scientific Methodology & Emission Assumptions',
+    mobilityDisclaimerTitle: 'Environmental & Health Advisory Disclaimer',
   },
   hi: {
     appName: 'एयरसाथी AI',
@@ -528,6 +578,31 @@ export const translations: Record<SupportedLanguage, Translations> = {
     chatAiBadge: 'गूगल जेमिनी 2.5 फ्लैश',
     chatRulesBadge: 'विशेषज्ञ नियम बैकअप',
     chatEmptyState: 'स्मॉग, मास्क, इनडोर वायु या परिवार की सुरक्षा को लेकर कोई भी प्रश्न पूछें।',
+    // Module 5 Mobility Assistant Translations
+    mobilityTabTitle: 'सतत गतिशीलता',
+    mobilitySubtitle: 'AQI-सचेत आवागमन नियोजक व शहरी परिवहन कार्बन बेंचमार्क',
+    commutePlannerTitle: 'सतत आवागमन प्राथमिकताएं',
+    distanceKmLabel: 'एक तरफ की यात्रा दूरी (किमी):',
+    currentModeLabel: 'वर्तमान आवागमन साधन:',
+    commutePurposeLabel: 'यात्रा का उद्देश्य:',
+    commuteFrequencyLabel: 'आवागमन आवृत्ति:',
+    accessibilityLabel: 'शारीरिक सुगमता आवश्यकताएं:',
+    vehicleOccupancyLabel: 'वाहन में यात्रियों की संख्या:',
+    calculateMobilityBtn: 'गतिशीलता योजना का विश्लेषण करें',
+    calculatingMobility: 'उत्सर्जन व AQI जोखिम का विश्लेषण जारी है...',
+    recommendedModeTitle: 'सर्वोत्तम अनुशंसित टिकाऊ परिवहन साधन',
+    activeMobilityAlertTitle: 'सक्रिय शारीरिक आवागमन व स्मॉग इनवर्जन चेतावनी',
+    modeComparisonTitle: 'विभिन्न परिवहन साधनों के कार्बन उत्सर्जन की तुलना',
+    carpoolWidgetTitle: 'कारपूलिंग से उत्सर्जन में बचत',
+    carpoolWidgetSubtitle: 'अकेले कार चलाने की तुलना में साझा सफर से अनुमानित बचत',
+    soloBaselineLabel: 'अकेले निजी कार का उत्सर्जन:',
+    shared3PersonLabel: '3-व्यक्ति साझा कारपूलिंग:',
+    dailyAvoidedLabel: 'दैनिक CO2e बचत:',
+    annualAvoidedLabel: 'वार्षिक CO2e बचत (250 कार्य दिवस):',
+    co2eSavingsLabel: 'कार्बन उत्सर्जन बचत:',
+    perPassengerEmissionsLabel: 'प्रति-यात्री उत्सर्जन:',
+    methodologyNotesTitle: 'वैज्ञानिक गणना पद्धति व उत्सर्जन मान्यताएं',
+    mobilityDisclaimerTitle: 'पर्यावरणीय व स्वास्थ्य परामर्श अस्वीकरण',
   },
 };
 

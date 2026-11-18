@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wind, MapPin, RefreshCw, Languages, Users, LayoutDashboard, Calendar, Home, MessageSquare } from 'lucide-react';
+import { Wind, MapPin, RefreshCw, Languages, Users, LayoutDashboard, Calendar, Home, MessageSquare, Navigation } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../utils/translations';
 
@@ -103,6 +103,17 @@ export const Navbar: React.FC = () => {
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span>{t.chatTabTitle}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('mobility')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'mobility'
+                  ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Navigation className="w-3.5 h-3.5" />
+              <span>{t.mobilityTabTitle}</span>
             </button>
           </nav>
 
@@ -214,6 +225,17 @@ export const Navbar: React.FC = () => {
         >
           <MessageSquare className="w-3.5 h-3.5" />
           <span className="truncate">{t.chatTabTitle}</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('mobility')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'mobility'
+              ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20'
+              : 'bg-slate-900 text-slate-400 border border-slate-800'
+          }`}
+        >
+          <Navigation className="w-3.5 h-3.5" />
+          <span className="truncate">{t.mobilityTabTitle}</span>
         </button>
       </div>
     </header>

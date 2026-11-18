@@ -2,9 +2,10 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { CurrentAqiData, FamilyProfile, ForecastData, StationInfo, SupportedLanguage } from '../types/aqi';
 import { RoutinePlan, RoutinePreferences } from '../types/routine';
 import { HouseholdInput, IndoorAssessmentResponse } from '../types/indoor';
-import { fetchCurrentAqi, fetchForecast, fetchIndoorAssessment, fetchRoutinePlan, fetchStations } from '../services/api';
+import { MobilityPlanResponse, MobilityRequest } from '../types/mobility';
+import { fetchCurrentAqi, fetchForecast, fetchIndoorAssessment, fetchMobilityPlan, fetchRoutinePlan, fetchStations } from '../services/api';
 
-export type AppTab = 'dashboard' | 'planner' | 'indoor' | 'chat';
+export type AppTab = 'dashboard' | 'planner' | 'indoor' | 'chat' | 'mobility';
 
 interface AppContextType {
   activeTab: AppTab;
@@ -34,6 +35,12 @@ interface AppContextType {
   householdInput: HouseholdInput;
   updateHouseholdInput: (partial: Partial<HouseholdInput>) => void;
   refreshIndoorAssessment: () => Promise<void>;
+  // Module 5 Sustainable Mobility state
+  mobilityPlan: MobilityPlanResponse | null;
+  mobilityLoading: boolean;
+  mobilityRequest: MobilityRequest;
+  updateMobilityRequest: (partial: Partial<MobilityRequest>) => void;
+  refreshMobilityPlan: () => Promise<void>;
 }
 
 const defaultFamilyProfile: FamilyProfile = {
@@ -68,6 +75,15 @@ const defaultHouseholdInput: HouseholdInput = {
   purifier_has_hepa: true,
 };
 
+const defaultMobilityRequest: MobilityRequest = {
+  distance_km: 12.0,
+  current_mode: 'petrol_car',
+  frequency: 'daily_round_trip',
+  purpose: 'office',
+  accessibility: 'none',
+  occupancy: 1,
+};
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -91,6 +107,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [indoorAssessment, setIndoorAssessment] = useState<IndoorAssessmentResponse | null>(null);
   const [indoorLoading, setIndoorLoading] = useState<boolean>(false);
   const [householdInput, setHouseholdInput] = useState<HouseholdInput>(defaultHouseholdInput);
+
+  // Module 5 sustainable mobility state
+  const [mobilityPlan, setMobilityPlan] = useState<MobilityPlanResponse | null>(null);
+  const [mobilityLoading, setMobilityLoading] = useState<boolean>(false);
+  const [mobilityRequest, setMobilityRequest] = useState<MobilityRequest>(defaultMobilityRequest);
 
   // Load stations once
   useEffect(() => {
@@ -159,18 +180,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     []
   );
 
+  // Load mobility plan
+  const loadMobilityPlan = useCallback(
+    async (stationId: string, lang: SupportedLanguage, req: MobilityRequest) => {
+      setMobilityLoading(true);
+      try {
+        const { data } = await fetchMobilityPlan({
+          ...req,
+          station_id: stationId,
+          language: lang,
+        });
+        setMobilityPlan(data);
+      } catch (err) {
+        console.error('Failed to load mobility plan:', err);
+      } finally {
+        setMobilityLoading(false);
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     if (selectedStationId) {
       loadStationData(selectedStationId);
       loadRoutinePlan(selectedStationId, language, familyProfile, routinePreferences);
       loadIndoorAssessment(selectedStationId, language, householdInput);
+      loadMobilityPlan(selectedStationId, language, mobilityRequest);
     }
-  }, [selectedStationId, language, familyProfile, routinePreferences, householdInput, loadRoutinePlan, loadIndoorAssessment]);
+  }, [
+    selectedStationId,
+    language,
+    familyProfile,
+    routinePreferences,
+    householdInput,
+    mobilityRequest,
+    loadRoutinePlan,
+    loadIndoorAssessment,
+    loadMobilityPlan,
+  ]);
 
   const refreshData = async () => {
     await loadStationData(selectedStationId);
     await loadRoutinePlan(selectedStationId, language, familyProfile, routinePreferences);
     await loadIndoorAssessment(selectedStationId, language, householdInput);
+    await loadMobilityPlan(selectedStationId, language, mobilityRequest);
   };
 
   const refreshRoutinePlan = async () => {
@@ -179,6 +232,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const refreshIndoorAssessment = async () => {
     await loadIndoorAssessment(selectedStationId, language, householdInput);
+  };
+
+  const refreshMobilityPlan = async () => {
+    await loadMobilityPlan(selectedStationId, language, mobilityRequest);
   };
 
   const updateFamilyProfile = (partial: Partial<FamilyProfile>) => {
@@ -191,6 +248,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateHouseholdInput = (partial: Partial<HouseholdInput>) => {
     setHouseholdInput((prev) => ({ ...prev, ...partial }));
+  };
+
+  const updateMobilityRequest = (partial: Partial<MobilityRequest>) => {
+    setMobilityRequest((prev) => ({ ...prev, ...partial }));
   };
 
   return (
@@ -221,6 +282,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         householdInput,
         updateHouseholdInput,
         refreshIndoorAssessment,
+        mobilityPlan,
+        mobilityLoading,
+        mobilityRequest,
+        updateMobilityRequest,
+        refreshMobilityPlan,
       }}
     >
       {children}

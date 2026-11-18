@@ -41,7 +41,8 @@ export const QuickModuleNav: React.FC = () => {
       desc: language === 'hi' ? 'कम उत्सर्जन मार्ग, मेट्रो/ई-बस विकल्प व उत्सर्जन तुलना' : 'Low-exposure commuting routes, metro/EV transit planning, and fleet alerts',
       icon: Navigation,
       color: 'from-amber-500/20 to-orange-500/10 text-amber-400 border-amber-500/30',
-      status: t.statusNext,
+      status: t.statusActive,
+      isAvailable: true,
     },
     {
       id: 'impact',
@@ -49,7 +50,7 @@ export const QuickModuleNav: React.FC = () => {
       desc: language === 'hi' ? 'पारिवारिक कार्बन फुटप्रिंट, वायु उत्सर्जन बचत और लक्ष्य' : 'Community emission savings, carbon avoided, and collective green milestones',
       icon: Leaf,
       color: 'from-teal-500/20 to-emerald-500/10 text-teal-400 border-teal-500/30',
-      status: t.statusPlanned,
+      status: t.statusNext,
     },
     {
       id: 'family',
@@ -84,6 +85,7 @@ export const QuickModuleNav: React.FC = () => {
                   if (m.id === 'routine') setActiveTab('planner');
                   if (m.id === 'indoor') setActiveTab('indoor');
                   if (m.id === 'chat') setActiveTab('chat');
+                  if (m.id === 'mobility') setActiveTab('mobility');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
               }}

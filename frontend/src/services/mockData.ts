@@ -1,5 +1,6 @@
 import { CurrentAqiData, ForecastData, StationInfo } from '../types/aqi';
 import { ChatResponse } from '../types/chat';
+import { MobilityPlanResponse, MobilityRequest, ModeEmissionDetail, TransportMode } from '../types/mobility';
 import { getAqiCategory, concentrationFromSubindex, calculateSubindex } from '../utils/aqiUtils';
 
 export const MOCK_STATIONS: StationInfo[] = [
@@ -655,5 +656,182 @@ export const getMockChatResponse = (
       ? 'चिकित्सीय अस्वीकरण: एयरसाथी AI केवल पर्यावरणीय दिशानिर्देश प्रदान करता है, कोई चिकित्सकीय परामर्श या दवा का नुस्खा नहीं।'
       : 'Medical Disclaimer: AirSaathi AI provides environmental risk guidance, not medical diagnosis or prescription. Consult a qualified physician for respiratory distress.',
     timestamp: new Date().toISOString(),
+  };
+};
+
+export const getMockMobilityPlan = (request: MobilityRequest): MobilityPlanResponse => {
+  const stationId = request.station_id || 'delhi-anand-vihar';
+  const language = request.language || 'en';
+  const isHi = language === 'hi';
+  const distance = Math.max(0.1, request.distance_km || 10.0);
+  const currentMode = request.current_mode || 'petrol_car';
+  const station = MOCK_STATIONS.find((s) => s.id === stationId) || MOCK_STATIONS[0];
+  const current = getMockCurrentAqi(stationId);
+  const aqi = current.aqi;
+
+  const tripsPerDay = request.frequency === 'one_way' || request.frequency === 'occasional' ? 1.0 : 2.0;
+
+  // Emission factors (g CO2e / km per passenger)
+  const factors: Record<TransportMode, { direct: number; grid: number; perP: number; labelEn: string; labelHi: string }> = {
+    metro: { direct: 0.0, grid: 22.0 * distance, perP: 22.0 * distance, labelEn: 'Urban Metro Rail', labelHi: 'मेट्रो रेल' },
+    electric_bus: { direct: 0.0, grid: 24.5 * distance, perP: 24.5 * distance, labelEn: 'Electric City Bus (e-Bus)', labelHi: 'इलेक्ट्रिक बस (e-Bus)' },
+    public_bus: { direct: 31.4 * distance, grid: 0.0, perP: 31.4 * distance, labelEn: 'Public City Bus', labelHi: 'पब्लिक सिटी बस' },
+    carpool: { direct: 55.0 * distance, grid: 0.0, perP: 55.0 * distance, labelEn: 'Shared Carpooling (3-person)', labelHi: 'कारपूलिंग (3-व्यक्ति)' },
+    electric_car: { direct: 0.0, grid: 71.6 * distance, perP: 71.6 * distance, labelEn: 'Electric Car (EV)', labelHi: 'इलेक्ट्रिक कार (EV)' },
+    electric_two_wheeler: { direct: 0.0, grid: 25.1 * distance, perP: 25.1 * distance, labelEn: 'Electric Scooter (e-2W)', labelHi: 'इलेक्ट्रिक स्कूटर (e-2W)' },
+    cng_auto: { direct: 36.0 * distance, grid: 0.0, perP: 36.0 * distance, labelEn: 'Shared CNG Auto', labelHi: 'सीएनजी ऑटो' },
+    two_wheeler: { direct: 52.0 * distance, grid: 0.0, perP: 52.0 * distance, labelEn: 'Petrol Two-Wheeler', labelHi: 'पेट्रोल दोपहिया' },
+    petrol_car: { direct: 165.0 * distance, grid: 0.0, perP: 165.0 * distance, labelEn: 'Private Petrol Car', labelHi: 'निजी पेट्रोल कार' },
+    diesel_car: { direct: 175.0 * distance, grid: 0.0, perP: 175.0 * distance, labelEn: 'Private Diesel Car', labelHi: 'निजी डीजल कार' },
+    cycling: { direct: 0.0, grid: 0.0, perP: 0.0, labelEn: 'Active Cycling', labelHi: 'साइकिल चलाना' },
+    walking: { direct: 0.0, grid: 0.0, perP: 0.0, labelEn: 'Active Walking', labelHi: 'पैदल चलना' },
+  };
+
+  const basePerP = 165.0 * distance;
+
+  const modeComparisons: ModeEmissionDetail[] = (Object.keys(factors) as TransportMode[]).map((mode) => {
+    const f = factors[mode];
+    const savingsG = Math.max(0, Math.round((basePerP - f.perP) * 10) / 10);
+    const savingsPct = basePerP > 0 ? Math.round((savingsG / basePerP) * 1000) / 10 : 0;
+
+    let suitability = isHi ? 'अनुशंसित' : 'Recommended';
+    let verdict = isHi ? 'सुचारु यात्रा विकल्प।' : 'Viable transit option.';
+    let exposure = 'Low';
+    let precautions: string[] = [];
+
+    if (aqi >= 301) {
+      if (mode === 'walking' || mode === 'cycling') {
+        suitability = isHi ? 'आज वर्जित' : 'Not Advised Today';
+        verdict = isHi
+          ? 'अत्यधिक स्मॉग जोखिम: गहरी सांस लेने से PM2.5 फेफड़ों में गहराई तक समा जाता है।'
+          : 'Critical Smog Hazard: Deep inhalation bypasses upper airways during severe pollution.';
+        exposure = 'Severe';
+        precautions = isHi ? ['सक्रिय यात्रा टालें', 'मेट्रो या वातानुकूलित बस चुनें'] : ['Avoid outdoor active travel', 'Choose enclosed AC transit'];
+      } else if (mode === 'metro') {
+        suitability = isHi ? 'सर्वोत्तम' : 'Optimal Today';
+        verdict = isHi ? 'भूमिगत व वातानुकूलित कोच सड़क स्तर के जहरीले स्मॉग से बचाते हैं।' : 'Grade-separated air-conditioned electric transit bypasses surface smog.';
+        exposure = 'Low';
+        precautions = isHi ? ['स्टेशन पर N95 मास्क पहनें'] : ['Wear N95 mask at station gates'];
+      } else if (mode === 'two_wheeler' || mode === 'electric_two_wheeler') {
+        suitability = isHi ? 'सावधानी' : 'Caution - High Exposure';
+        verdict = isHi ? 'सड़क स्तर पर अत्यधिक धुआं। बिना मास्क यात्रा न करें।' : 'High roadside soot exposure. Do not travel unmasked.';
+        exposure = 'High';
+        precautions = isHi ? ['N95 मास्क अनिवार्य रूप से लगाएं'] : ['Wear certified N95 respirator'];
+      }
+    } else if (aqi >= 201) {
+      if (mode === 'walking' && distance > 1.5) {
+        suitability = isHi ? 'वर्जित' : 'Not Advised';
+        verdict = isHi ? 'लंबी पैदल दूरी फेफड़ों पर प्रदूषण का भार बढ़ाती है।' : 'Long walking increases cumulative PM2.5 lung load.';
+        exposure = 'High';
+      } else if (mode === 'cycling') {
+        suitability = isHi ? 'सावधानी' : 'Caution';
+        verdict = isHi ? 'साइकिल चलाते समय सांस की गति तेज होती है।' : 'Aerobic effort accelerates particulate inhalation.';
+        exposure = 'Moderate';
+      }
+    }
+
+    return {
+      mode,
+      label: isHi ? f.labelHi : f.labelEn,
+      direct_emissions_g: Math.round(f.direct * 10) / 10,
+      grid_indirect_emissions_g: Math.round(f.grid * 10) / 10,
+      total_emissions_g: Math.round((f.direct + f.grid) * 10) / 10,
+      per_passenger_emissions_g: Math.round(f.perP * 10) / 10,
+      co2e_savings_vs_baseline_g: savingsG,
+      co2e_savings_pct: savingsPct,
+      suitability_score: suitability,
+      aqi_safety_verdict: verdict,
+      exposure_level: exposure,
+      precautions,
+    };
+  });
+
+  // Current mode metrics
+  const currentFact = factors[currentMode] || factors.petrol_car;
+  const currentTripG = Math.round(currentFact.perP * 10) / 10;
+  const currentDailyG = Math.round(currentTripG * tripsPerDay * 10) / 10;
+
+  // Carpool potential
+  const soloG = Math.round(165.0 * distance * 10) / 10;
+  const shared3G = Math.round((soloG / 3.0) * 10) / 10;
+  const dailySaveKg = Math.round(((soloG - shared3G) * tripsPerDay / 1000.0) * 100) / 100;
+  const annualSaveKg = Math.round(dailySaveKg * 250.0 * 10) / 10;
+
+  // Recommendation logic
+  let recMode: TransportMode = 'metro';
+  let recLabel = isHi ? 'मेट्रो रेल' : 'Urban Metro Rail';
+  let recReason = isHi
+    ? 'लंबी दूरी के लिए मेट्रो 86% कार्बन उत्सर्जन घटाती है और सड़क स्तर के स्मॉग से बचाती है।'
+    : 'Electrified rail cuts per-passenger emissions by ~86% and shields from surface smog.';
+
+  if (aqi <= 200 && distance <= 2.0) {
+    recMode = 'walking';
+    recLabel = isHi ? 'पैदल चलना' : 'Active Walking';
+    recReason = isHi ? '2 किमी से कम दूरी में पैदल चलना शून्य उत्सर्जन और स्वास्थ्यवर्धक है।' : 'Under 2 km with moderate AQI: 100% zero emissions with cardiovascular fitness.';
+  } else if (aqi <= 200 && distance <= 6.0) {
+    recMode = 'cycling';
+    recLabel = isHi ? 'साइकिल चलाना' : 'Active Cycling';
+    recReason = isHi ? 'मध्यम दूरी के लिए साइकिल सबसे टिकाऊ और शून्य-उत्सर्जन साधन है।' : 'Zero tailpipe emissions and zero grid reliance for trips under 6 km.';
+  } else if (distance < 5.0) {
+    recMode = 'carpool';
+    recLabel = isHi ? 'कारपूलिंग (3-व्यक्ति)' : 'Shared Carpool';
+    recReason = isHi ? 'साझा कारपूल से व्यक्तिगत उत्सर्जन में 67% की सीधी कटौती होती है।' : '3-person carpool cuts personal carbon emissions by 67% without route transfers.';
+  }
+
+  const activeAdvisory = aqi >= 301
+    ? (isHi
+        ? 'चेतावनी: वायु गुणवत्ता गंभीर (AQI > 300) है। पैदल या साइकिल से यात्रा करने पर गहरी सांस लेने से PM2.5 फेफड़ों में गहराई तक पहुंचता है। आज सक्रिय आउटडोर आवागमन पूरी तरह टालें।'
+        : 'Critical Warning: AQI is Severe (> 300). Strenuous walking or cycling induces high minute-ventilation, depositing toxic PM2.5 deep into alveoli. Avoid outdoor active commuting today.')
+    : (isHi
+        ? 'सावधानी: वायु गुणवत्ता बहुत खराब है। 1.5 किमी से अधिक सक्रिय यात्रा न करें और N95 मास्क पहनें।'
+        : 'Caution: AQI is elevated. Restrict active travel to short trips and wear a certified N95 respirator.');
+
+  const aiText = isHi
+    ? `### सतत गतिशीलता परामर्श (${station.name})\n\n- **वर्तमान उत्सर्जन:** आपकी ${distance} किमी की यात्रा में प्रतिदिन लगभग **${currentDailyG} ग्राम CO2e** उत्सर्जित होता है।\n- **सर्वोत्तम अनुशंसित साधन:** **${recLabel}**\n  - *कारण:* ${recReason}\n- **वायु गुणवत्ता व स्वास्थ्य सावधानी:** वर्तमान में AQI **${aqi}** (${current.category}) है। ${activeAdvisory}\n- **कारपूलिंग व सार्वजनिक परिवहन:** मेट्रो या 3-व्यक्ति कारपूलिंग अपनाने से यात्रा का कार्बन फुटप्रिंट 67% से 85% तक घट जाता है।\n- **वाहन केबिन प्रोटोकॉल:** सड़क यात्रा के दौरान वाहन की खिड़कियां बंद रखें और एयर कंडीशनर को **रीसर्क्युलेशन मोड** पर रखें।`
+    : `### Sustainable Mobility Strategy (${station.name})\n\n- **Current Carbon Baseline:** Your ${distance} km commute generates approximately **${currentDailyG} g CO2e** per day.\n- **Recommended Mode:** **${recLabel}**\n  - *Rationale:* ${recReason}\n- **AQI Exposure Safeguard:** Currently, AQI is **${aqi}** (${current.category}). ${activeAdvisory}\n- **Public Transit & Ridesharing:** Switching to electrified rail (Metro) or a 3-person carpool reduces per-passenger carbon emissions by 67% to 86%.\n- **Vehicle Cabin Protocol:** Keep car windows closed in congested corridors and switch ventilation to **Air Recirculation Mode** to keep out toxic roadside particulates.`;
+
+  return {
+    station_id: station.id,
+    station_name: station.name,
+    city: station.city,
+    aqi,
+    category: current.category,
+    prominent_pollutant: current.prominent_pollutant,
+    is_demo_data: true,
+    data_source: 'AirSaathi Baseline Demo',
+    observed_at: new Date().toISOString(),
+    language,
+    distance_km: distance,
+    frequency: request.frequency || 'daily_round_trip',
+    current_mode: currentMode,
+    current_trip_emissions_g: currentTripG,
+    current_daily_emissions_g: currentDailyG,
+    mode_comparisons: modeComparisons,
+    recommended_mode: recMode,
+    recommended_mode_label: recLabel,
+    recommended_mode_reason: recReason,
+    active_mobility_advisory: activeAdvisory,
+    carpool_potential: {
+      solo_trip_emissions_g: soloG,
+      shared_2_person_emissions_g: Math.round((soloG / 2.0) * 10) / 10,
+      shared_3_person_emissions_g: shared3G,
+      shared_4_person_emissions_g: Math.round((soloG / 4.0) * 10) / 10,
+      daily_savings_kg: dailySaveKg,
+      annual_savings_kg: annualSaveKg,
+    },
+    ai_recommendation: aiText,
+    ai_provider: 'expert-rules-fallback',
+    ai_generated: false,
+    methodology_notes: [
+      'Modeled emissions are calculated based on India Central Electricity Authority (CEA v19) national grid baseline: ~716 g CO2/kWh and ARAI standard vehicle test figures.',
+      'Private petrol car baseline: ~165 g CO2e/km direct tailpipe emissions.',
+      'Electric vehicles (EVs) have zero direct tailpipe exhaust; upstream power-grid emissions are modeled at ~107 g CO2e/km (4W) and ~25 g CO2e/km (2W).',
+      'Public bus (average 35 passengers) and Metro Rail (~22 g CO2e/passenger-km) yield high passenger-kilometer efficiency.',
+      'Active travel (walking/cycling) is modeled as zero-emission but carries respiratory exposure risks during high AQI episodes.',
+    ],
+    disclaimer: isHi
+      ? 'चिकित्सीय व पर्यावरणीय अस्वीकरण: प्रदर्शित कार्बन गणना मॉडल्ड अनुमानों पर आधारित है। वायु प्रदूषण के दिनों में शारीरिक यात्रा (पैदल/साइकिल) की तुलना में श्वसन सुरक्षा को प्राथमिकता दें।'
+      : 'Medical & Environmental Disclaimer: Emission metrics represent engineering models based on standardized parameters, not measured tailpipe tests. During elevated AQI, prioritize respiratory protection over active travel.',
+    generated_at: new Date().toISOString(),
   };
 };
