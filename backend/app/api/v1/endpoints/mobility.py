@@ -42,6 +42,7 @@ def plan_sustainable_commute(
 def plan_sustainable_commute_get(
     distance_km: float = Query(..., gt=0, le=150, description="Commute distance in kilometers"),
     station_id: str = Query("delhi-anand-vihar", description="Target CPCB station ID"),
+    city: Optional[str] = Query(None, description="City name (e.g. Udaipur, Delhi, Mumbai)"),
     language: str = Query("en", description="Output language: 'en' or 'hi'"),
     current_mode: str = Query("petrol_car", description="Current travel mode"),
     frequency: str = Query("daily_round_trip", description="Commute frequency"),
@@ -57,6 +58,7 @@ def plan_sustainable_commute_get(
 
     res_distance = float(_resolve(distance_km, 10.0))
     res_station_id = str(_resolve(station_id, "delhi-anand-vihar"))
+    res_city = _resolve(city, None)
     res_language = str(_resolve(language, "en"))
     res_mode = str(_resolve(current_mode, "petrol_car"))
     res_frequency = str(_resolve(frequency, "daily_round_trip"))
@@ -86,6 +88,7 @@ def plan_sustainable_commute_get(
 
     req = MobilityRequest(
         station_id=res_station_id,
+        city=res_city,
         language=res_language,
         distance_km=res_distance,
         current_mode=mode_enum,

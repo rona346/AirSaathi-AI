@@ -58,6 +58,7 @@ CPCB_STATION_MAP: Dict[str, str] = {
     "gurugram-vikas-sadan": "Vikas Sadan, Gurugram - HSPCB",
     "mumbai-bandra-kurla": "Bandra Kurla Complex, Mumbai - MPCB",
     "bengaluru-btm-layout": "BTM Layout, Bengaluru - CPCB",
+    "udaipur-ashok-nagar": "Ashok Nagar, Udaipur - RSPCB",
 }
 
 

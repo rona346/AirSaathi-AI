@@ -47,16 +47,19 @@ class AccessibilityNeed(str, Enum):
 class ModeEmissionDetail(BaseModel):
     mode: TransportMode
     label: str
-    direct_emissions_g: float = Field(..., description="Tailpipe exhaust emissions in grams CO2e per trip")
-    grid_indirect_emissions_g: float = Field(..., description="Upstream power-grid generation emissions in grams CO2e per trip")
-    total_emissions_g: float = Field(..., description="Total direct + indirect modeled emissions per trip")
-    per_passenger_emissions_g: float = Field(..., description="Emissions allocated per passenger based on occupancy")
-    co2e_savings_vs_baseline_g: float = Field(..., description="CO2e savings compared to solo private petrol car")
+    direct_emissions_g: float = Field(..., description="Vehicle-level tailpipe exhaust emissions in grams CO2e per trip")
+    grid_indirect_emissions_g: float = Field(..., description="Vehicle-level upstream power-grid generation emissions in grams CO2e per trip")
+    total_emissions_g: float = Field(..., description="Vehicle-level total direct + indirect modeled emissions per trip")
+    passenger_occupancy: float = Field(default=1.0, description="Modeled or actual passenger occupancy used for per-passenger allocation")
+    per_passenger_emissions_g: float = Field(..., description="Emissions allocated per passenger based on occupancy (g CO2e/passenger)")
+    co2e_savings_vs_baseline_g: float = Field(..., description="CO2e savings per passenger compared to solo private petrol car")
     co2e_savings_pct: float = Field(..., description="Percentage savings relative to baseline (0 to 100%)")
-    suitability_score: str = Field(..., description="Optimal, Recommended, Moderate, or Restricted Today")
-    aqi_safety_verdict: str = Field(..., description="AQI-aware exposure assessment (e.g. Enclosed Cabin Safe, High Respiratory Hazard)")
+    suitability_score: str = Field(..., description="Qualified suitability rating (e.g. Recommended, Reduced Exposure, Caution)")
+    aqi_safety_verdict: str = Field(..., description="AQI-aware exposure assessment distinguishing reduced exposure from zero exposure")
     exposure_level: str = Field(..., description="Low, Moderate, High, or Severe outdoor smog inhalation risk")
     precautions: List[str] = Field(default_factory=list, description="Specific precautions (e.g. AC recirculation, N95 mask)")
+    availability_status: str = Field(default="available", description="'available', 'unavailable', or 'unverified' in this city")
+    data_sources: List[str] = Field(default_factory=list, description="Credible data sources and reference URLs for factors")
 
 
 class CarpoolEstimate(BaseModel):
@@ -69,7 +72,8 @@ class CarpoolEstimate(BaseModel):
 
 
 class MobilityRequest(BaseModel):
-    station_id: str = Field("delhi-anand-vihar", description="Target CPCB monitoring station ID")
+    station_id: str = Field("delhi-anand-vihar", description="Target CPCB monitoring station ID or station identifier")
+    city: Optional[str] = Field(None, max_length=100, description="City name (e.g. 'Udaipur', 'Delhi', 'Mumbai')")
     language: str = Field("en", description="'en' for English or 'hi' for Hindi")
     distance_km: float = Field(..., gt=0, le=150, description="One-way commute distance in kilometers")
     starting_area: Optional[str] = Field(None, max_length=100, description="Origin area or locality")

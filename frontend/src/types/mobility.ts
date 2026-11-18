@@ -40,6 +40,7 @@ export interface ModeEmissionDetail {
   direct_emissions_g: number;
   grid_indirect_emissions_g: number;
   total_emissions_g: number;
+  passenger_occupancy?: number;
   per_passenger_emissions_g: number;
   co2e_savings_vs_baseline_g: number;
   co2e_savings_pct: number;
@@ -47,6 +48,8 @@ export interface ModeEmissionDetail {
   aqi_safety_verdict: string;
   exposure_level: string;
   precautions: string[];
+  availability_status?: 'available' | 'unavailable' | 'unverified';
+  data_sources?: string[];
 }
 
 export interface CarpoolEstimate {
@@ -60,6 +63,7 @@ export interface CarpoolEstimate {
 
 export interface MobilityRequest {
   station_id?: string;
+  city?: string;
   language?: SupportedLanguage | string;
   distance_km: number;
   starting_area?: string;

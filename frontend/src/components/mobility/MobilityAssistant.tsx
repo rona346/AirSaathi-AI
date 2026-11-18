@@ -157,7 +157,7 @@ export const MobilityAssistant: React.FC = () => {
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
             <MapPin className="w-3.5 h-3.5 text-emerald-400" />
             <span className="text-slate-300 font-medium">
-              {station ? station.name : 'CPCB Station'}
+              {plan ? `${plan.station_name}, ${plan.city}` : station ? `${station.name}, ${station.city}` : 'CPCB Station'}
             </span>
           </div>
 
@@ -165,20 +165,22 @@ export const MobilityAssistant: React.FC = () => {
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
               <Activity className="w-3.5 h-3.5 text-amber-400" />
               <span className="text-slate-400">AQI:</span>
-              <strong className="text-white font-bold">{currentAqi.aqi}</strong>
+              <strong className="text-white font-bold">{plan ? plan.aqi : currentAqi.aqi}</strong>
               <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                {aqiCategory ? getAqiCategoryLabel(aqiCategory, language) : 'CPCB'}
+                {plan ? plan.category : aqiCategory ? getAqiCategoryLabel(aqiCategory, language) : 'CPCB'}
               </span>
             </div>
           )}
 
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
             <span
               className={`w-2 h-2 rounded-full ${
-                isDemoData ? 'bg-amber-400' : 'bg-emerald-400'
+                (plan?.is_demo_data ?? isDemoData) ? 'bg-amber-400' : 'bg-emerald-400'
               } animate-pulse`}
             />
-            <span>{isDemoData ? 'Demo CPCB' : 'CPCB Live'}</span>
+            <span className={`font-semibold ${(plan?.is_demo_data ?? isDemoData) ? 'text-amber-300' : 'text-emerald-300'}`}>
+              {(plan?.is_demo_data ?? isDemoData) ? 'DEMO DATA' : 'CPCB LIVE'}
+            </span>
           </div>
         </div>
       </div>
@@ -426,15 +428,19 @@ export const MobilityAssistant: React.FC = () => {
       {plan && (
         <div
           className={`rounded-2xl p-4 border flex items-start gap-3 ${
-            plan.aqi >= 301
+            plan.aqi >= 401
               ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+              : plan.aqi >= 301
+              ? 'bg-orange-500/10 border-orange-500/30 text-orange-300'
               : plan.aqi >= 201
               ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
               : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
           }`}
         >
-          {plan.aqi >= 301 ? (
+          {plan.aqi >= 401 ? (
             <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+          ) : plan.aqi >= 301 ? (
+            <ShieldAlert className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" />
           ) : plan.aqi >= 201 ? (
             <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
           ) : (
@@ -566,9 +572,13 @@ export const MobilityAssistant: React.FC = () => {
                               ? isHi
                                 ? 'ग्रिड-संचालित (विद्युत)'
                                 : 'Electric Grid Mass Transit'
+                              : item.mode === 'electric_car' || item.mode === 'electric_two_wheeler'
+                              ? isHi
+                                ? 'ग्रिड-संचालित (शून्य टेलपाइप)'
+                                : 'Grid-Powered (Zero Tailpipe)'
                               : item.mode === 'walking' || item.mode === 'cycling'
                               ? isHi
-                                ? 'शून्य टेलपाइप उत्सर्जन'
+                                ? 'शून्य टेलपाइप सक्रिय'
                                 : 'Zero Tailpipe Active'
                               : isHi
                               ? 'सड़क परिवहन'
@@ -580,23 +590,30 @@ export const MobilityAssistant: React.FC = () => {
                       <div className="flex flex-col items-end gap-1">
                         <span
                           className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                            item.suitability_score.includes('Optimal') ||
-                            item.suitability_score.includes('सर्वोत्तम')
+                            item.availability_status === 'unavailable'
+                              ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                              : item.availability_status === 'unverified'
+                              ? 'bg-slate-700/40 text-slate-300 border-slate-600'
+                              : item.suitability_score.includes('Favorable') ||
+                                item.suitability_score.includes('अनुकूल') ||
+                                item.suitability_score.includes('कम संपर्क') ||
+                                item.suitability_score.includes('Reduced Exposure')
                               ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
                               : item.suitability_score.includes('Recommended') ||
                                 item.suitability_score.includes('अनुशंसित')
                               ? 'bg-blue-500/20 text-blue-300 border-blue-500/30'
                               : item.suitability_score.includes('Caution') ||
-                                item.suitability_score.includes('सावधानी')
+                                item.suitability_score.includes('सावधानी') ||
+                                item.suitability_score.includes('मध्यम')
                               ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
                               : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
                           }`}
                         >
                           {item.suitability_score}
                         </span>
-                        {isRecommended && (
+                        {isRecommended && item.availability_status === 'available' && (
                           <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">
-                            ★ {isHi ? 'सर्वोत्तम' : 'Top Pick'}
+                            ★ {isHi ? 'अनुशंसित' : 'Top Recommendation'}
                           </span>
                         )}
                       </div>
@@ -611,6 +628,9 @@ export const MobilityAssistant: React.FC = () => {
                         <strong className="text-xs font-bold text-white font-mono">
                           {item.per_passenger_emissions_g} g CO2e
                         </strong>
+                        <span className="text-[9px] text-slate-400 block">
+                          ({item.passenger_occupancy ?? 1} {item.passenger_occupancy === 1 ? 'person' : 'passengers'})
+                        </span>
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-400 block">
@@ -627,6 +647,9 @@ export const MobilityAssistant: React.FC = () => {
                         >
                           {item.co2e_savings_pct > 0 ? `-${item.co2e_savings_pct}%` : 'Baseline'}
                         </strong>
+                        <span className="text-[9px] text-slate-400 block">
+                          vs solo car
+                        </span>
                       </div>
                     </div>
 

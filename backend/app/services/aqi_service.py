@@ -97,6 +97,15 @@ STATIONS: List[StationInfo] = [
         longitude=77.6101,
         is_hotspot=False,
     ),
+    StationInfo(
+        id="udaipur-ashok-nagar",
+        name="Ashok Nagar",
+        city="Udaipur",
+        state="Rajasthan",
+        latitude=24.5854,
+        longitude=73.7125,
+        is_hotspot=False,
+    ),
 ]
 
 
@@ -171,10 +180,46 @@ class AqiService:
         return None
 
     @classmethod
-    def get_current_aqi(cls, station_id: str = "delhi-anand-vihar") -> CurrentAqiResponse:
-        station = cls.get_station_by_id(station_id) or STATIONS[0]
+    def get_station_by_id_or_city(cls, identifier: str) -> Optional[StationInfo]:
+        """Resolves a station matching either exact station ID or matching city name."""
+        if not identifier:
+            return None
+        clean = identifier.strip().lower()
+        for s in STATIONS:
+            if s.id.lower() == clean or s.city.lower() == clean:
+                return s
+        for s in STATIONS:
+            if clean in s.id.lower() or clean in s.city.lower():
+                return s
+        return None
 
-        # Station-specific realistic baseline (Winter smog simulation for Delhi NCR)
+    @classmethod
+    def get_current_aqi(cls, station_id: str = "delhi-anand-vihar") -> CurrentAqiResponse:
+        matched_station = cls.get_station_by_id_or_city(station_id)
+        is_unverified = False
+
+        if matched_station:
+            station = matched_station
+        else:
+            is_unverified = True
+            clean_city = (
+                station_id.replace("station-", "")
+                .replace("-station", "")
+                .replace("-", " ")
+                .strip()
+                .title()
+            )
+            station = StationInfo(
+                id=station_id,
+                name=f"Monitoring Station ({clean_city})",
+                city=clean_city,
+                state="India",
+                latitude=20.5937,
+                longitude=78.9629,
+                is_hotspot=False,
+            )
+
+        # Station-specific realistic baseline
         base_aqi_map = {
             "delhi-anand-vihar": 368,
             "delhi-punjabi-bagh": 342,
@@ -185,9 +230,11 @@ class AqiService:
             "gurugram-vikas-sadan": 305,
             "mumbai-bandra-kurla": 164,
             "bengaluru-btm-layout": 88,
+            "udaipur-ashok-nagar": 135,
         }
 
-        aqi = base_aqi_map.get(station.id, 320)
+        default_aqi = 145 if is_unverified else 320
+        aqi = base_aqi_map.get(station.id, default_aqi)
         category = get_aqi_category_from_value(aqi)
 
         # Compute concentrations derived from official CPCB breakpoint formulas
@@ -279,6 +326,12 @@ class AqiService:
             "mixing_layer_height_m": 420.0,
         }
 
+        source_label = (
+            "Demonstration Baseline (Unverified Station)"
+            if is_unverified
+            else "Central Pollution Control Board (CPCB) - CAAQMS Mock Baseline"
+        )
+
         return CurrentAqiResponse(
             station=station,
             aqi=aqi,
@@ -287,7 +340,7 @@ class AqiService:
             pollutants=pollutants,
             health_advisory=health_adv,
             weather=weather,
-            data_source="Central Pollution Control Board (CPCB) - CAAQMS Mock Baseline",
+            data_source=source_label,
             last_updated=datetime.utcnow(),
             is_demo_data=True,
         )
