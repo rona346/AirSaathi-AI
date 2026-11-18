@@ -430,3 +430,150 @@ export const getMockRoutinePlan = (
     generated_at: new Date().toISOString(),
   };
 };
+
+export const getMockIndoorAssessment = (
+  stationId: string = 'delhi-anand-vihar',
+  language: 'en' | 'hi' = 'en',
+  household?: any
+): any => {
+  const station = MOCK_STATIONS.find((s) => s.id === stationId) || MOCK_STATIONS[0];
+  const hi = language === 'hi';
+  const area = household?.room_area_sqft || 150;
+  const volumeM3 = area * 10 * 0.0283168;
+  const cadrM3h = Math.round(volumeM3 * 4.5);
+  const cadrCfm = Math.round(cadrM3h / 1.699);
+
+  return {
+    station_id: station.id,
+    station_name: station.name,
+    city: station.city,
+    outdoor_aqi: 368,
+    outdoor_category: 'Very Poor',
+    outdoor_is_demo: true,
+    outdoor_data_source: 'Central Pollution Control Board (CPCB) - Offline Fallback Baseline',
+    outdoor_observed_at: new Date().toISOString(),
+    language,
+    ai_provider: 'expert-rules-fallback',
+    ai_generated: false,
+    has_connected_indoor_sensor: false,
+    qualitative_risk: 'High',
+    risk_score_numeric: 68,
+    risk_summary: hi
+      ? 'उच्च इनडोर जोखिम: रसोई का तड़का/धुआं और बाहरी स्मॉग का रिसाव इनडोर हवा पर प्रतिकूल प्रभाव डाल रहा है।'
+      : 'High Indoor Risk: Cooking aerosols and outdoor smog infiltration are elevating indoor particulate levels.',
+    sensor_notice: hi
+      ? 'सेंसर प्रकटीकरण: यह मूल्यांकन आपकी घरेलू आदतों और बाहरी CPCB प्रदूषण के आधार पर एक अनुमानित गुणात्मक जोखिम विश्लेषण है। बिना प्रमाणित इनडोर सेंसर के वास्तविक इनडोर AQI संख्या प्रदर्शित नहीं की जाती है।'
+      : 'Sensor Disclosure: This qualitative risk evaluation is modeled from reported household practices and outdoor CPCB ambient infiltration. Without physical in-situ air sensors, AirSaathi AI never fabricates synthetic indoor AQI numbers.',
+    ventilation: {
+      action: hi ? 'खिड़कियां बंद रखें (सीमित वेंटिलेशन)' : 'Seal / Restrict',
+      optimal_window: hi ? 'दोपहर 01:30 बजे से 02:30 बजे' : '01:30 PM - 02:30 PM',
+      duration_minutes: 15,
+      rationale: hi
+        ? 'दोपहर के समय सौर विकिरण से स्मॉग की सघनता सबसे कम होती है। केवल 15 मिनट का फ्लश करें।'
+        : 'Solar convective heating raises the planetary boundary layer during mid-afternoon. Limit window opening to a brief 15-minute flush.',
+      precautions: [
+        hi ? 'सुबह 5 से 10 बजे के बीच खिड़की बिल्कुल न खोलें' : 'Keep all windows sealed tight between 5:00 AM and 10:00 AM',
+        hi ? 'वेंटिलेशन के तुरंत बाद खिड़कियां बंद करें' : 'Close windows promptly after flush and run purifier',
+      ],
+    },
+    purifier_guidance: {
+      room_area_sqft: area,
+      recommended_min_cadr_m3h: cadrM3h,
+      recommended_min_cadr_cfm: cadrCfm,
+      target_ach: 4.5,
+      filter_type_guidance: hi
+        ? 'सत्य HEPA H13/H14 प्रमाणित फिल्टर चुनें जो 0.3 माइक्रोन के 99.97% कण रोकता है।'
+        : 'Select certified True HEPA (H13/H14) capable of capturing 99.97% of particles down to 0.3 microns. Avoid standalone ozone/ionizer devices.',
+      placement_tips: [
+        hi ? 'दीवार और पर्दों से कम से कम 1.5 से 2 फीट दूर रखें' : 'Position at least 1.5 - 2 feet away from walls and heavy drapery',
+        hi ? 'कमरे के केंद्र में खुली हवा के प्रवाह की दिशा में रखें' : 'Orient towards central living breathing zone for unhindered airflow',
+        hi ? 'कमरे के दरवाजे व खिड़कियां बंद रखकर चलाएं' : 'Keep doors and external windows closed during operation',
+      ],
+      maintenance_schedule: hi
+        ? 'प्री-फिल्टर को हर 2-3 सप्ताह में वैक्यूम करें। मुख्य HEPA फिल्टर को 6-12 महीने में बदलें।'
+        : 'Vacuum or wash external mesh pre-filter every 2-3 weeks in winter. Replace main True HEPA core every 6-12 months.',
+    },
+    kitchen_guidance: {
+      risk_summary: hi
+        ? 'भारतीय तड़का और डीप फ्राइंग से PM2.5 का स्तर 500 µg/m³ के पार जा सकता है।'
+        : 'Indian spices, dry chili tempering (tadka) and deep frying cause rapid indoor PM2.5 spikes exceeding 500 µg/m³.',
+      chimney_exhaust_guidance: hi
+        ? 'गैस जलाने से 2 मिनट पहले एग्जॉस्ट/चिमनी चालू करें और खाना पकने के 5 मिनट बाद तक चालू रखें।'
+        : 'Turn on kitchen chimney or exhaust fan 2 minutes BEFORE lighting stove, and run for 5 minutes post-cooking.',
+      cooking_habits_advice: [
+        hi ? 'तड़के और छौंक के समय पैन पर ढक्कन लगाएं' : 'Cover pans with lids or splatter mesh during tempering/frying',
+        hi ? 'रसोई का दरवाजा अन्य कमरों से अलग रखें' : 'Keep kitchen door closed to isolate cooking aerosols from bedrooms',
+      ],
+      combustion_safety: hi
+        ? 'गैस स्टोव की लौ हमेशा नीली होनी चाहिए। पीली लौ कार्बन मोनोऑक्साइड का संकेत है।'
+        : 'Ensure gas burner produces crisp blue flame. Yellow flame signals incomplete combustion and toxic carbon monoxide.',
+    },
+    room_recommendations: {
+      bedroom: {
+        room_name: hi ? 'शयनकक्ष (Bedroom)' : 'Bedroom',
+        primary_threats: [
+          hi ? 'बिस्तर के धूल कण (Dust Mites)' : 'Dust mites & settled bedding particulates',
+          hi ? 'खिड़की व बालकनी से बाहरी स्मॉग का रिसाव' : 'Nighttime outdoor smog infiltration through gaps',
+        ],
+        immediate_actions: [
+          hi ? 'दरवाजे के नीचे ड्राफ्ट स्टॉपर लगाएं' : 'Install door draft stoppers to block living room corridor air',
+          hi ? 'सोते समय खिड़की पूरी तरह बंद रखें' : 'Keep windows locked shut throughout sleep hours',
+        ],
+        night_protocol: hi
+          ? 'सोने से 30 मिनट पहले एयर प्यूरीफायर को स्लीप मोड पर चालू करें।'
+          : 'Power on HEPA purifier 30 minutes before bedtime on sleep/auto mode for 8 hours of clean respiratory recovery.',
+        lifestyle_adjustments: [
+          hi ? 'कमरे में अगरबत्ती या मच्छर क्वाइल बिल्कुल न जलाएं' : 'Never burn mosquito coils or incense sticks in sleeping quarters',
+        ],
+      },
+      kitchen: {
+        room_name: hi ? 'रसोईघर (Kitchen)' : 'Kitchen',
+        primary_threats: [
+          hi ? 'तड़के और तेल का धुआं (PM2.5 > 500 µg/m³)' : 'Ultra-fine cooking aerosols from oil & chili tempering',
+        ],
+        immediate_actions: [
+          hi ? 'खाना बनाते समय चिमनी का पूरा उपयोग करें' : 'Run ducted chimney on medium/high speed during all frying',
+        ],
+        night_protocol: null,
+        lifestyle_adjustments: [
+          hi ? 'तड़के के दौरान पैन को ढंक कर रखें' : 'Cover hot oil vessels with splatter screens',
+        ],
+      },
+      living_room: {
+        room_name: hi ? 'लिविंग रूम (Living Room)' : 'Living Room',
+        primary_threats: [
+          hi ? 'मुख्य दरवाजे से जूतों की धूल और बाहरी प्रदूषण' : 'Tracked-in street dust, soot and heavy footfall re-suspension',
+        ],
+        immediate_actions: [
+          hi ? 'बाहर के जूते दरवाजे के बाहर ही उतारें' : 'Enforce a strict no outdoor shoes inside policy',
+          hi ? 'सूखे झाड़ू की जगह गीला पोछा लगाएं' : 'Switch completely from dry brooms to microfiber wet mopping',
+        ],
+        night_protocol: null,
+        lifestyle_adjustments: [
+          hi ? 'अगरबत्ती की जगह इलेक्ट्रॉनिक दीया चुनें' : 'Substitute combustion incense with electric diffusers or brass lamps',
+        ],
+      },
+    },
+    actionable_checklist: [
+      hi
+        ? 'सप्ताह में कम से कम 3 बार गीले माइक्रोफाइबर कपड़े से पोछा लगाएं (सूखी झाड़ू न लगाएं)'
+        : 'Switch exclusively to damp microfiber mopping (dry brooms re-suspend hazardous PM10 into the breathing zone)',
+      hi
+        ? 'तड़के और छौंक से 2 मिनट पहले रसोई का एग्जॉस्ट/चिमनी चालू करें'
+        : 'Turn on kitchen chimney or exhaust fan 2 minutes before cooking begins and maintain for 5 minutes after',
+      hi
+        ? 'घर के अंदर अगरबत्ती, धूप या मच्छर क्वाइल जलाने से बचें'
+        : 'Eliminate daily burning of incense sticks (agarbatti), dhoop, and mosquito coils in enclosed living spaces',
+      hi
+        ? 'शयनकक्ष में HEPA H13 एयर प्यूरीफायर को रात भर ऑटो मोड पर चलाएं'
+        : 'Operate True HEPA (H13) air purifier in bedrooms throughout sleep hours with doors closed',
+    ],
+    plant_myth_clarification: hi
+      ? 'वैज्ञानिक स्पष्टीकरण (पौधों का मिथक): वास्तविक घरों में हवा का आदान-प्रदान पौधों की शोधन क्षमता से 100 गुना अधिक होता है। पौधे सुंदर हैं, परंतु वे भारी PM2.5, NO2 या तड़के के धुएं को साफ नहीं कर सकते। इसके लिए प्रमाणित HEPA फिल्टर और एग्जॉस्ट ही आवश्यक हैं।'
+      : 'Scientific Clarification on Indoor Plants: Potted plants are often marketed as natural air purifiers citing the 1989 NASA study. However, real-world residential air exchange rates overpower plant phytoremediation by more than 100-fold. Potted plants cannot replace mechanical True HEPA filtration or kitchen exhaust systems.',
+    disclaimer: hi
+      ? 'चिकित्सीय अस्वीकरण: यह इनडोर वायु सहायक केवल पर्यावरणीय जोखिम न्यूनीकरण सुझाव प्रदान करता है, बीमारी का निदान या उपचार नहीं। HEPA प्यूरीफायर या N95 मास्क 100% सुरक्षा की गारंटी नहीं देते।'
+      : 'Medical Disclaimer: This indoor air assistant provides environmental hazard reduction guidance, not medical diagnosis or treatment. Air purifiers and N95 masks reduce particulate mass but do not provide absolute immunity.',
+    generated_at: new Date().toISOString(),
+  };
+};

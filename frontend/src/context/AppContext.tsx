@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { CurrentAqiData, FamilyProfile, ForecastData, StationInfo, SupportedLanguage } from '../types/aqi';
 import { RoutinePlan, RoutinePreferences } from '../types/routine';
-import { fetchCurrentAqi, fetchForecast, fetchRoutinePlan, fetchStations } from '../services/api';
+import { HouseholdInput, IndoorAssessmentResponse } from '../types/indoor';
+import { fetchCurrentAqi, fetchForecast, fetchIndoorAssessment, fetchRoutinePlan, fetchStations } from '../services/api';
 
-export type AppTab = 'dashboard' | 'planner';
+export type AppTab = 'dashboard' | 'planner' | 'indoor';
 
 interface AppContextType {
   activeTab: AppTab;
@@ -27,6 +28,12 @@ interface AppContextType {
   routinePreferences: RoutinePreferences;
   updateRoutinePreferences: (partial: Partial<RoutinePreferences>) => void;
   refreshRoutinePlan: () => Promise<void>;
+  // Module 3 Indoor Assistant state
+  indoorAssessment: IndoorAssessmentResponse | null;
+  indoorLoading: boolean;
+  householdInput: HouseholdInput;
+  updateHouseholdInput: (partial: Partial<HouseholdInput>) => void;
+  refreshIndoorAssessment: () => Promise<void>;
 }
 
 const defaultFamilyProfile: FamilyProfile = {
@@ -42,6 +49,23 @@ const defaultRoutinePreferences: RoutinePreferences = {
   school_going_kids: true,
   exercises_daily: true,
   preferred_exercise_type: 'walk',
+};
+
+const defaultHouseholdInput: HouseholdInput = {
+  room_type: 'living_room',
+  room_area_sqft: 150.0,
+  ceiling_height_ft: 10.0,
+  cooking_fuel: 'lpg',
+  heavy_frying_or_tadka: true,
+  has_kitchen_chimney: true,
+  has_kitchen_exhaust: true,
+  ventilation_status: 'mostly_closed',
+  cleaning_method: 'wet_mopping',
+  burns_agarbatti_or_dhoop: true,
+  has_pets: false,
+  indoor_smoking: false,
+  has_air_purifier: false,
+  purifier_has_hepa: true,
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -62,6 +86,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [routinePlan, setRoutinePlan] = useState<RoutinePlan | null>(null);
   const [routineLoading, setRoutineLoading] = useState<boolean>(false);
   const [routinePreferences, setRoutinePreferences] = useState<RoutinePreferences>(defaultRoutinePreferences);
+
+  // Module 3 indoor assistant state
+  const [indoorAssessment, setIndoorAssessment] = useState<IndoorAssessmentResponse | null>(null);
+  const [indoorLoading, setIndoorLoading] = useState<boolean>(false);
+  const [householdInput, setHouseholdInput] = useState<HouseholdInput>(defaultHouseholdInput);
 
   // Load stations once
   useEffect(() => {
@@ -114,20 +143,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     []
   );
 
+  // Load indoor assessment
+  const loadIndoorAssessment = useCallback(
+    async (stationId: string, lang: SupportedLanguage, hh: HouseholdInput) => {
+      setIndoorLoading(true);
+      try {
+        const { data } = await fetchIndoorAssessment(stationId, lang, hh);
+        setIndoorAssessment(data);
+      } catch (err) {
+        console.error('Failed to load indoor assessment:', err);
+      } finally {
+        setIndoorLoading(false);
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     if (selectedStationId) {
       loadStationData(selectedStationId);
       loadRoutinePlan(selectedStationId, language, familyProfile, routinePreferences);
+      loadIndoorAssessment(selectedStationId, language, householdInput);
     }
-  }, [selectedStationId, language, familyProfile, routinePreferences, loadRoutinePlan]);
+  }, [selectedStationId, language, familyProfile, routinePreferences, householdInput, loadRoutinePlan, loadIndoorAssessment]);
 
   const refreshData = async () => {
     await loadStationData(selectedStationId);
     await loadRoutinePlan(selectedStationId, language, familyProfile, routinePreferences);
+    await loadIndoorAssessment(selectedStationId, language, householdInput);
   };
 
   const refreshRoutinePlan = async () => {
     await loadRoutinePlan(selectedStationId, language, familyProfile, routinePreferences);
+  };
+
+  const refreshIndoorAssessment = async () => {
+    await loadIndoorAssessment(selectedStationId, language, householdInput);
   };
 
   const updateFamilyProfile = (partial: Partial<FamilyProfile>) => {
@@ -136,6 +187,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateRoutinePreferences = (partial: Partial<RoutinePreferences>) => {
     setRoutinePreferences((prev) => ({ ...prev, ...partial }));
+  };
+
+  const updateHouseholdInput = (partial: Partial<HouseholdInput>) => {
+    setHouseholdInput((prev) => ({ ...prev, ...partial }));
   };
 
   return (
@@ -161,6 +216,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         routinePreferences,
         updateRoutinePreferences,
         refreshRoutinePlan,
+        indoorAssessment,
+        indoorLoading,
+        householdInput,
+        updateHouseholdInput,
+        refreshIndoorAssessment,
       }}
     >
       {children}

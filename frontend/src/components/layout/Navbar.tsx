@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wind, MapPin, RefreshCw, Languages, Users, LayoutDashboard, Calendar } from 'lucide-react';
+import { Wind, MapPin, RefreshCw, Languages, Users, LayoutDashboard, Calendar, Home } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../utils/translations';
 
@@ -82,6 +82,17 @@ export const Navbar: React.FC = () => {
               <Calendar className="w-3.5 h-3.5" />
               <span>{t.plannerTabTitle}</span>
             </button>
+            <button
+              onClick={() => setActiveTab('indoor')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'indoor'
+                  ? 'bg-teal-600 text-white shadow-md shadow-teal-500/20'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>{t.indoorTabTitle}</span>
+            </button>
           </nav>
 
           {/* Mobile Refresh Button */}
@@ -158,7 +169,7 @@ export const Navbar: React.FC = () => {
           }`}
         >
           <LayoutDashboard className="w-3.5 h-3.5" />
-          <span>{t.dashboardTabTitle}</span>
+          <span className="truncate">{t.dashboardTabTitle}</span>
         </button>
         <button
           onClick={() => setActiveTab('planner')}
@@ -169,7 +180,18 @@ export const Navbar: React.FC = () => {
           }`}
         >
           <Calendar className="w-3.5 h-3.5" />
-          <span>{t.plannerTabTitle}</span>
+          <span className="truncate">{t.plannerTabTitle}</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('indoor')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'indoor'
+              ? 'bg-teal-600 text-white shadow-md shadow-teal-500/20'
+              : 'bg-slate-900 text-slate-400 border border-slate-800'
+          }`}
+        >
+          <Home className="w-3.5 h-3.5" />
+          <span className="truncate">{t.indoorTabTitle}</span>
         </button>
       </div>
     </header>

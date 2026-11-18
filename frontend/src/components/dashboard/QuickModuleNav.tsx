@@ -23,7 +23,8 @@ export const QuickModuleNav: React.FC = () => {
       desc: language === 'hi' ? 'स्मार्ट HEPA प्यूरीफायर नियंत्रण, खिड़की वेंटिलेशन समय' : 'CADR requirements, filter health tracking, and optimal natural aeration hours',
       icon: Home,
       color: 'from-emerald-500/20 to-teal-500/10 text-emerald-400 border-emerald-500/30',
-      status: t.statusNext,
+      status: t.statusActive,
+      isAvailable: true,
     },
     {
       id: 'chat',
@@ -79,7 +80,8 @@ export const QuickModuleNav: React.FC = () => {
               key={m.id}
               onClick={() => {
                 if (m.isAvailable) {
-                  setActiveTab('planner');
+                  if (m.id === 'routine') setActiveTab('planner');
+                  if (m.id === 'indoor') setActiveTab('indoor');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
               }}

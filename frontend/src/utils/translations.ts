@@ -114,6 +114,41 @@ export interface Translations {
   exerciseCycling: string;
   regeneratePlanBtn: string;
   regenerating: string;
+  // Module 3 Indoor Assistant Translations
+  indoorTabTitle: string;
+  indoorSubtitle: string;
+  qualitativeRiskBadge: string;
+  riskScoreLabel: string;
+  sensorNoticeTitle: string;
+  householdConfigTitle: string;
+  roomTypeLabel: string;
+  roomBedroom: string;
+  roomKitchen: string;
+  roomLiving: string;
+  roomChildren: string;
+  roomStudy: string;
+  roomAreaLabel: string;
+  heavyFryingLabel: string;
+  chimneyLabel: string;
+  exhaustLabel: string;
+  incenseLabel: string;
+  smokingLabel: string;
+  petsLabel: string;
+  cleaningMethodLabel: string;
+  wetMoppingOption: string;
+  dryBroomOption: string;
+  purifierPresentLabel: string;
+  hepaCertifiedLabel: string;
+  purifierGuidanceTitle: string;
+  recommendedCadrLabel: string;
+  targetAchLabel: string;
+  ventilationStrategyTitle: string;
+  kitchenManagementTitle: string;
+  roomSpecificTitle: string;
+  plantMythTitle: string;
+  actionChecklistTitle: string;
+  recalculateBtn: string;
+  calculating: string;
 }
 
 export const translations: Record<SupportedLanguage, Translations> = {
@@ -243,6 +278,41 @@ export const translations: Record<SupportedLanguage, Translations> = {
     exerciseCycling: 'Cycling',
     regeneratePlanBtn: 'Regenerate Plan',
     regenerating: 'Synthesizing Plan...',
+    indoorTabTitle: 'Indoor Air Quality Assistant',
+    indoorSubtitle:
+      'Personalized qualitative indoor risk evaluation, smart ventilation, CADR purifier calculator, and kitchen pollution management',
+    qualitativeRiskBadge: 'Qualitative Hazard Level',
+    riskScoreLabel: 'Indoor Risk Index',
+    sensorNoticeTitle: 'Sensor Disclosure & Zero Hallucination Protocol',
+    householdConfigTitle: 'Household Habits & Room Configuration',
+    roomTypeLabel: 'Room Type:',
+    roomBedroom: 'Bedroom',
+    roomKitchen: 'Kitchen',
+    roomLiving: 'Living Room',
+    roomChildren: "Children's Room",
+    roomStudy: 'Study / Office',
+    roomAreaLabel: 'Room Area:',
+    heavyFryingLabel: 'Tadka / Deep Frying:',
+    chimneyLabel: 'Kitchen Chimney:',
+    exhaustLabel: 'Exhaust Fan:',
+    incenseLabel: 'Incense / Agarbatti / Coil:',
+    smokingLabel: 'Indoor Smoking:',
+    petsLabel: 'Pets Present:',
+    cleaningMethodLabel: 'Cleaning Technique:',
+    wetMoppingOption: 'Damp Microfiber Mopping',
+    dryBroomOption: 'Dry Broom Sweeping',
+    purifierPresentLabel: 'Air Purifier Present:',
+    hepaCertifiedLabel: 'True HEPA (H13) Filter:',
+    purifierGuidanceTitle: 'HEPA Air Purifier Sizing & CADR Calculator',
+    recommendedCadrLabel: 'Target CADR Output:',
+    targetAchLabel: 'Target Air Changes / Hour (ACH):',
+    ventilationStrategyTitle: 'Smart Window Aeration Strategy',
+    kitchenManagementTitle: 'Kitchen Smog & Gas Safety Protocol',
+    roomSpecificTitle: 'Room-Wise Targeted Safeguards',
+    plantMythTitle: 'Scientific Fact Check: Indoor Plants vs Mechanical Filtration',
+    actionChecklistTitle: 'Actionable Clean Air Checklist',
+    recalculateBtn: 'Recalculate Assessment',
+    calculating: 'Analyzing Indoor Hazards...',
   },
   hi: {
     appName: 'एयरसाथी AI',
@@ -370,6 +440,41 @@ export const translations: Record<SupportedLanguage, Translations> = {
     exerciseCycling: 'साइकिलिंग',
     regeneratePlanBtn: 'योजना अपडेट करें',
     regenerating: 'AI योजना तैयार हो रही है...',
+    indoorTabTitle: 'इनडोर वायु गुणवत्ता सहायक',
+    indoorSubtitle:
+      'घरेलू प्रदूषण जोखिम का गुणात्मक मूल्यांकन, स्मार्ट खिड़की वेंटिलेशन, HEPA प्यूरीफायर CADR कैलकुलेटर व रसोई सुरक्षा',
+    qualitativeRiskBadge: 'गुणात्मक जोखिम स्तर',
+    riskScoreLabel: 'इनडोर जोखिम सूचकांक',
+    sensorNoticeTitle: 'सेंसर प्रकटीकरण एवं शून्य सिंथेटिक भ्रम नीति',
+    householdConfigTitle: 'घरेलू आदतें व कमरे का विन्यास',
+    roomTypeLabel: 'कमरे का प्रकार:',
+    roomBedroom: 'शयनकक्ष (Bedroom)',
+    roomKitchen: 'रसोईघर (Kitchen)',
+    roomLiving: 'लिविंग रूम (Living)',
+    roomChildren: 'बच्चों का कमरा (Children)',
+    roomStudy: 'अध्ययन कक्ष (Study/Office)',
+    roomAreaLabel: 'कमरे का क्षेत्रफल:',
+    heavyFryingLabel: 'तड़का व डीप फ्राइंग:',
+    chimneyLabel: 'रसोई चिमनी:',
+    exhaustLabel: 'एग्जॉस्ट पंखा:',
+    incenseLabel: 'अगरबत्ती / धूप / क्वाइल:',
+    smokingLabel: 'इनडोर धूम्रपान:',
+    petsLabel: 'पालतू जानवर:',
+    cleaningMethodLabel: 'सफाई की तकनीक:',
+    wetMoppingOption: 'गीला माइक्रोफाइबर पोछा',
+    dryBroomOption: 'सूखा झाड़ू लगाना',
+    purifierPresentLabel: 'एयर प्यूरीफायर उपलब्ध:',
+    hepaCertifiedLabel: 'सत्य HEPA (H13) फिल्टर:',
+    purifierGuidanceTitle: 'HEPA एयर प्यूरीफायर आकार व CADR कैलकुलेटर',
+    recommendedCadrLabel: 'लक्षित CADR आउटपुट:',
+    targetAchLabel: 'प्रति घंटा वायु चक्र (ACH):',
+    ventilationStrategyTitle: 'स्मार्ट खिड़की वेंटिलेशन रणनीति',
+    kitchenManagementTitle: 'रसोई स्मॉग व गैस सुरक्षा प्रोटोकॉल',
+    roomSpecificTitle: 'कक्ष-वार लक्षित सुरक्षा निर्देश',
+    plantMythTitle: 'वैज्ञानिक तथ्य: इनडोर पौधे बनाम प्रमाणित HEPA फिल्टर',
+    actionChecklistTitle: 'स्वच्छ वायु कार्य सूची (Checklist)',
+    recalculateBtn: 'मूल्यांकन अपडेट करें',
+    calculating: 'इनडोर जोखिम विश्लेषण जारी है...',
   },
 };
 
