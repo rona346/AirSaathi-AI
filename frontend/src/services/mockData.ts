@@ -232,3 +232,201 @@ export const getMockForecast = (stationId: string = 'delhi-anand-vihar'): Foreca
     is_demo_data: true,
   };
 };
+
+export const getMockRoutinePlan = (
+  stationId: string = 'delhi-anand-vihar',
+  language: 'en' | 'hi' = 'en'
+): any => {
+  const station = MOCK_STATIONS.find((s) => s.id === stationId) || MOCK_STATIONS[0];
+  const hi = language === 'hi';
+
+  return {
+    station_id: station.id,
+    station_name: station.name,
+    city: station.city,
+    aqi: 368,
+    category: 'Very Poor',
+    prominent_pollutant: 'PM2.5',
+    is_demo_data: true,
+    data_source: 'Central Pollution Control Board (CPCB) - Offline Fallback Baseline',
+    observed_at: new Date().toISOString(),
+    language,
+    ai_provider: 'expert-rules-fallback',
+    ai_generated: false,
+    morning: [
+      {
+        title: hi ? 'सुबह की सैर' : 'Early Morning Walk',
+        recommended_time: '06:00 AM - 08:30 AM',
+        status: 'Avoid',
+        risk_level: 'Critical',
+        advice: hi
+          ? 'सुबह की सैर पूरी तरह से बंद रखें। घर पर ही योग व हल्का व्यायाम करें।'
+          : 'Avoid outdoor morning walks entirely during heavy smog inversion.',
+        rationale: hi
+          ? 'सर्दियों में सुबह तापमान व्युत्क्रमण (थर्मल इनवर्जन) के कारण महीन कण सतह पर जमा रहते हैं।'
+          : 'Ground-level thermal inversion traps toxic fine particulates near breathing height.',
+        indoor_alternative: hi ? 'कमरे में 20 मिनट स्ट्रेचिंग व प्राणायाम' : '20 minutes indoor stretching or yoga',
+        precautions: [hi ? 'खिड़कियां बंद रखें' : 'Keep windows shut during early morning'],
+      },
+      {
+        title: hi ? 'स्कूल का सफर व कक्षा तैयारी' : 'School Commute & Transit',
+        recommended_time: '07:30 AM - 08:30 AM',
+        status: 'Caution',
+        risk_level: 'High',
+        advice: hi
+          ? 'बच्चों के लिए फिट-परीक्षित N95 मास्क अनिवार्य करें। स्कूल बस की खिड़कियां बंद रखें।'
+          : 'Mandate well-fitting certified N95 masks for children. Keep school bus windows tightly shut.',
+        rationale: hi
+          ? 'बच्चों का श्वसन दर वयस्कों से अधिक होता है जिससे वे प्रति किलोग्राम अधिक विषैले कण ग्रहण करते हैं।'
+          : 'Children inhale more air per kg of body weight, increasing toxic absorption during transit.',
+        indoor_alternative: hi ? 'ऑनलाइन क्लास विकल्प यदि उपलब्ध हो' : 'Online schooling if declared by authorities',
+        precautions: [hi ? 'बाल-अनुकूल N95 मास्क पहनें' : 'Wear certified pediatric N95 mask'],
+      },
+      {
+        title: hi ? 'दफ्तर आवागमन योजना' : 'Office Commute Planning',
+        recommended_time: '09:00 AM - 10:30 AM',
+        status: 'Caution',
+        risk_level: 'High',
+        advice: hi
+          ? 'मेट्रो या बंद कार का उपयोग करें। कार में एयर रिसर्कुलेशन चालू रखें। दोपहिया वाहन से बचें।'
+          : 'Prioritize Metro or closed car with AC recirculation mode enabled. Avoid two-wheelers.',
+        rationale: hi
+          ? 'सड़क किनारे वाहनों के धुएं में NO2 व पार्टिकुलेट का स्तर सामान्य से 4 गुना अधिक होता है।'
+          : 'Roadside traffic corridors exhibit 4x higher NO2 and particulate density during peak hours.',
+        indoor_alternative: hi ? 'घर से कार्य (Work From Home)' : 'Work-from-Home (WFH) if permitted',
+        precautions: [hi ? 'कार में रिसर्कुलेशन मोड रखें' : 'Enable internal air recirculation in car'],
+      },
+    ],
+    afternoon: [
+      {
+        title: hi ? 'प्राकृतिक वेंटिलेशन (खिड़की खोलने का समय)' : 'Natural Aeration Window',
+        recommended_time: '01:00 PM - 03:00 PM',
+        status: 'Recommended',
+        risk_level: 'Moderate',
+        advice: hi
+          ? 'यदि धूप खिली हो तो 15-20 मिनट के लिए खिड़कियां खोलें ताकि कमरे की CO2 बाहर निकल सके।'
+          : 'Open windows for a brief 15-20 min cross-ventilation flush if sun is shining to vent trapped CO2.',
+        rationale: hi
+          ? 'दोपहर में सौर विकिरण के कारण वायुमंडल की मिक्सिंग लेयर ऊपर उठती है जिससे स्मॉग कम होता है।'
+          : 'Mid-afternoon solar heating raises the planetary boundary layer, diluting surface pollution.',
+        indoor_alternative: null,
+        precautions: [hi ? 'वेंटिलेशन के तुरंत बाद खिड़कियां बंद करें' : 'Close windows promptly after flush'],
+      },
+      {
+        title: hi ? 'घरेलू कार्य व खरीदारी' : 'Outdoor Chores & Errand Planning',
+        recommended_time: '01:00 PM - 03:30 PM',
+        status: 'Caution',
+        risk_level: 'High',
+        advice: hi
+          ? 'बाहर कपड़े सुखाने से बचें (धूल व कालिख चिपक जाती है)। जरूरी खरीदारी दोपहर 1 से 3 बजे के बीच निपटाएं।'
+          : 'Avoid air-drying laundry on balconies as soot adheres to damp fabric. Bundle errands between 1 PM and 3 PM.',
+        rationale: hi
+          ? 'गीले कपड़ों पर विषैले कण जम जाते हैं और शाम को स्मॉग फिर से घना हो जाता है।'
+          : 'Wet fabrics absorb airborne hydrocarbons, and cooling evening air traps renewed emissions.',
+        indoor_alternative: hi ? 'कपड़े घर के अंदर सुखाएं' : 'Dry laundry in well-ventilated indoor space',
+        precautions: [hi ? 'बाहर जाते समय N95 लगाएं' : 'Wear N95 on grocery runs'],
+      },
+    ],
+    evening: [
+      {
+        title: hi ? 'शाम का घर वापसी का सफर' : 'Evening Return Transit',
+        recommended_time: '06:00 PM - 07:30 PM',
+        status: 'Caution',
+        risk_level: 'High',
+        advice: hi
+          ? 'शाम के ट्रैफिक में N95 मास्क पहनें और चौराहों पर रुकने से बचें।'
+          : 'Wear N95 on transit and avoid lingering near congested traffic intersections.',
+        rationale: hi
+          ? 'सूरज ढलने के साथ तापमान गिरता है और शाम के ट्रैफिक का धुआं वातावरण में फंस जाता है।'
+          : 'Cooling nocturnal boundary layer traps rush-hour vehicular emissions near surface levels.',
+        indoor_alternative: null,
+        precautions: [hi ? 'मास्क का इस्तेमाल करें' : 'Keep mask on until safely indoors'],
+      },
+      {
+        title: hi ? 'रात्रि इनडोर वायु शोधन' : 'Nighttime Indoor Air Purification',
+        recommended_time: '09:00 PM - 06:00 AM',
+        status: 'Recommended',
+        risk_level: 'Low',
+        advice: hi
+          ? 'सोते समय शयनकक्ष में एयर प्यूरीफायर को ऑटो/स्लीप मोड पर रखें और खिड़कियां बंद रखें।'
+          : 'Run bedroom HEPA purifier continuously on sleep/auto mode with closed doors and windows.',
+        rationale: hi
+          ? '8 घंटे की नींद के दौरान स्वच्छ हवा फेफड़ों के ऊतकों को ठीक होने में मदद करती है।'
+          : '8 hours of clean air sleep allows mucosal clearance and respiratory tissue recovery.',
+        indoor_alternative: null,
+        precautions: [hi ? 'कमरे का दरवाजा बंद रखें' : 'Keep bedroom door closed'],
+      },
+    ],
+    school_commute: {
+      title: hi ? 'स्कूल का सफर व कक्षा तैयारी' : 'School Commute & Transit',
+      recommended_time: '07:30 AM - 08:30 AM',
+      status: 'Caution',
+      risk_level: 'High',
+      advice: hi
+        ? 'बच्चों के लिए फिट-परीक्षित N95 मास्क अनिवार्य करें। स्कूल बस की खिड़कियां बंद रखें।'
+        : 'Mandate well-fitting certified N95 masks for children. Keep school bus windows tightly shut.',
+      rationale: hi
+        ? 'बच्चों का श्वसन दर वयस्कों से अधिक होता है जिससे वे प्रति किलोग्राम अधिक विषैले कण ग्रहण करते हैं।'
+        : 'Children inhale more air per kg of body weight, increasing toxic absorption during transit.',
+      indoor_alternative: hi ? 'ऑनलाइन क्लास विकल्प यदि उपलब्ध हो' : 'Online schooling if declared by authorities',
+      precautions: [hi ? 'बाल-अनुकूल N95 मास्क पहनें' : 'Wear certified pediatric N95 mask'],
+    },
+    office_commute: {
+      title: hi ? 'दफ्तर आवागमन योजना' : 'Office Commute Planning',
+      recommended_time: '09:00 AM - 10:30 AM',
+      status: 'Caution',
+      risk_level: 'High',
+      advice: hi
+        ? 'मेट्रो या बंद कार का उपयोग करें। कार में एयर रिसर्कुलेशन चालू रखें।'
+        : 'Prioritize Metro or closed car with AC recirculation mode enabled.',
+      rationale: hi
+        ? 'सड़क किनारे NO2 व पार्टिकुलेट का स्तर सामान्य से 4 गुना अधिक होता है।'
+        : 'Roadside traffic corridors exhibit 4x higher NO2 and particulate density.',
+      indoor_alternative: hi ? 'घर से कार्य (Work From Home)' : 'Work-from-Home (WFH) if permitted',
+      precautions: [hi ? 'कार में रिसर्कुलेशन मोड रखें' : 'Enable internal air recirculation in car'],
+    },
+    exercise_plan: {
+      title: hi ? 'कसरत व व्यायाम समय-सारणी' : 'Physical Exercise Scheduling',
+      recommended_time: '12:30 PM - 03:30 PM',
+      status: 'Indoor Alternative',
+      risk_level: 'Critical',
+      advice: hi
+        ? 'बाहर दौड़ना या सैर पूरी तरह से स्थगित करें। इनडोर योग या एयर प्यूरीफायर वाले कमरे में कसरत करें।'
+        : 'Strictly avoid outdoor jogging, running, and cycling. Shift all workouts indoors.',
+      rationale: hi
+        ? 'तीव्र व्यायाम के दौरान फेफड़ों का वायु प्रवाह 10 गुना बढ़ जाता है।'
+        : 'Intense aerobic exertion increases pulmonary minute ventilation up to 10-fold.',
+      indoor_alternative: hi ? 'घर के अंदर 30 मिनट का योगासन' : '30 minutes of indoor yoga or bodyweight exercise',
+      precautions: [hi ? 'सुबह 5 से 9 बजे के बीच सैर न करें' : 'Never jog between 5:00 AM and 9:00 AM in smog'],
+    },
+    chores_plan: {
+      title: hi ? 'घरेलू कार्य व खरीदारी' : 'Outdoor Chores & Errand Planning',
+      recommended_time: '01:00 PM - 03:30 PM',
+      status: 'Caution',
+      risk_level: 'High',
+      advice: hi
+        ? 'बाहर कपड़े सुखाने से बचें। जरूरी खरीदारी दोपहर 1 से 3 बजे के बीच निपटाएं।'
+        : 'Avoid air-drying laundry on balconies. Consolidate errands between 1 PM and 3:30 PM.',
+      rationale: hi
+        ? 'गीले कपड़ों पर विषैले कण जम जाते हैं।'
+        : 'Wet fabrics absorb airborne hydrocarbons.',
+      indoor_alternative: hi ? 'कपड़े घर के अंदर सुखाएं' : 'Dry laundry in indoor space',
+      precautions: [hi ? 'बाहर जाते समय N95 लगाएं' : 'Wear N95 on grocery runs'],
+    },
+    family_precautions: [
+      hi
+        ? 'बच्चों के लिए: आउटडोर खेल रोकें; कमरे में इनडोर खेल खेलें।'
+        : 'For Children: Suspend outdoor recess and physical training; replace with indoor reading and games.',
+      hi
+        ? 'बुजुर्गों के लिए: सुबह 8 बजे से पहले बालकनी में न जाएं; दवाएं समय पर लें।'
+        : 'For Seniors: Avoid step-outs before 8:00 AM; monitor resting pulse and maintain cardiovascular medications.',
+      hi
+        ? 'अस्थमा मरीजों के लिए: इनहेलर हमेशा पास रखें; बाहर निकलने पर N95 अनिवार्य है।'
+        : 'For Respiratory Patients: Keep bronchodilator inhalers accessible at all times; mandate N95 outdoors.',
+    ],
+    disclaimer: hi
+      ? 'चिकित्सीय अस्वीकरण: यह दैनिक दिनचर्या योजना केवल पर्यावरणीय जोखिम न्यूनीकरण सुझाव प्रदान करती है, चिकित्सकीय सलाह नहीं।'
+      : "Medical Disclaimer: This daily routine plan provides environmental exposure mitigation guidance, not medical diagnosis or treatment. Sensitive individuals should follow their physician's medical action plan.",
+    generated_at: new Date().toISOString(),
+  };
+};

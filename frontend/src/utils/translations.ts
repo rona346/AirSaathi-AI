@@ -87,6 +87,33 @@ export interface Translations {
   refreshBtn: string;
   familyPillLabel: string;
   activeCount: string;
+  // Module 2 Planner Translations
+  plannerTabTitle: string;
+  dashboardTabTitle: string;
+  plannerHeaderSubtitle: string;
+  aiEngineBadge: string;
+  ruleEngineBadge: string;
+  timeOfDayMorning: string;
+  timeOfDayAfternoon: string;
+  timeOfDayEvening: string;
+  keyActivitiesTitle: string;
+  schoolCommuteTitle: string;
+  officeCommuteTitle: string;
+  exerciseTitle: string;
+  choresTitle: string;
+  indoorAlternative: string;
+  scientificRationale: string;
+  actionPrecautions: string;
+  familyPrecautionsTitle: string;
+  disclaimerTitle: string;
+  exercisePrefLabel: string;
+  exerciseWalk: string;
+  exerciseRun: string;
+  exerciseGym: string;
+  exerciseYoga: string;
+  exerciseCycling: string;
+  regeneratePlanBtn: string;
+  regenerating: string;
 }
 
 export const translations: Record<SupportedLanguage, Translations> = {
@@ -189,6 +216,33 @@ export const translations: Record<SupportedLanguage, Translations> = {
     refreshBtn: 'Refresh',
     familyPillLabel: 'Family Profile:',
     activeCount: 'Active',
+    plannerTabTitle: 'AI Daily Routine Planner',
+    dashboardTabTitle: 'Air Quality Dashboard',
+    plannerHeaderSubtitle:
+      'Personalized smog-adjusted schedule for school, commute, workouts, and household tasks powered by atmospheric modeling and Gemini AI',
+    aiEngineBadge: 'Google Gemini 2.5 Flash',
+    ruleEngineBadge: 'CPCB Expert Rule Engine',
+    timeOfDayMorning: 'Morning Schedule (06:00 - 12:00)',
+    timeOfDayAfternoon: 'Afternoon Schedule (12:00 - 17:00)',
+    timeOfDayEvening: 'Evening & Night Schedule (17:00 - 22:00+)',
+    keyActivitiesTitle: 'Personalized Daily Action Plans',
+    schoolCommuteTitle: 'School Commute & Recess',
+    officeCommuteTitle: 'Office Commute & Transit',
+    exerciseTitle: 'Exercise & Workout Routine',
+    choresTitle: 'Outdoor Chores & Errands',
+    indoorAlternative: 'Indoor Safe Alternative',
+    scientificRationale: 'Atmospheric & Physiological Rationale',
+    actionPrecautions: 'Key Safety Precautions',
+    familyPrecautionsTitle: 'Family Vulnerability Safeguards',
+    disclaimerTitle: 'Medical & Environmental Disclaimer',
+    exercisePrefLabel: 'Workout Preference:',
+    exerciseWalk: 'Brisk Walk',
+    exerciseRun: 'Running',
+    exerciseGym: 'Gym Workout',
+    exerciseYoga: 'Yoga & Pranayama',
+    exerciseCycling: 'Cycling',
+    regeneratePlanBtn: 'Regenerate Plan',
+    regenerating: 'Synthesizing Plan...',
   },
   hi: {
     appName: 'एयरसाथी AI',
@@ -289,6 +343,33 @@ export const translations: Record<SupportedLanguage, Translations> = {
     refreshBtn: 'रिफ्रेश',
     familyPillLabel: 'परिवार सुरक्षा:',
     activeCount: 'सक्रिय',
+    plannerTabTitle: 'AI दैनिक दिनचर्या नियोजक',
+    dashboardTabTitle: 'वायु गुणवत्ता डैशबोर्ड',
+    plannerHeaderSubtitle:
+      'स्कूल, ऑफिस, कसरत और घरेलू कार्यों के लिए प्रदूषण-अनुकूलित व्यक्तिगत दैनिक समय-सारणी (जेमिनी AI व वायुमंडलीय मॉडल द्वारा संचालित)',
+    aiEngineBadge: 'गूगल जेमिनी 2.5 फ्लैश',
+    ruleEngineBadge: 'CPCB विशेषज्ञ नियम इंजन',
+    timeOfDayMorning: 'प्रातःकालीन समय-सारणी (06:00 - 12:00)',
+    timeOfDayAfternoon: 'दोपहर समय-सारणी (12:00 - 17:00)',
+    timeOfDayEvening: 'सायंकाल व रात्रि समय-सारणी (17:00 - 22:00+)',
+    keyActivitiesTitle: 'व्यक्तिगत दैनिक कार्य योजनाएं',
+    schoolCommuteTitle: 'स्कूल का सफर व कक्षा तैयारी',
+    officeCommuteTitle: 'दफ्तर आवागमन योजना',
+    exerciseTitle: 'कसरत व व्यायाम समय-सारणी',
+    choresTitle: 'घरेलू कार्य व खरीदारी',
+    indoorAlternative: 'इनडोर सुरक्षित विकल्प',
+    scientificRationale: 'वैज्ञानिक व वातावरणीय कारण',
+    actionPrecautions: 'आवश्यक सुरक्षा सावधानियां',
+    familyPrecautionsTitle: 'पारिवारिक स्वास्थ्य सुरक्षा अलर्ट',
+    disclaimerTitle: 'चिकित्सीय व पर्यावरणीय अस्वीकरण',
+    exercisePrefLabel: 'व्यायाम प्राथमिकता:',
+    exerciseWalk: 'हल्की सैर / वॉक',
+    exerciseRun: 'दौड़ (रनिंग)',
+    exerciseGym: 'जिम वर्कआउट',
+    exerciseYoga: 'योग व प्राणायाम',
+    exerciseCycling: 'साइकिलिंग',
+    regeneratePlanBtn: 'योजना अपडेट करें',
+    regenerating: 'AI योजना तैयार हो रही है...',
   },
 };
 

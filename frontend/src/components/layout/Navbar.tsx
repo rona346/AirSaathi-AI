@@ -1,10 +1,12 @@
 import React from 'react';
-import { Wind, MapPin, RefreshCw, Languages, Users } from 'lucide-react';
+import { Wind, MapPin, RefreshCw, Languages, Users, LayoutDashboard, Calendar } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../utils/translations';
 
 export const Navbar: React.FC = () => {
   const {
+    activeTab,
+    setActiveTab,
     stations,
     selectedStationId,
     setSelectedStationId,
@@ -26,10 +28,10 @@ export const Navbar: React.FC = () => {
   ].filter(Boolean).length;
 
   return (
-    <header className="sticky top-0 z-50 glass-panel border-b border-slate-800/80 px-4 lg:px-8 py-3.5">
+    <header className="sticky top-0 z-50 glass-panel border-b border-slate-800/80 px-4 lg:px-8 py-3">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
-        {/* Brand & Logo */}
-        <div className="flex items-center justify-between w-full md:w-auto">
+        {/* Brand & Logo + Module Tabs */}
+        <div className="flex items-center justify-between w-full md:w-auto gap-4">
           <div className="flex items-center gap-3">
             <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 shadow-lg shadow-emerald-500/20 text-white">
               <Wind className="w-5 h-5 animate-pulse" />
@@ -55,6 +57,32 @@ export const Navbar: React.FC = () => {
               <p className="text-xs text-slate-400 font-normal">{t.appSubtitle}</p>
             </div>
           </div>
+
+          {/* Module Navigation Tabs */}
+          <nav className="hidden lg:flex items-center bg-slate-900/90 p-1 rounded-2xl border border-slate-800 ml-2">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'dashboard'
+                  ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              <span>{t.dashboardTabTitle}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('planner')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'planner'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span>{t.plannerTabTitle}</span>
+            </button>
+          </nav>
 
           {/* Mobile Refresh Button */}
           <button
@@ -117,6 +145,32 @@ export const Navbar: React.FC = () => {
             <span>{t.refreshBtn}</span>
           </button>
         </div>
+      </div>
+
+      {/* Mobile Tab Switcher */}
+      <div className="flex lg:hidden items-center justify-center gap-2 mt-3 pt-2.5 border-t border-slate-800/60">
+        <button
+          onClick={() => setActiveTab('dashboard')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'dashboard'
+              ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+              : 'bg-slate-900 text-slate-400 border border-slate-800'
+          }`}
+        >
+          <LayoutDashboard className="w-3.5 h-3.5" />
+          <span>{t.dashboardTabTitle}</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('planner')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'planner'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+              : 'bg-slate-900 text-slate-400 border border-slate-800'
+          }`}
+        >
+          <Calendar className="w-3.5 h-3.5" />
+          <span>{t.plannerTabTitle}</span>
+        </button>
       </div>
     </header>
   );

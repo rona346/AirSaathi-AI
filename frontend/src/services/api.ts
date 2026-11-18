@@ -1,5 +1,6 @@
-import { CurrentAqiData, ForecastData, StationInfo } from '../types/aqi';
-import { MOCK_STATIONS, getMockCurrentAqi, getMockForecast } from './mockData';
+import { CurrentAqiData, FamilyProfile, ForecastData, StationInfo, SupportedLanguage } from '../types/aqi';
+import { RoutinePlan, RoutinePreferences } from '../types/routine';
+import { MOCK_STATIONS, getMockCurrentAqi, getMockForecast, getMockRoutinePlan } from './mockData';
 
 const API_BASE = '/api/v1';
 
@@ -42,5 +43,48 @@ export async function fetchForecast(stationId: string): Promise<{ data: Forecast
   } catch (err) {
     console.info(`Backend unreachable, serving diurnal forecast for station: ${stationId}`);
     return { data: getMockForecast(stationId), isDemo: true };
+  }
+}
+
+export async function fetchRoutinePlan(
+  stationId: string,
+  language: SupportedLanguage,
+  familyProfile: FamilyProfile,
+  preferences?: RoutinePreferences
+): Promise<{ data: RoutinePlan; isDemo: boolean }> {
+  try {
+    const payload = {
+      station_id: stationId,
+      language,
+      family_profile: {
+        has_children: familyProfile.hasChildren,
+        has_seniors: familyProfile.hasSeniors,
+        has_respiratory_condition: familyProfile.hasRespiratoryCondition,
+        is_pregnant: familyProfile.isPregnant,
+      },
+      preferences: preferences || {
+        wakes_up_early: true,
+        commutes_to_office: true,
+        school_going_kids: familyProfile.hasChildren,
+        exercises_daily: true,
+        preferred_exercise_type: 'walk',
+      },
+    };
+
+    const res = await fetch(`${API_BASE}/routine/plan`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const json = await res.json();
+    return { data: json.data, isDemo: json.is_demo_data };
+  } catch (err) {
+    console.info(`Backend unreachable, serving offline fallback daily routine plan for station: ${stationId}`);
+    return { data: getMockRoutinePlan(stationId, language), isDemo: true };
   }
 }

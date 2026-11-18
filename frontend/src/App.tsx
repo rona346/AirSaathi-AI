@@ -8,6 +8,7 @@ import { PollutantBreakdown } from './components/dashboard/PollutantBreakdown';
 import { HealthRecommendations } from './components/dashboard/HealthRecommendations';
 import { VulnerabilityAlerts } from './components/dashboard/VulnerabilityAlerts';
 import { QuickModuleNav } from './components/dashboard/QuickModuleNav';
+import { DailyPlanner } from './components/planner/DailyPlanner';
 import { Footer } from './components/layout/Footer';
 import { AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
 import { translations } from './utils/translations';
@@ -86,13 +87,27 @@ const DashboardContent: React.FC = () => {
   );
 };
 
+const MainContent: React.FC = () => {
+  const { activeTab } = useApp();
+
+  if (activeTab === 'planner') {
+    return (
+      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
+        <DailyPlanner />
+      </main>
+    );
+  }
+
+  return <DashboardContent />;
+};
+
 export const App: React.FC = () => {
   return (
     <AppProvider>
       <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-white">
         <Navbar />
         <div className="flex-1">
-          <DashboardContent />
+          <MainContent />
         </div>
         <Footer />
       </div>

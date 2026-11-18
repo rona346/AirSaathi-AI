@@ -4,7 +4,7 @@ import { useApp } from '../../context/AppContext';
 import { translations } from '../../utils/translations';
 
 export const QuickModuleNav: React.FC = () => {
-  const { language } = useApp();
+  const { language, setActiveTab } = useApp();
   const t = translations[language];
 
   const modules = [
@@ -14,7 +14,8 @@ export const QuickModuleNav: React.FC = () => {
       desc: language === 'hi' ? 'स्मॉग से बचाव हेतु सुरक्षित सैर, स्कूल व ऑफिस समय सारणी' : 'Dynamic smog-adjusted school, transit, and workout schedules generated with Gemini',
       icon: Calendar,
       color: 'from-blue-500/20 to-indigo-500/10 text-blue-400 border-blue-500/30',
-      status: t.statusNext,
+      status: t.statusActive,
+      isAvailable: true,
     },
     {
       id: 'indoor',
@@ -76,14 +77,28 @@ export const QuickModuleNav: React.FC = () => {
           return (
             <div
               key={m.id}
-              className="glass-card rounded-2xl p-5 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between group"
+              onClick={() => {
+                if (m.isAvailable) {
+                  setActiveTab('planner');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }}
+              className={`glass-card rounded-2xl p-5 border border-slate-800 transition-all flex flex-col justify-between group ${
+                m.isAvailable ? 'hover:border-blue-500/50 cursor-pointer shadow-lg hover:shadow-blue-500/10' : 'hover:border-slate-700'
+              }`}
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <div className={`p-2.5 rounded-xl bg-gradient-to-br ${m.color} border`}>
                     <Icon className="w-5 h-5" />
                   </div>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                  <span
+                    className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                      m.isAvailable
+                        ? 'bg-blue-500/15 text-blue-300 border-blue-500/30'
+                        : 'bg-slate-800 text-slate-400 border-slate-700'
+                    }`}
+                  >
                     {m.status}
                   </span>
                 </div>
@@ -96,7 +111,7 @@ export const QuickModuleNav: React.FC = () => {
               </div>
 
               <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 group-hover:text-slate-200 transition-colors">
-                <span>{t.viewArchitecture}</span>
+                <span>{m.isAvailable ? (language === 'hi' ? 'प्लानर खोलें' : 'Launch Planner') : t.viewArchitecture}</span>
                 <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
