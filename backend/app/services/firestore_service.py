@@ -251,19 +251,63 @@ class FirestoreService:
 
     # Subcollection: Impact Logs
     @classmethod
-    def save_impact_log(cls, user_id: str, log: PersistedImpactLog) -> str:
+    def save_impact_log(cls, user_id: str, log: Any) -> str:
         """Persist environmental action log under /users/{userId}/impact_logs/{logId}."""
         if not is_firebase_available():
             raise RuntimeError("Cloud Firestore persistence is unavailable.")
+
+        log_id = log.log_id if hasattr(log, "log_id") else log.get("log_id")
+        data = log.model_dump(mode="json") if hasattr(log, "model_dump") else log
 
         log_ref = (
             cls._users_collection()
             .document(user_id)
             .collection("impact_logs")
-            .document(log.log_id)
+            .document(log_id)
         )
-        log_ref.set(log.model_dump(mode="json"))
-        return log.log_id
+        log_ref.set(data)
+        return log_id
+
+    @classmethod
+    def get_impact_log(cls, user_id: str, log_id: str) -> Optional[Dict[str, Any]]:
+        """Retrieve a single impact log under /users/{userId}/impact_logs/{logId}."""
+        if not is_firebase_available():
+            return None
+
+        try:
+            doc_ref = (
+                cls._users_collection()
+                .document(user_id)
+                .collection("impact_logs")
+                .document(log_id)
+            )
+            doc = doc_ref.get()
+            return doc.to_dict() if doc.exists else None
+        except Exception as exc:
+            logger.warning(f"Error fetching impact log {log_id} for user {user_id}: {exc}")
+            return None
+
+    @classmethod
+    def delete_impact_log(cls, user_id: str, log_id: str) -> bool:
+        """Delete an environmental action log under /users/{userId}/impact_logs/{logId}."""
+        if not is_firebase_available():
+            raise RuntimeError("Cloud Firestore persistence is unavailable.")
+
+        try:
+            doc_ref = (
+                cls._users_collection()
+                .document(user_id)
+                .collection("impact_logs")
+                .document(log_id)
+            )
+            doc = doc_ref.get()
+            if not doc.exists:
+                return False
+            doc_ref.delete()
+            return True
+        except Exception as exc:
+            logger.warning(f"Error deleting impact log {log_id} for user {user_id}: {exc}")
+            return False
 
     @classmethod
     def list_impact_logs(cls, user_id: str, limit: int = 50) -> List[Dict[str, Any]]:

@@ -203,6 +203,50 @@ export interface Translations {
   perPassengerEmissionsLabel: string;
   methodologyNotesTitle: string;
   mobilityDisclaimerTitle: string;
+  // Module 6 Impact Tracker Translations
+  impactTabTitle: string;
+  impactHeaderSubtitle: string;
+  impactTimeframeDay: string;
+  impactTimeframeWeek: string;
+  impactTimeframeMonth: string;
+  impactTimeframeAll: string;
+  impactTotalDistance: string;
+  impactModeledEmissions: string;
+  impactAvoidedEmissions: string;
+  impactTreeMonths: string;
+  impactTreeDisclaimer: string;
+  impactDailyTrendTitle: string;
+  impactDailyTrendSubtitle: string;
+  impactModalSplitTitle: string;
+  impactModalSplitSubtitle: string;
+  impactSuggestionsTitle: string;
+  impactSuggestionsSubtitle: string;
+  impactLogActivityBtn: string;
+  impactMethodologyBtn: string;
+  impactHistoryTitle: string;
+  impactHistorySubtitle: string;
+  impactNoActivities: string;
+  impactDeleteConfirmTitle: string;
+  impactDeleteConfirmDesc: string;
+  impactAddModalTitle: string;
+  impactAddModalSubtitle: string;
+  impactActivityTypeLabel: string;
+  impactTransportModeLabel: string;
+  impactDistanceLabel: string;
+  impactPassengersLabel: string;
+  impactDateLabel: string;
+  impactNotesLabel: string;
+  impactExposureMitigationLabel: string;
+  impactIndoorIntegrityNote: string;
+  impactPreviewEmissions: string;
+  impactPreviewSavings: string;
+  impactSaveActivityBtn: string;
+  impactSaving: string;
+  impactDeleteBtn: string;
+  impactDeleting: string;
+  impactCancelBtn: string;
+  impactMethodologyTitle: string;
+  impactMethodologySubtitle: string;
 }
 
 export const translations: Record<SupportedLanguage, Translations> = {
@@ -422,6 +466,50 @@ export const translations: Record<SupportedLanguage, Translations> = {
     perPassengerEmissionsLabel: 'Per-Passenger Emissions:',
     methodologyNotesTitle: 'Scientific Methodology & Emission Assumptions',
     mobilityDisclaimerTitle: 'Environmental & Health Advisory Disclaimer',
+    // Module 6 Impact Tracker Translations
+    impactTabTitle: 'Impact Tracker',
+    impactHeaderSubtitle: 'Personal Carbon Footprint, Avoided Emissions & Sustainability Milestones',
+    impactTimeframeDay: 'Today',
+    impactTimeframeWeek: 'Past 7 Days',
+    impactTimeframeMonth: 'Past 30 Days',
+    impactTimeframeAll: 'All Time',
+    impactTotalDistance: 'Clean Distance Logged',
+    impactModeledEmissions: 'Modeled Emissions',
+    impactAvoidedEmissions: 'Avoided CO2e (Savings)',
+    impactTreeMonths: 'Tree-Months Equivalent',
+    impactTreeDisclaimer: 'Educational equivalency: 1 mature tree absorbs ~1.75 kg CO2/mo (US EPA). Not a carbon offset credit.',
+    impactDailyTrendTitle: 'Daily Impact & Emissions Trend',
+    impactDailyTrendSubtitle: 'Modeled commute emissions versus avoided baseline emissions over time',
+    impactModalSplitTitle: 'Modal Split & Travel Distribution',
+    impactModalSplitSubtitle: 'Commute distance and emission breakdown across transport modes',
+    impactSuggestionsTitle: 'Personalized Sustainability Actions',
+    impactSuggestionsSubtitle: 'Actionable suggestions based on your commute history to maximize CO2 savings',
+    impactLogActivityBtn: 'Log Activity',
+    impactMethodologyBtn: 'Scientific Methodology',
+    impactHistoryTitle: 'Environmental Action History',
+    impactHistorySubtitle: 'Transparent log of commutes, carpools, and indoor air mitigation actions',
+    impactNoActivities: 'No environmental activities recorded in this timeframe. Log your daily commute or lifestyle actions to begin tracking!',
+    impactDeleteConfirmTitle: 'Confirm Activity Deletion',
+    impactDeleteConfirmDesc: 'Are you sure you want to remove this logged activity? This action cannot be undone.',
+    impactAddModalTitle: 'Log Environmental Activity',
+    impactAddModalSubtitle: 'Record a sustainable commute, carpool, or indoor air safeguard',
+    impactActivityTypeLabel: 'Activity Category',
+    impactTransportModeLabel: 'Transport Mode',
+    impactDistanceLabel: 'Trip Distance (km)',
+    impactPassengersLabel: 'Occupancy / Passengers',
+    impactDateLabel: 'Activity Date',
+    impactNotesLabel: 'Trip Notes / Purpose (Optional)',
+    impactExposureMitigationLabel: 'Exposure Mitigation Score (0-100)',
+    impactIndoorIntegrityNote: 'Indoor safeguards (purifier/ventilation) mitigate respiratory PM2.5/PM10 lung intake; they do not claim vehicular CO2 reductions.',
+    impactPreviewEmissions: 'Est. Emissions:',
+    impactPreviewSavings: 'Est. CO2e Avoided:',
+    impactSaveActivityBtn: 'Record Activity',
+    impactSaving: 'Saving...',
+    impactDeleteBtn: 'Delete',
+    impactDeleting: 'Deleting...',
+    impactCancelBtn: 'Cancel',
+    impactMethodologyTitle: 'Calculation Methodology & Standards',
+    impactMethodologySubtitle: 'Verified scientific benchmarks, grid factors, and transparent accounting rules',
   },
   hi: {
     appName: 'एयरसाथी AI',
@@ -639,6 +727,50 @@ export const translations: Record<SupportedLanguage, Translations> = {
     perPassengerEmissionsLabel: 'प्रति-यात्री उत्सर्जन:',
     methodologyNotesTitle: 'वैज्ञानिक गणना पद्धति व उत्सर्जन मान्यताएं',
     mobilityDisclaimerTitle: 'पर्यावरणीय व स्वास्थ्य परामर्श अस्वीकरण',
+    // Module 6 Impact Tracker Translations
+    impactTabTitle: 'पर्यावरणीय प्रभाव',
+    impactHeaderSubtitle: 'व्यक्तिगत कार्बन फुटप्रिंट, वायु उत्सर्जन बचत और सतत लक्ष्य',
+    impactTimeframeDay: 'आज',
+    impactTimeframeWeek: 'पिछले 7 दिन',
+    impactTimeframeMonth: 'पिछले 30 दिन',
+    impactTimeframeAll: 'कुल समय',
+    impactTotalDistance: 'दर्ज स्वच्छ दूरी',
+    impactModeledEmissions: 'अनुमानित उत्सर्जन',
+    impactAvoidedEmissions: 'बचत हुआ CO2e (कार्बन कटौती)',
+    impactTreeMonths: 'वृक्ष-माह समतुल्यता',
+    impactTreeDisclaimer: 'शैक्षणिक संदर्भ: 1 परिपक्व पेड़ ~1.75 किग्रा CO2/माह अवशोषित करता है (US EPA)। यह प्रत्यक्ष कार्बन क्रेडिट नहीं है।',
+    impactDailyTrendTitle: 'दैनिक प्रभाव व उत्सर्जन रुझान',
+    impactDailyTrendSubtitle: 'समय के साथ वास्तविक आवागमन उत्सर्जन और बचाए गए बेसलाइन कार्बन की तुलना',
+    impactModalSplitTitle: 'परिवहन साधन विभाजन व वितरण',
+    impactModalSplitSubtitle: 'विभिन्न परिवहन साधनों में यात्रा की गई दूरी और उत्सर्जन का प्रतिशत',
+    impactSuggestionsTitle: 'अनुकूलित सतत कार्य योजनाएं',
+    impactSuggestionsSubtitle: 'कार्बन बचत को अधिकतम करने हेतु आपके यात्रा इतिहास पर आधारित व्यावहारिक सुझाव',
+    impactLogActivityBtn: 'गतिविधि जोड़ें',
+    impactMethodologyBtn: 'वैज्ञानिक कार्यप्रणाली',
+    impactHistoryTitle: 'पर्यावरणीय गतिविधि इतिहास',
+    impactHistorySubtitle: 'सफर, कारपूलिंग और इनडोर सुरक्षा उपायों का पारदर्शी लेखा-जोखा',
+    impactNoActivities: 'इस समय सीमा में कोई गतिविधि दर्ज नहीं है। ट्रैकिंग प्रारंभ करने हेतु अपनी यात्रा या इनडोर उपाय दर्ज करें!',
+    impactDeleteConfirmTitle: 'गतिविधि हटाने की पुष्टि करें',
+    impactDeleteConfirmDesc: 'क्या आप वाकई इस गतिविधि को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।',
+    impactAddModalTitle: 'पर्यावरणीय गतिविधि दर्ज करें',
+    impactAddModalSubtitle: 'सतत यात्रा, कारपूलिंग या इनडोर वायु सुरक्षा का रिकॉर्ड बनाएं',
+    impactActivityTypeLabel: 'गतिविधि श्रेणी',
+    impactTransportModeLabel: 'परिवहन साधन',
+    impactDistanceLabel: 'सफर की दूरी (किमी)',
+    impactPassengersLabel: 'सवारियों की संख्या',
+    impactDateLabel: 'गतिविधि दिनांक',
+    impactNotesLabel: 'सफर विवरण / उद्देश्य (वैकल्पिक)',
+    impactExposureMitigationLabel: 'प्रदूषण बचाव स्कोर (0-100)',
+    impactIndoorIntegrityNote: 'इनडोर प्यूरीफायर व वेंटिलेशन उपाय फेफड़ों में जाने वाले PM2.5/PM10 को कम करते हैं; वे ऑटोमोटिव CO2 कटौती का दावा नहीं करते।',
+    impactPreviewEmissions: 'अनुमानित उत्सर्जन:',
+    impactPreviewSavings: 'अनुमानित बचत:',
+    impactSaveActivityBtn: 'गतिविधि सहेजें',
+    impactSaving: 'सहेजा जा रहा है...',
+    impactDeleteBtn: 'हटाएं',
+    impactDeleting: 'हटाया जा रहा है...',
+    impactCancelBtn: 'रद्द करें',
+    impactMethodologyTitle: 'गणना कार्यप्रणाली व मानक',
+    impactMethodologySubtitle: 'सत्यापित वैज्ञानिक मानक, ग्रिड कारक और पारदर्शी उत्सर्जन लेखा नियम',
   },
 };
 

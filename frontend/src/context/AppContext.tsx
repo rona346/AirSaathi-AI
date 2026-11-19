@@ -26,7 +26,7 @@ import {
   registerWithEmailPassword,
 } from '../services/firebase';
 
-export type AppTab = 'dashboard' | 'planner' | 'indoor' | 'chat' | 'mobility';
+export type AppTab = 'dashboard' | 'planner' | 'indoor' | 'chat' | 'mobility' | 'impact';
 
 export type PersistenceStatus = 'saved' | 'saving' | 'guest' | 'error';
 

@@ -10,6 +10,7 @@ import {
   Home,
   MessageSquare,
   Navigation,
+  Leaf,
   User,
   Cloud,
   LogOut,
@@ -133,6 +134,17 @@ export const Navbar: React.FC = () => {
             >
               <Navigation className="w-3.5 h-3.5" />
               <span>{t.mobilityTabTitle}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('impact')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'impact'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/20'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Leaf className="w-3.5 h-3.5" />
+              <span>{t.impactTabTitle}</span>
             </button>
           </nav>
 
@@ -291,6 +303,17 @@ export const Navbar: React.FC = () => {
         >
           <Navigation className="w-3.5 h-3.5" />
           <span className="truncate">{t.mobilityTabTitle}</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('impact')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'impact'
+              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/20'
+              : 'bg-slate-900 text-slate-400 border border-slate-800'
+          }`}
+        >
+          <Leaf className="w-3.5 h-3.5" />
+          <span className="truncate">{t.impactTabTitle}</span>
         </button>
       </div>
     </header>

@@ -11,10 +11,21 @@ import {
   UserProfileUpdate,
 } from '../types/user';
 import {
+  CalculationMethodologyDetail,
+  ImpactLogCreate,
+  ImpactLogRecord,
+  ImpactSummaryResponse,
+  PaginatedImpactLogs,
+  TimeframeFilter,
+} from '../types/impact';
+import {
+  MOCK_IMPACT_METHODOLOGY,
   MOCK_STATIONS,
   getMockChatResponse,
   getMockCurrentAqi,
   getMockForecast,
+  getMockImpactLogs,
+  getMockImpactSummary,
   getMockIndoorAssessment,
   getMockMobilityPlan,
   getMockRoutinePlan,
@@ -369,5 +380,135 @@ export async function saveUserChatSession(
   } catch (err) {
     console.warn('Failed to save user chat session:', err);
     return null;
+  }
+}
+
+// Module 6: Environmental Impact Tracker APIs
+
+export async function fetchImpactSummary(
+  token?: string | null,
+  timeframe: TimeframeFilter = 'week'
+): Promise<{ data: ImpactSummaryResponse; isDemo: boolean }> {
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  try {
+    const res = await fetch(`${API_BASE}/impact/summary?timeframe=${encodeURIComponent(timeframe)}`, {
+      headers,
+    });
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      const errorMsg =
+        errJson.detail ||
+        `Server error (${res.status}): Failed to retrieve impact summary.`;
+      throw new Error(errorMsg);
+    }
+    const json = await res.json();
+    return { data: json.data, isDemo: json.is_demo_data };
+  } catch (err: any) {
+    // For authenticated users, propagate error so UI displays genuine error state
+    if (token) {
+      console.warn('Authenticated impact summary request failed:', err);
+      throw err;
+    }
+    // Only unauthenticated guests fall back to offline demonstration data
+    console.info('Backend unreachable for guest user, serving offline simulated summary baseline:', err);
+    return { data: getMockImpactSummary(timeframe) as unknown as ImpactSummaryResponse, isDemo: true };
+  }
+}
+
+export async function fetchImpactLogs(
+  token?: string | null,
+  timeframe?: TimeframeFilter,
+  limit: number = 20,
+  offset: number = 0
+): Promise<{ data: PaginatedImpactLogs; isDemo: boolean }> {
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  let url = `${API_BASE}/impact/logs?limit=${limit}&offset=${offset}`;
+  if (timeframe) url += `&timeframe=${encodeURIComponent(timeframe)}`;
+
+  try {
+    const res = await fetch(url, { headers });
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      const errorMsg =
+        errJson.detail ||
+        `Server error (${res.status}): Failed to retrieve impact logs.`;
+      throw new Error(errorMsg);
+    }
+    const json = await res.json();
+    return { data: json.data, isDemo: json.is_demo_data };
+  } catch (err: any) {
+    if (token) {
+      console.warn('Authenticated impact logs request failed:', err);
+      throw err;
+    }
+    console.info('Backend unreachable for guest user, serving offline simulated logs baseline:', err);
+    return { data: getMockImpactLogs(limit, offset) as unknown as PaginatedImpactLogs, isDemo: true };
+  }
+}
+
+export async function createImpactLog(
+  token: string,
+  payload: ImpactLogCreate
+): Promise<{ data: ImpactLogRecord; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/impact/logs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      throw new Error(errJson.detail || `HTTP error ${res.status}`);
+    }
+    const json = await res.json();
+    return { data: json.data };
+  } catch (err: any) {
+    console.warn('Failed to record impact activity:', err);
+    throw err;
+  }
+}
+
+export async function deleteImpactLog(
+  token: string,
+  logId: string
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/impact/logs/${encodeURIComponent(logId)}`, {
+      method: 'DELETE',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      throw new Error(errJson.detail || `HTTP error ${res.status}`);
+    }
+    return true;
+  } catch (err) {
+    console.warn(`Failed to delete impact log ${logId}:`, err);
+    throw err;
+  }
+}
+
+export async function fetchImpactMethodology(): Promise<CalculationMethodologyDetail> {
+  try {
+    const res = await fetch(`${API_BASE}/impact/methodology`, {
+      headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const json = await res.json();
+    return json.data;
+  } catch (err) {
+    console.info('Using offline fallback methodology details:', err);
+    return MOCK_IMPACT_METHODOLOGY as CalculationMethodologyDetail;
   }
 }

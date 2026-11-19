@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/layout/Navbar';
 import { DemoDataBanner } from './components/dashboard/DemoDataBanner';
@@ -8,14 +8,37 @@ import { PollutantBreakdown } from './components/dashboard/PollutantBreakdown';
 import { HealthRecommendations } from './components/dashboard/HealthRecommendations';
 import { VulnerabilityAlerts } from './components/dashboard/VulnerabilityAlerts';
 import { QuickModuleNav } from './components/dashboard/QuickModuleNav';
-import { DailyPlanner } from './components/planner/DailyPlanner';
-import { IndoorAssistant } from './components/indoor/IndoorAssistant';
-import { ChatAssistant } from './components/chat/ChatAssistant';
-import { MobilityAssistant } from './components/mobility/MobilityAssistant';
 import { AuthModal } from './components/auth/AuthModal';
 import { Footer } from './components/layout/Footer';
 import { AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
 import { translations } from './utils/translations';
+
+// Lazy-loaded assistant modules for optimal bundle code-splitting
+const DailyPlanner = React.lazy(() =>
+  import('./components/planner/DailyPlanner').then((m) => ({ default: m.DailyPlanner }))
+);
+const IndoorAssistant = React.lazy(() =>
+  import('./components/indoor/IndoorAssistant').then((m) => ({ default: m.IndoorAssistant }))
+);
+const ChatAssistant = React.lazy(() =>
+  import('./components/chat/ChatAssistant').then((m) => ({ default: m.ChatAssistant }))
+);
+const MobilityAssistant = React.lazy(() =>
+  import('./components/mobility/MobilityAssistant').then((m) => ({ default: m.MobilityAssistant }))
+);
+const ImpactTracker = React.lazy(() =>
+  import('./components/impact/ImpactTracker').then((m) => ({ default: m.ImpactTracker }))
+);
+
+const ModuleFallback: React.FC = () => (
+  <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 text-center">
+    <div className="relative">
+      <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+      <div className="absolute inset-0 rounded-full blur-md bg-emerald-500/20 pointer-events-none" />
+    </div>
+    <span className="text-xs text-slate-400 font-medium">Loading AirSaathi module...</span>
+  </div>
+);
 
 const DashboardContent: React.FC = () => {
   const { loading, error, refreshData, currentAqi, language } = useApp();
@@ -94,39 +117,36 @@ const DashboardContent: React.FC = () => {
 const MainContent: React.FC = () => {
   const { activeTab } = useApp();
 
-  if (activeTab === 'planner') {
-    return (
-      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
-        <DailyPlanner />
-      </main>
-    );
-  }
-
-  if (activeTab === 'indoor') {
-    return (
-      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
-        <IndoorAssistant />
-      </main>
-    );
-  }
-
-  if (activeTab === 'chat') {
-    return (
-      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
-        <ChatAssistant />
-      </main>
-    );
-  }
-
-  if (activeTab === 'mobility') {
-    return (
-      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
-        <MobilityAssistant />
-      </main>
-    );
-  }
-
-  return <DashboardContent />;
+  return (
+    <Suspense fallback={<ModuleFallback />}>
+      {activeTab === 'planner' && (
+        <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
+          <DailyPlanner />
+        </main>
+      )}
+      {activeTab === 'indoor' && (
+        <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
+          <IndoorAssistant />
+        </main>
+      )}
+      {activeTab === 'chat' && (
+        <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
+          <ChatAssistant />
+        </main>
+      )}
+      {activeTab === 'mobility' && (
+        <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
+          <MobilityAssistant />
+        </main>
+      )}
+      {activeTab === 'impact' && (
+        <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
+          <ImpactTracker />
+        </main>
+      )}
+      {activeTab === 'dashboard' && <DashboardContent />}
+    </Suspense>
+  );
 };
 
 const AuthModalWrapper: React.FC = () => {

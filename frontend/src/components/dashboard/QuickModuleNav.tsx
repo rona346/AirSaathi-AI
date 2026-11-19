@@ -50,7 +50,8 @@ export const QuickModuleNav: React.FC = () => {
       desc: language === 'hi' ? 'पारिवारिक कार्बन फुटप्रिंट, वायु उत्सर्जन बचत और लक्ष्य' : 'Community emission savings, carbon avoided, and collective green milestones',
       icon: Leaf,
       color: 'from-teal-500/20 to-emerald-500/10 text-teal-400 border-teal-500/30',
-      status: t.statusNext,
+      status: t.statusActive,
+      isAvailable: true,
     },
     {
       id: 'family',
@@ -86,6 +87,7 @@ export const QuickModuleNav: React.FC = () => {
                   if (m.id === 'indoor') setActiveTab('indoor');
                   if (m.id === 'chat') setActiveTab('chat');
                   if (m.id === 'mobility') setActiveTab('mobility');
+                  if (m.id === 'impact') setActiveTab('impact');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
               }}
