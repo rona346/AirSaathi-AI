@@ -1,0 +1,15 @@
+# Environment variables and local secrets
+.env
+.env.local
+.env.*.local
+*.env
+*.local
+*serviceAccount*.json
+*service-account*.json
+
+# Dependencies
+node_modules/
+
+# Production build outputs
+dist/
+dist-ssr/

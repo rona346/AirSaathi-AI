@@ -12,19 +12,59 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Comprehensive list of privileged administrative aliases
+    function privilegedKeys() {
+      return [
+        'role', 'roles', 'is_admin', 'isAdmin', 'admin',
+        'permissions', 'claims', 'system_role', 'is_super_admin'
+      ];
+    }
+
     // Helper to verify that client writes do not tamper with privileged administrative flags
     function hasNoPrivilegedFieldChanges() {
-      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'is_admin', 'admin', 'permissions', 'claims']);
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(privilegedKeys());
+    }
+
+    // Validate email conditionally: missing or null allowed, non-null must match auth token claim
+    function isValidEmail() {
+      let data = request.resource.data;
+      return !('email' in data) || data.email == null || data.email == request.auth.token.email;
+    }
+
+    // Validate uid on update: existing uid must remain present and unchanged (never removed or replaced)
+    function isValidUidUpdate(userId) {
+      return ('uid' in resource.data)
+        ? (('uid' in request.resource.data) && request.resource.data.uid == resource.data.uid)
+        : (!('uid' in request.resource.data) || request.resource.data.uid == userId);
+    }
+
+    // Validate created_at on update: immutable, preserves ISO 8601 string compatibility
+    function isImmutableCreatedAt() {
+      return !('created_at' in resource.data)
+        || (('created_at' in request.resource.data) && request.resource.data.created_at == resource.data.created_at);
     }
 
     // User profiles & family settings
     match /users/{userId} {
       allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && (!request.resource.data.keys().hasAny(['role', 'is_admin', 'admin', 'permissions', 'claims']));
-      allow update: if isOwner(userId) && hasNoPrivilegedFieldChanges();
-      allow delete: if isOwner(userId);
+
+      // Create: user owns path, no admin fields injected, uid matches userId if provided, email matches token if provided
+      allow create: if isOwner(userId)
+        && !request.resource.data.keys().hasAny(privilegedKeys())
+        && (!('uid' in request.resource.data) || request.resource.data.uid == userId)
+        && isValidEmail();
+
+      // Update: user owns path, no admin fields modified, uid unchanged/not removed, created_at unchanged, email matches token if provided
+      allow update: if isOwner(userId)
+        && hasNoPrivilegedFieldChanges()
+        && isValidUidUpdate(userId)
+        && isImmutableCreatedAt()
+        && isValidEmail();
+
+      // Root profile deletion disabled; account cleanup requires a future secure backend workflow with recursive subcollection deletion
+      allow delete: if false;
       
-      // Subcollections under user
+      // Subcollections under user (Strict Owner Isolation)
       match /routines/{routineId} {
         allow read, write: if isOwner(userId);
       }
