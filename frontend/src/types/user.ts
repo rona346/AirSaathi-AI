@@ -17,10 +17,44 @@ export interface FamilyMemberProfile {
   notes?: string;
 }
 
+export type AlertThresholdPreference = 'sensitive' | 'standard' | 'high_tolerance';
+
+export interface HouseholdDemographics {
+  has_infants?: boolean;
+  has_children?: boolean;
+  has_teens?: boolean;
+  has_adults?: boolean;
+  has_seniors?: boolean;
+}
+
+export interface HouseholdCleanAirPreferences {
+  alert_threshold?: AlertThresholdPreference;
+  preferred_transit_mode?: string;
+  has_hepa_purifier?: boolean;
+  has_kitchen_exhaust?: boolean;
+  has_indoor_monitor?: boolean;
+  morning_outdoor_window?: boolean;
+  school_commute_active?: boolean;
+  office_commute_active?: boolean;
+  evening_outdoor_window?: boolean;
+}
+
 export interface FamilyPreferencesData {
   vulnerability: FamilyProfile;
-  members: FamilyMemberProfile[];
-  configured_precautions: string[];
+  members?: FamilyMemberProfile[];
+  configured_precautions?: string[];
+  household_size?: number;
+  demographics?: HouseholdDemographics;
+  preferences?: HouseholdCleanAirPreferences;
+}
+
+export interface FamilyPreferencesUpdate {
+  vulnerability?: Partial<FamilyProfile>;
+  members?: FamilyMemberProfile[];
+  configured_precautions?: string[];
+  household_size?: number;
+  demographics?: HouseholdDemographics;
+  preferences?: HouseholdCleanAirPreferences;
 }
 
 export interface RoutinePreferencesData {
@@ -50,7 +84,7 @@ export interface UserProfileUpdate {
   display_name?: string | null;
   preferred_language?: SupportedLanguage;
   location?: LocationPreferences;
-  family?: FamilyPreferencesData;
+  family?: FamilyPreferencesUpdate | FamilyPreferencesData;
   routine?: RoutinePreferencesData;
   household?: HouseholdInput;
   mobility?: MobilityRequest;
@@ -89,4 +123,39 @@ export interface AuthUser {
   email: string | null;
   displayName: string | null;
   token?: string;
+}
+
+export interface PersonalizedActionItem {
+  category: 'demographic' | 'indoor_asset' | 'commute' | 'general' | string;
+  priority: 'urgent' | 'caution' | 'advisory' | 'good' | string;
+  title: string;
+  description: string;
+  target_group?: string | null;
+  rationale: string;
+}
+
+export interface PersonalizedAdvisoryResponse {
+  status: 'active' | 'unavailable' | string;
+  station_id?: string | null;
+  station_name?: string | null;
+  city?: string | null;
+  aqi?: number | null;
+  category?: string | null;
+  prominent_pollutant?: string | null;
+  data_source: string;
+  is_demo_data: boolean;
+  observed_at?: string | null;
+  threshold_applied: AlertThresholdPreference;
+  household_size: number;
+  actions: PersonalizedActionItem[];
+  active_safeguards: string[];
+  equipment_status: {
+    has_hepa_purifier?: boolean;
+    has_kitchen_exhaust?: boolean;
+    has_indoor_monitor?: boolean;
+    preferred_transit_mode?: string;
+    alert_threshold?: string;
+    [key: string]: any;
+  };
+  disclaimer: string;
 }

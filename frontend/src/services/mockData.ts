@@ -1,6 +1,11 @@
 import { CurrentAqiData, ForecastData, StationInfo } from '../types/aqi';
 import { ChatResponse } from '../types/chat';
 import { MobilityPlanResponse, MobilityRequest, ModeEmissionDetail, TransportMode } from '../types/mobility';
+import {
+  FamilyPreferencesData,
+  PersonalizedActionItem,
+  PersonalizedAdvisoryResponse,
+} from '../types/user';
 import { getAqiCategory, concentrationFromSubindex, calculateSubindex } from '../utils/aqiUtils';
 
 export const MOCK_STATIONS: StationInfo[] = [
@@ -1170,5 +1175,300 @@ export const getMockImpactLogs = (limit: number = 20, offset: number = 0) => {
     limit,
     offset,
     has_more: offset + limit < allLogs.length,
+  };
+};
+
+export const getMockPersonalizedAdvisory = (
+  stationId: string = 'delhi-anand-vihar',
+  familyData?: FamilyPreferencesData
+): PersonalizedAdvisoryResponse => {
+  const station = MOCK_STATIONS.find((s) => s.id === stationId) || MOCK_STATIONS[0];
+  const aqiData = getMockCurrentAqi(station.id);
+  const aqi = aqiData.aqi;
+
+  const householdSize = familyData?.household_size ?? 4;
+  const demographics = familyData?.demographics ?? {
+    has_infants: false,
+    has_children: true,
+    has_teens: false,
+    has_adults: true,
+    has_seniors: true,
+  };
+  const preferences = familyData?.preferences ?? {
+    alert_threshold: 'standard',
+    preferred_transit_mode: 'public_transit',
+    has_hepa_purifier: true,
+    has_kitchen_exhaust: true,
+    has_indoor_monitor: true,
+    morning_outdoor_window: false,
+    school_commute_active: true,
+    office_commute_active: true,
+    evening_outdoor_window: false,
+  };
+
+  const threshold = preferences.alert_threshold || 'standard';
+  let isElevatedAlert = false;
+  if (threshold === 'sensitive' && aqi > 100) {
+    isElevatedAlert = true;
+  } else if (threshold === 'standard' && aqi > 200) {
+    isElevatedAlert = true;
+  } else if (threshold === 'high_tolerance' && aqi > 300) {
+    isElevatedAlert = true;
+  }
+
+  const actions: PersonalizedActionItem[] = [];
+
+  // 1. Infants
+  if (demographics.has_infants) {
+    if (aqi > 100 || isElevatedAlert) {
+      actions.push({
+        category: 'demographic',
+        priority: aqi > 200 ? 'urgent' : 'caution',
+        title: 'Infant Respiratory Shield',
+        description:
+          'Keep infants in filtered indoor air. Avoid stroller transit outdoors near roadways as tailpipe particulate concentration at 0.5m-1m above ground is up to 3x higher.',
+        target_group: 'infants',
+        rationale: 'Infants have immature nasal filtration and breathe more air per unit body weight than adults.',
+      });
+    } else {
+      actions.push({
+        category: 'demographic',
+        priority: 'good',
+        title: 'Infant Outdoor Air Quality Normal',
+        description:
+          'Current ambient air quality is within acceptable limits. Standard gentle outdoor exposure and room ventilation are appropriate.',
+        target_group: 'infants',
+        rationale: 'Ambient particulate levels currently do not exceed infant sensitivity thresholds.',
+      });
+    }
+  }
+
+  // 2. Children
+  const hasChildren = Boolean(demographics.has_children || familyData?.vulnerability?.hasChildren);
+  if (hasChildren) {
+    if (aqi > 200 || isElevatedAlert) {
+      if (preferences.school_commute_active) {
+        actions.push({
+          category: 'demographic',
+          priority: aqi > 300 ? 'urgent' : 'caution',
+          title: 'Pediatric Commute & School Exposure Mitigation',
+          description:
+            'Limit outdoor exposure duration during school commutes when pollution is elevated. Request schools move outdoor morning assemblies and physical activities indoors. If outdoor exposure is unavoidable, consider age-appropriate, comfortable particulate filtration masks with adult supervision.',
+          target_group: 'children',
+          rationale:
+            'Children breathe more air per unit body weight than adults and their developing airways are more susceptible to particulate-induced inflammation.',
+        });
+      } else {
+        actions.push({
+          category: 'demographic',
+          priority: 'caution',
+          title: 'Limit Outdoor Play & School Recess',
+          description:
+            'Pollution levels exceed pediatric activity thresholds. Encourage indoor games and creative recreation in clean rooms.',
+          target_group: 'children',
+          rationale: 'Vigorous aerobic play increases deep lung deposition of fine particulate matter.',
+        });
+      }
+    } else {
+      actions.push({
+        category: 'demographic',
+        priority: 'good',
+        title: 'Unrestricted Outdoor Activity for Children',
+        description:
+          'Ambient air quality allows standard outdoor sports, playtime, and school activities without added precautions.',
+        target_group: 'children',
+        rationale: 'Current particulate concentrations do not present elevated acute pediatric risks.',
+      });
+    }
+  }
+
+  // 3. Seniors
+  const hasSeniors = Boolean(demographics.has_seniors || familyData?.vulnerability?.hasSeniors);
+  if (hasSeniors) {
+    if (aqi > 200 || isElevatedAlert) {
+      actions.push({
+        category: 'demographic',
+        priority: aqi > 300 ? 'urgent' : 'caution',
+        title: 'Senior Outdoor Activity Exposure Caution',
+        description:
+          'Elevated morning pollution is common due to diurnal boundary layer dynamics. Consider shifting outdoor morning walks to later in the day when local air quality is verified acceptable, or opt for light indoor movement.',
+        target_group: 'seniors',
+        rationale:
+          'Inhaling fine particulates during early cold hours elevates cardiovascular and pulmonary stress in older adults.',
+      });
+    } else {
+      actions.push({
+        category: 'demographic',
+        priority: 'good',
+        title: 'Standard Morning Exercise Permitted',
+        description:
+          'Ambient air levels support routine morning strolls and light outdoor gardening for senior family members.',
+        target_group: 'seniors',
+        rationale: 'Current air quality poses minimal acute cardiovascular risk.',
+      });
+    }
+  }
+
+  // 4. Teens & Adults
+  if (demographics.has_teens || demographics.has_adults) {
+    if (aqi > 200 || isElevatedAlert) {
+      actions.push({
+        category: 'demographic',
+        priority: 'caution',
+        title: 'Moderate Strenuous Outdoor Exercise',
+        description:
+          'Shift intense outdoor workouts, jogging, and cycling indoors or reschedule away from peak traffic hours.',
+        target_group: 'adults',
+        rationale:
+          'Strenuous outdoor exertion increases minute ventilation by 5-10x, deeply pulling ambient particulates into bronchial passages.',
+      });
+    }
+  }
+
+  // 5. Equipment: HEPA Purifier
+  if (preferences.has_hepa_purifier) {
+    if (aqi > 150 || isElevatedAlert) {
+      actions.push({
+        category: 'indoor_asset',
+        priority: aqi > 300 ? 'urgent' : 'caution',
+        title: 'Prioritize HEPA Air Filtration Indoors',
+        description:
+          'Prioritize operating your HEPA purifier in occupied rooms (e.g. bedrooms overnight, family spaces in the evening) during elevated outdoor pollution. Keep windows and external doors sealed while operating.',
+        target_group: 'all',
+        rationale:
+          'High-Efficiency Particulate Air (HEPA) filters capture at least 99.97% of airborne particles down to 0.3 microns, substantially reducing indoor PM2.5 levels when doors and windows are closed.',
+      });
+    } else {
+      actions.push({
+        category: 'indoor_asset',
+        priority: 'good',
+        title: 'HEPA Purifier in Standby / Ambient Filtration',
+        description:
+          'Air quality is moderate to good. Run purifier on low or eco speed in primary living areas as desired.',
+        target_group: 'all',
+        rationale: 'Indoor particulate levels remain within comfortable ranges; continuous filtration can be moderated.',
+      });
+    }
+  } else {
+    actions.push({
+      category: 'indoor_asset',
+      priority: 'advisory',
+      title: 'Consider Dedicated Indoor Air Filtration',
+      description:
+        'Your home currently has no active HEPA filtration configured. On days with elevated AQI, create a single clean room with closed windows and minimize indoor combustion sources.',
+      target_group: 'all',
+      rationale:
+        'Homes without active mechanical filtration experience indoor PM2.5 concentrations reaching 60-80% of ambient outdoor levels.',
+    });
+  }
+
+  // 6. Equipment: Kitchen Exhaust
+  if (preferences.has_kitchen_exhaust) {
+    actions.push({
+      category: 'indoor_asset',
+      priority: 'advisory',
+      title: 'Kitchen Ventilation & Exhaust Deployment',
+      description:
+        'Run kitchen chimney or exhaust fan on high before igniting gas burners and keep it running for 5 minutes post-cooking.',
+      target_group: 'all',
+      rationale:
+        'Indian cooking with mustard oil, tadka, or frying generates rapid localized PM2.5 peaks up to 500+ µg/m³ along with toxic VOCs and NO2.',
+    });
+  }
+
+  // 7. Equipment: Indoor Air Monitor
+  if (preferences.has_indoor_monitor) {
+    actions.push({
+      category: 'indoor_asset',
+      priority: 'good',
+      title: 'Cross-Check Indoor Air Monitor Readings',
+      description:
+        'Compare indoor PM2.5 readings against ambient outdoor levels to verify building envelope integrity and filtration effectiveness.',
+      target_group: 'all',
+      rationale:
+        'Real-time indoor air monitors provide feedback on window sealing and air purifier clean air delivery rate (CADR).',
+    });
+  }
+
+  // 8. Transit Mode Commute Guidance
+  const transitMode = preferences.preferred_transit_mode || 'public_transit';
+  if (transitMode === 'metro') {
+    actions.push({
+      category: 'commute',
+      priority: 'good',
+      title: 'Metro Rail Commute Shield',
+      description:
+        'Underground and elevated enclosed metro coaches offer lower particulate exposure than open street-level road traffic.',
+      target_group: 'all',
+      rationale: 'Enclosed transit with air circulation reduces direct inhalation of roadside vehicle exhaust.',
+    });
+  } else if (transitMode === 'electric_bus' || transitMode === 'public_transit') {
+    actions.push({
+      category: 'commute',
+      priority: aqi > 250 ? 'caution' : 'advisory',
+      title: 'Public Transit Exposure Management',
+      description:
+        'Choose AC or closed electric buses during smog peaks. Avoid prolonged waiting at high-traffic curb stops.',
+      target_group: 'all',
+      rationale: 'Bus stop idling zones experience localized particulate concentrations up to 40% higher than moving traffic.',
+    });
+  } else if (transitMode === 'walking' || transitMode === 'cycling') {
+    if (aqi > 200 || isElevatedAlert) {
+      actions.push({
+        category: 'commute',
+        priority: 'urgent',
+        title: 'Active Travel Route & Timing Adjustment',
+        description:
+          'Avoid high-traffic arterial roads for walking or cycling during peak hours. Use side streets or transit alternatives.',
+        target_group: 'all',
+        rationale:
+          'Active commuters inhale 2-4x more air volume per minute, increasing deep alveolar deposition of toxic combustion soot.',
+      });
+    } else {
+      actions.push({
+        category: 'commute',
+        priority: 'good',
+        title: 'Active Commute Supported',
+        description: 'Current ambient conditions are suitable for walking or cycling commutes.',
+        target_group: 'all',
+        rationale: 'Air quality levels do not pose heightened inhalation hazards during physical travel.',
+      });
+    }
+  }
+
+  // Active safeguards list
+  const activeSafeguards: string[] = [];
+  if (demographics.has_infants) activeSafeguards.push('Infant Respiratory Shield Active');
+  if (hasChildren) activeSafeguards.push('Pediatric Filtration Protocol Active');
+  if (hasSeniors) activeSafeguards.push('Senior Cardiovascular Safeguard Active');
+  if (preferences.has_hepa_purifier) activeSafeguards.push('HEPA Indoor Filtration Enabled');
+  if (preferences.has_kitchen_exhaust) activeSafeguards.push('Kitchen Source Exhaust Active');
+  if (preferences.has_indoor_monitor) activeSafeguards.push('Indoor Telemetry Monitoring Enabled');
+  if (transitMode) activeSafeguards.push(`Preferred Transit: ${transitMode.replace('_', ' ').toUpperCase()}`);
+
+  return {
+    status: 'active',
+    station_id: station.id,
+    station_name: station.name,
+    city: station.city,
+    aqi: aqiData.aqi,
+    category: aqiData.category,
+    prominent_pollutant: aqiData.prominent_pollutant,
+    data_source: 'Calibrated CPCB Baseline',
+    is_demo_data: true,
+    observed_at: aqiData.last_updated || new Date().toISOString(),
+    threshold_applied: threshold as any,
+    household_size: householdSize,
+    actions,
+    active_safeguards: activeSafeguards,
+    equipment_status: {
+      has_hepa_purifier: Boolean(preferences.has_hepa_purifier),
+      has_kitchen_exhaust: Boolean(preferences.has_kitchen_exhaust),
+      has_indoor_monitor: Boolean(preferences.has_indoor_monitor),
+      preferred_transit_mode: preferences.preferred_transit_mode || 'public_transit',
+      alert_threshold: preferences.alert_threshold || 'standard',
+    },
+    disclaimer:
+      'AirSaathi provides atmospheric exposure-mitigation guidance based on ambient air quality. This is not medical diagnosis, clinical treatment, or a health guarantee.',
   };
 };

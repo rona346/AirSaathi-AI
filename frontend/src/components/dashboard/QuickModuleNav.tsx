@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Home, MessageSquare, Navigation, Leaf, UserCheck, ArrowRight, Sparkles } from 'lucide-react';
+import { Calendar, Home, MessageSquare, Navigation, Leaf, Users, ArrowRight, Sparkles } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../utils/translations';
 
@@ -55,11 +55,12 @@ export const QuickModuleNav: React.FC = () => {
     },
     {
       id: 'family',
-      title: language === 'hi' ? 'पारिवारिक प्रोफ़ाइल व प्राथमिकताएं' : 'Family Health Preferences',
-      desc: language === 'hi' ? 'सदस्यों के अनुसार कस्टम अलर्ट व संवेदनशील स्वास्थ्य रिकॉर्ड' : 'Multi-generational clinical vulnerability tracking and emergency contacts',
-      icon: UserCheck,
+      title: language === 'hi' ? 'पारिवारिक प्रोफ़ाइल व अनुकूलन' : 'Family Profile & Personalization',
+      desc: language === 'hi' ? 'परिवार के सदस्यों, संवेदनशीलता सीमा और वायु शोधन उपकरणों के आधार पर व्यक्तिगत सुरक्षा' : 'Science-grounded exposure reduction tailored to household members, alert sensitivity, and clean-air assets',
+      icon: Users,
       color: 'from-sky-500/20 to-cyan-500/10 text-sky-400 border-sky-500/30',
       status: t.statusActive,
+      isAvailable: true,
     },
   ];
 
@@ -88,6 +89,7 @@ export const QuickModuleNav: React.FC = () => {
                   if (m.id === 'chat') setActiveTab('chat');
                   if (m.id === 'mobility') setActiveTab('mobility');
                   if (m.id === 'impact') setActiveTab('impact');
+                  if (m.id === 'family') setActiveTab('family');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
               }}

@@ -2,11 +2,13 @@
 
 Provides:
 - User profile & preferences management (/api/v1/user/me)
+- Personalized environmental advisory (/api/v1/user/me/personalized-advisory)
 - Subcollection endpoints: routines, chat-sessions, routes, indoor-devices, impact-logs
 - Cross-user ownership enforcement (403 on mismatched user ID)
 - Service availability status (/api/v1/user/status)
 """
 
+import logging
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
@@ -15,6 +17,8 @@ from backend.app.core.firebase import is_firebase_available
 from backend.app.models.response import ApiResponse
 from backend.app.models.user import (
     AuthenticatedUser,
+    FamilyPreferencesData,
+    PersonalizedAdvisoryResponse,
     PersistedChatSession,
     PersistedImpactLog,
     PersistedIndoorDevice,
@@ -24,6 +28,10 @@ from backend.app.models.user import (
     UserProfileUpdate,
 )
 from backend.app.services.firestore_service import FirestoreService
+from backend.app.services.live_aqi_provider import get_active_aqi_provider
+from backend.app.services.personalization_service import PersonalizationService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -86,6 +94,70 @@ def update_current_user_profile(
         message="User profile and preferences updated successfully",
         data=profile,
         is_demo_data=False,
+    )
+
+
+@router.get("/me/personalized-advisory", response_model=ApiResponse[PersonalizedAdvisoryResponse])
+def get_personalized_advisory(
+    station_id: Optional[str] = Query(None, description="Optional monitoring station ID override"),
+    current_user: AuthenticatedUser = Depends(get_current_user),
+):
+    """
+    Generate personalized household environmental exposure-reduction guidance for the authenticated user.
+    Uses saved household demographics, sensitivity thresholds, clean-air assets, and ambient AQI.
+    """
+    profile = FirestoreService.get_user_profile(current_user.uid)
+    if profile is None:
+        try:
+            profile = FirestoreService.upsert_user_profile(
+                user_id=current_user.uid,
+                update=UserProfileUpdate(
+                    display_name=current_user.display_name,
+                ),
+                fallback_email=current_user.email,
+                fallback_display_name=current_user.display_name,
+            )
+        except Exception as exc:
+            logger.warning(f"Could not initialize profile for {current_user.uid}: {exc}")
+            profile = UserProfile(
+                uid=current_user.uid,
+                email=current_user.email,
+                display_name=current_user.display_name,
+            )
+
+    # Resolve target station: query parameter override or user's configured location preference
+    target_station_id = (
+        station_id.strip()
+        if isinstance(station_id, str) and station_id.strip()
+        else (
+            profile.location.default_station_id
+            if (profile and profile.location and profile.location.default_station_id)
+            else "delhi-anand-vihar"
+        )
+    )
+
+    # Retrieve current ambient AQI telemetry
+    provider = get_active_aqi_provider()
+    aqi_data = None
+    try:
+        aqi_data = provider.get_current_aqi(target_station_id)
+    except Exception as exc:
+        logger.warning(f"Failed to retrieve AQI for station '{target_station_id}': {exc}")
+        aqi_data = None
+
+    family_prefs = profile.family if (profile and profile.family) else FamilyPreferencesData()
+    advisory = PersonalizationService.generate_advisory(
+        family=family_prefs,
+        aqi_data=aqi_data,
+        station_id=target_station_id,
+    )
+
+    is_unavailable = advisory.status == "unavailable"
+    return ApiResponse(
+        success=True,
+        message="Ambient air quality telemetry unavailable" if is_unavailable else "Personalized household advisory generated successfully",
+        data=advisory,
+        is_demo_data=advisory.is_demo_data,
     )
 
 

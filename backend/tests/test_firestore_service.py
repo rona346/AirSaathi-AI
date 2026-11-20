@@ -19,8 +19,12 @@ import pytest
 from backend.app.core.firebase import reset_firebase, set_mock_firebase
 from backend.app.models.routine import FamilyVulnerabilityInput, RoutinePreferencesInput
 from backend.app.models.user import (
+    AlertThresholdPreference,
     FamilyMemberProfile,
     FamilyPreferencesData,
+    FamilyPreferencesUpdate,
+    HouseholdCleanAirPreferences,
+    HouseholdDemographics,
     LocationPreferences,
     PersistedChatSession,
     PersistedImpactLog,
@@ -367,3 +371,184 @@ def test_account_switching_data_isolation(mock_db):
     user_b_routes = FirestoreService.list_routes(user_b)
     assert len(user_a_routes) == 0  # User A has no routes
     assert len(user_b_routes) == 1
+
+
+def test_safe_nested_partial_update_preserves_all_unrelated_fields(mock_db):
+    """Verify that updating household_size does not reset vulnerability, members, routine, or location."""
+    user_id = "user_nested_preserve"
+
+    # Step 1: Create initial profile with legacy members, vulnerability, routine, and location
+    initial_update = UserProfileUpdate(
+        display_name="Siddharth Verma",
+        preferred_language="hi",
+        location=LocationPreferences(default_station_id="delhi-rk-puram", default_city="Delhi"),
+        family=FamilyPreferencesData(
+            vulnerability=FamilyVulnerabilityInput(
+                has_children=True,
+                has_seniors=True,
+                has_respiratory_condition=True,
+                is_pregnant=False,
+            ),
+            members=[
+                FamilyMemberProfile(name="Grandfather", age_group="senior", vulnerabilities=["Asthma"]),
+            ],
+            configured_precautions=["Bedroom Purifier"],
+            household_size=2,
+            demographics=HouseholdDemographics(has_children=True, has_seniors=True, has_adults=True),
+            preferences=HouseholdCleanAirPreferences(has_hepa_purifier=True, preferred_transit_mode="metro"),
+        ),
+        routine=RoutinePreferencesData(
+            work_start_time="09:15",
+            indoor_alternatives_enabled=True,
+        ),
+    )
+    profile = FirestoreService.upsert_user_profile(user_id=user_id, update=initial_update)
+    assert profile.family.household_size == 2
+    assert len(profile.family.members) == 1
+    assert profile.family.vulnerability.has_respiratory_condition is True
+    assert profile.routine.work_start_time == "09:15"
+    assert profile.location.default_station_id == "delhi-rk-puram"
+
+    # Step 2: Issue partial update changing ONLY household_size and preferred_transit_mode
+    partial_family = FamilyPreferencesUpdate(
+        household_size=5,
+        preferences=HouseholdCleanAirPreferences(preferred_transit_mode="electric_bus"),
+    )
+    partial_update = UserProfileUpdate(family=partial_family)
+    updated_profile = FirestoreService.upsert_user_profile(user_id=user_id, update=partial_update)
+
+    # Verify updated fields changed
+    assert updated_profile.family.household_size == 5
+    assert updated_profile.family.preferences.preferred_transit_mode == "electric_bus"
+
+    # Verify ALL unrelated nested fields were preserved
+    assert len(updated_profile.family.members) == 1
+    assert updated_profile.family.members[0].name == "Grandfather"
+    assert updated_profile.family.vulnerability.has_children is True
+    assert updated_profile.family.vulnerability.has_seniors is True
+    assert updated_profile.family.vulnerability.has_respiratory_condition is True
+    assert updated_profile.family.configured_precautions == ["Bedroom Purifier"]
+    assert updated_profile.family.preferences.has_hepa_purifier is True  # preserved!
+    assert updated_profile.routine.work_start_time == "09:15"           # preserved!
+    assert updated_profile.location.default_station_id == "delhi-rk-puram"  # preserved!
+    assert updated_profile.display_name == "Siddharth Verma"            # preserved!
+
+
+def test_omitted_members_vs_explicit_empty_list_clearing(mock_db):
+    """Verify that omitted members field preserves existing members, while explicit members=[] clears them."""
+    user_id = "user_clearing_test"
+
+    # Setup profile with members
+    initial_update = UserProfileUpdate(
+        family=FamilyPreferencesData(
+            members=[
+                FamilyMemberProfile(name="Aarav", age_group="child", vulnerabilities=[]),
+                FamilyMemberProfile(name="Devi", age_group="senior", vulnerabilities=[]),
+            ],
+            configured_precautions=["Wear Mask"],
+        )
+    )
+    profile = FirestoreService.upsert_user_profile(user_id=user_id, update=initial_update)
+    assert len(profile.family.members) == 2
+    assert len(profile.family.configured_precautions) == 1
+
+    # Case 1: Partial update with members OMITTED -> existing members MUST be preserved
+    update_omitted = UserProfileUpdate(
+        family=FamilyPreferencesUpdate(household_size=4)
+    )
+    p1 = FirestoreService.upsert_user_profile(user_id=user_id, update=update_omitted)
+    assert p1.family.household_size == 4
+    assert len(p1.family.members) == 2  # preserved!
+    assert p1.family.configured_precautions == ["Wear Mask"]  # preserved!
+
+    # Case 2: Partial update with explicit members=[] -> MUST clear members
+    update_cleared = UserProfileUpdate(
+        family=FamilyPreferencesUpdate(members=[])
+    )
+    p2 = FirestoreService.upsert_user_profile(user_id=user_id, update=update_cleared)
+    assert len(p2.family.members) == 0  # successfully cleared!
+    assert p2.family.configured_precautions == ["Wear Mask"]  # unrelated precautions still preserved!
+
+
+def test_demographic_and_vulnerability_bidirectional_synchronization(mock_db):
+    """Verify bidirectional synchronization between demographics and vulnerability for children and seniors."""
+    user_id = "user_sync_test"
+
+    # Direction 1: Demographic update syncs to vulnerability (True and False)
+    u1 = UserProfileUpdate(
+        family=FamilyPreferencesUpdate(
+            demographics=HouseholdDemographics(has_children=True, has_seniors=True)
+        )
+    )
+    p1 = FirestoreService.upsert_user_profile(user_id=user_id, update=u1)
+    assert p1.family.demographics.has_children is True
+    assert p1.family.vulnerability.has_children is True  # synced!
+    assert p1.family.demographics.has_seniors is True
+    assert p1.family.vulnerability.has_seniors is True   # synced!
+
+    # Turn off seniors via demographics
+    u2 = UserProfileUpdate(
+        family=FamilyPreferencesUpdate(
+            demographics=HouseholdDemographics(has_children=True, has_seniors=False)
+        )
+    )
+    p2 = FirestoreService.upsert_user_profile(user_id=user_id, update=u2)
+    assert p2.family.demographics.has_seniors is False
+    assert p2.family.vulnerability.has_seniors is False  # synced False!
+    assert p2.family.vulnerability.has_children is True
+
+    # Direction 2: Vulnerability update syncs to demographics
+    u3 = UserProfileUpdate(
+        family=FamilyPreferencesUpdate(
+            vulnerability=FamilyVulnerabilityInput(
+                has_children=False,
+                has_seniors=True,
+                has_respiratory_condition=True,
+                is_pregnant=True,
+            )
+        )
+    )
+    p3 = FirestoreService.upsert_user_profile(user_id=user_id, update=u3)
+    assert p3.family.vulnerability.has_children is False
+    assert p3.family.demographics.has_children is False  # synced False!
+    assert p3.family.vulnerability.has_seniors is True
+    assert p3.family.demographics.has_seniors is True   # synced True!
+    assert p3.family.vulnerability.has_respiratory_condition is True
+    assert p3.family.vulnerability.is_pregnant is True
+
+
+def test_partial_vulnerability_update_preserves_respiratory_and_pregnancy(mock_db):
+    """Verify that updating household preferences does not erase respiratory condition or pregnancy flags."""
+    user_id = "user_resp_preg_preserve"
+
+    initial = UserProfileUpdate(
+        family=FamilyPreferencesData(
+            vulnerability=FamilyVulnerabilityInput(
+                has_children=False,
+                has_seniors=False,
+                has_respiratory_condition=True,
+                is_pregnant=True,
+            ),
+            household_size=2,
+        )
+    )
+    p = FirestoreService.upsert_user_profile(user_id=user_id, update=initial)
+    assert p.family.vulnerability.has_respiratory_condition is True
+    assert p.family.vulnerability.is_pregnant is True
+
+    # Update only alert_threshold and has_hepa_purifier
+    update = UserProfileUpdate(
+        family=FamilyPreferencesUpdate(
+            preferences=HouseholdCleanAirPreferences(
+                alert_threshold=AlertThresholdPreference.SENSITIVE,
+                has_hepa_purifier=True,
+            )
+        )
+    )
+    p_updated = FirestoreService.upsert_user_profile(user_id=user_id, update=update)
+
+    assert p_updated.family.preferences.alert_threshold == AlertThresholdPreference.SENSITIVE
+    assert p_updated.family.preferences.has_hepa_purifier is True
+    assert p_updated.family.vulnerability.has_respiratory_condition is True  # preserved!
+    assert p_updated.family.vulnerability.is_pregnant is True              # preserved!
+

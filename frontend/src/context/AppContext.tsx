@@ -3,13 +3,21 @@ import { CurrentAqiData, FamilyProfile, ForecastData, StationInfo, SupportedLang
 import { RoutinePlan, RoutinePreferences } from '../types/routine';
 import { HouseholdInput, IndoorAssessmentResponse } from '../types/indoor';
 import { MobilityPlanResponse, MobilityRequest } from '../types/mobility';
-import { AuthUser, UserProfile } from '../types/user';
+import {
+  AuthUser,
+  FamilyPreferencesData,
+  HouseholdCleanAirPreferences,
+  HouseholdDemographics,
+  PersonalizedAdvisoryResponse,
+  UserProfileUpdate,
+} from '../types/user';
 import {
   fetchAuthServiceStatus,
   fetchCurrentAqi,
   fetchForecast,
   fetchIndoorAssessment,
   fetchMobilityPlan,
+  fetchPersonalizedAdvisory,
   fetchRoutinePlan,
   fetchStations,
   fetchUserProfile,
@@ -26,7 +34,7 @@ import {
   registerWithEmailPassword,
 } from '../services/firebase';
 
-export type AppTab = 'dashboard' | 'planner' | 'indoor' | 'chat' | 'mobility' | 'impact';
+export type AppTab = 'dashboard' | 'planner' | 'indoor' | 'chat' | 'mobility' | 'impact' | 'family';
 
 export type PersistenceStatus = 'saved' | 'saving' | 'guest' | 'error';
 
@@ -69,6 +77,18 @@ interface AppContextType {
   updateMobilityRequest: (partial: Partial<MobilityRequest>) => void;
   refreshMobilityPlan: () => Promise<void>;
   saveCurrentMobilityRoute: (title?: string) => Promise<string | null>;
+
+  // Module 7 Family Profile & Personalization state
+  householdSize: number;
+  demographics: HouseholdDemographics;
+  cleanAirPreferences: HouseholdCleanAirPreferences;
+  personalizedAdvisory: PersonalizedAdvisoryResponse | null;
+  advisoryLoading: boolean;
+  advisoryError: string | null;
+  updateHouseholdSize: (size: number) => void;
+  updateDemographics: (partial: Partial<HouseholdDemographics>) => void;
+  updateCleanAirPreferences: (partial: Partial<HouseholdCleanAirPreferences>) => void;
+  refreshPersonalizedAdvisory: () => Promise<void>;
 
   // Firebase Authentication & Cloud Firestore Persistence
   user: AuthUser | null;
@@ -124,6 +144,26 @@ const defaultMobilityRequest: MobilityRequest = {
   occupancy: 1,
 };
 
+const defaultHouseholdDemographics: HouseholdDemographics = {
+  has_infants: false,
+  has_children: true,
+  has_teens: false,
+  has_adults: true,
+  has_seniors: true,
+};
+
+const defaultCleanAirPreferences: HouseholdCleanAirPreferences = {
+  alert_threshold: 'standard',
+  preferred_transit_mode: 'public_transit',
+  has_hepa_purifier: true,
+  has_kitchen_exhaust: true,
+  has_indoor_monitor: true,
+  morning_outdoor_window: false,
+  school_commute_active: true,
+  office_commute_active: true,
+  evening_outdoor_window: false,
+};
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -152,6 +192,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [mobilityPlan, setMobilityPlan] = useState<MobilityPlanResponse | null>(null);
   const [mobilityLoading, setMobilityLoading] = useState<boolean>(false);
   const [mobilityRequest, setMobilityRequest] = useState<MobilityRequest>(defaultMobilityRequest);
+
+  // Module 7 family personalization state
+  const [householdSize, setHouseholdSize] = useState<number>(4);
+  const [demographics, setDemographics] = useState<HouseholdDemographics>(defaultHouseholdDemographics);
+  const [cleanAirPreferences, setCleanAirPreferences] = useState<HouseholdCleanAirPreferences>(defaultCleanAirPreferences);
+  const [personalizedAdvisory, setPersonalizedAdvisory] = useState<PersonalizedAdvisoryResponse | null>(null);
+  const [advisoryLoading, setAdvisoryLoading] = useState<boolean>(false);
+  const [advisoryError, setAdvisoryError] = useState<string | null>(null);
 
   // Authentication & Persistence state
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -201,8 +249,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (profile.location?.default_station_id) {
               setSelectedStationId(profile.location.default_station_id);
             }
-            if (profile.family?.vulnerability) {
-              setFamilyProfile(profile.family.vulnerability);
+            if (profile.family) {
+              if (profile.family.vulnerability) {
+                setFamilyProfile(profile.family.vulnerability);
+              }
+              if (typeof profile.family.household_size === 'number' && profile.family.household_size > 0) {
+                setHouseholdSize(profile.family.household_size);
+              }
+              if (profile.family.demographics) {
+                setDemographics(profile.family.demographics);
+              }
+              if (profile.family.preferences) {
+                setCleanAirPreferences(profile.family.preferences);
+              }
             }
             if (profile.routine?.preferences) {
               setRoutinePreferences(profile.routine.preferences);
@@ -231,6 +290,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setRoutinePreferences(defaultRoutinePreferences);
         setHouseholdInput(defaultHouseholdInput);
         setMobilityRequest(defaultMobilityRequest);
+        setHouseholdSize(4);
+        setDemographics(defaultHouseholdDemographics);
+        setCleanAirPreferences(defaultCleanAirPreferences);
       }
       setAuthLoading(false);
     });
@@ -325,12 +387,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     []
   );
 
+  // Load Module 7 personalized advisory
+  const loadPersonalizedAdvisory = useCallback(
+    async (
+      stationId: string,
+      size: number,
+      demog: HouseholdDemographics,
+      prefs: HouseholdCleanAirPreferences,
+      fam: FamilyProfile
+    ) => {
+      setAdvisoryLoading(true);
+      setAdvisoryError(null);
+      try {
+        const token = tokenRef.current || (await getCurrentIdToken());
+        const guestFamilyData: FamilyPreferencesData = {
+          vulnerability: fam,
+          household_size: size,
+          demographics: demog,
+          preferences: prefs,
+        };
+        const { data } = await fetchPersonalizedAdvisory(token, stationId, guestFamilyData);
+        setPersonalizedAdvisory(data);
+      } catch (err: any) {
+        console.error('Failed to load personalized advisory:', err);
+        setAdvisoryError(err?.message || 'Failed to load personalized advisory');
+      } finally {
+        setAdvisoryLoading(false);
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     if (selectedStationId) {
       loadStationData(selectedStationId);
       loadRoutinePlan(selectedStationId, language, familyProfile, routinePreferences);
       loadIndoorAssessment(selectedStationId, language, householdInput);
       loadMobilityPlan(selectedStationId, language, mobilityRequest);
+      loadPersonalizedAdvisory(selectedStationId, householdSize, demographics, cleanAirPreferences, familyProfile);
     }
   }, [
     selectedStationId,
@@ -339,16 +433,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     routinePreferences,
     householdInput,
     mobilityRequest,
+    householdSize,
+    demographics,
+    cleanAirPreferences,
     loadRoutinePlan,
     loadIndoorAssessment,
     loadMobilityPlan,
+    loadPersonalizedAdvisory,
   ]);
 
   const refreshData = async () => {
-    await loadStationData(selectedStationId);
-    await loadRoutinePlan(selectedStationId, language, familyProfile, routinePreferences);
-    await loadIndoorAssessment(selectedStationId, language, householdInput);
-    await loadMobilityPlan(selectedStationId, language, mobilityRequest);
+    await Promise.all([
+      loadStationData(selectedStationId),
+      loadRoutinePlan(selectedStationId, language, familyProfile, routinePreferences),
+      loadIndoorAssessment(selectedStationId, language, householdInput),
+      loadMobilityPlan(selectedStationId, language, mobilityRequest),
+      loadPersonalizedAdvisory(selectedStationId, householdSize, demographics, cleanAirPreferences, familyProfile),
+    ]);
   };
 
   const refreshRoutinePlan = async () => {
@@ -363,8 +464,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await loadMobilityPlan(selectedStationId, language, mobilityRequest);
   };
 
+  const refreshPersonalizedAdvisory = async () => {
+    await loadPersonalizedAdvisory(selectedStationId, householdSize, demographics, cleanAirPreferences, familyProfile);
+  };
+
   // Helper to persist updates to Cloud Firestore if authenticated
-  const syncProfileToCloud = async (update: Partial<UserProfile>) => {
+  const syncProfileToCloud = async (update: UserProfileUpdate) => {
     const token = tokenRef.current || (await getCurrentIdToken());
     if (!token) {
       setPersistenceStatus('guest');
@@ -389,8 +494,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       syncProfileToCloud({
         family: {
           vulnerability: updated,
-          members: [],
-          configured_precautions: [],
         },
       });
       return updated;
@@ -422,6 +525,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setMobilityRequest((prev) => {
       const updated = { ...prev, ...partial };
       syncProfileToCloud({ mobility: updated });
+      return updated;
+    });
+  };
+
+  const updateHouseholdSize = (size: number) => {
+    setHouseholdSize(size);
+    syncProfileToCloud({
+      family: {
+        household_size: size,
+      },
+    });
+  };
+
+  const updateDemographics = (partial: Partial<HouseholdDemographics>) => {
+    setDemographics((prev) => {
+      const updated = { ...prev, ...partial };
+      syncProfileToCloud({
+        family: {
+          demographics: updated,
+        },
+      });
+      return updated;
+    });
+  };
+
+  const updateCleanAirPreferences = (partial: Partial<HouseholdCleanAirPreferences>) => {
+    setCleanAirPreferences((prev) => {
+      const updated = { ...prev, ...partial };
+      syncProfileToCloud({
+        family: {
+          preferences: updated,
+        },
+      });
       return updated;
     });
   };
@@ -542,6 +678,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateMobilityRequest,
         refreshMobilityPlan,
         saveCurrentMobilityRoute,
+        householdSize,
+        demographics,
+        cleanAirPreferences,
+        personalizedAdvisory,
+        advisoryLoading,
+        advisoryError,
+        updateHouseholdSize,
+        updateDemographics,
+        updateCleanAirPreferences,
+        refreshPersonalizedAdvisory,
         user,
         authLoading,
         isGuestMode: !user,

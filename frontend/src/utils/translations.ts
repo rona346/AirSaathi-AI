@@ -247,6 +247,52 @@ export interface Translations {
   impactCancelBtn: string;
   impactMethodologyTitle: string;
   impactMethodologySubtitle: string;
+  // Module 7 Family Profile & Personalization Translations
+  familyTabTitle: string;
+  familyHeaderSubtitle: string;
+  householdSectionTitle: string;
+  householdSizeLabel: string;
+  householdSizeDesc: string;
+  demographicsTitle: string;
+  demographicsDesc: string;
+  hasInfantsLabel: string;
+  hasChildrenLabel: string;
+  hasTeensLabel: string;
+  hasAdultsLabel: string;
+  hasSeniorsLabel: string;
+  preferencesSectionTitle: string;
+  alertThresholdTitle: string;
+  alertThresholdDesc: string;
+  thresholdSensitive: string;
+  thresholdStandard: string;
+  thresholdHighTolerance: string;
+  preferredTransitTitle: string;
+  equipmentTitle: string;
+  equipmentDesc: string;
+  hasHepaLabel: string;
+  hasKitchenExhaustLabel: string;
+  hasIndoorMonitorLabel: string;
+  activityWindowsTitle: string;
+  morningWindowLabel: string;
+  schoolCommuteLabel: string;
+  officeCommuteLabel: string;
+  eveningWindowLabel: string;
+  advisorySectionTitle: string;
+  advisorySectionDesc: string;
+  telemetryActive: string;
+  telemetryDemo: string;
+  telemetryUnavailable: string;
+  activeSafeguardsTitle: string;
+  priorityUrgent: string;
+  priorityCaution: string;
+  priorityAdvisory: string;
+  priorityGood: string;
+  scientificRationaleLabel: string;
+  targetGroupLabel: string;
+  disclaimerLabel: string;
+  savePreferencesBtn: string;
+  preferencesSaved: string;
+  preferencesGuestNotice: string;
 }
 
 export const translations: Record<SupportedLanguage, Translations> = {
@@ -510,6 +556,52 @@ export const translations: Record<SupportedLanguage, Translations> = {
     impactCancelBtn: 'Cancel',
     impactMethodologyTitle: 'Calculation Methodology & Standards',
     impactMethodologySubtitle: 'Verified scientific benchmarks, grid factors, and transparent accounting rules',
+    // Module 7 Family Profile & Personalization
+    familyTabTitle: 'Family Profile & Personalization',
+    familyHeaderSubtitle: 'Science-grounded exposure reduction tailored to your household members, alert sensitivity, and clean-air equipment.',
+    householdSectionTitle: 'Household Structure & Demographics',
+    householdSizeLabel: 'Household Size',
+    householdSizeDesc: 'Number of individuals living in this home',
+    demographicsTitle: 'Age Group Vulnerabilities',
+    demographicsDesc: 'Select broad age categories present in your household to activate tailored exposure mitigation.',
+    hasInfantsLabel: 'Infants (0–2 yrs)',
+    hasChildrenLabel: 'Children (3–11 yrs)',
+    hasTeensLabel: 'Teens (12–17 yrs)',
+    hasAdultsLabel: 'Adults (18–59 yrs)',
+    hasSeniorsLabel: 'Seniors (60+ yrs)',
+    preferencesSectionTitle: 'Sensitivity & Environmental Preferences',
+    alertThresholdTitle: 'AQI Alert Sensitivity Threshold',
+    alertThresholdDesc: 'Threshold when elevated precautionary alerts and protective protocols are initiated.',
+    thresholdSensitive: 'Sensitive (AQI > 100)',
+    thresholdStandard: 'Standard (AQI > 200)',
+    thresholdHighTolerance: 'High Tolerance (AQI > 300)',
+    preferredTransitTitle: 'Preferred Transit Mode',
+    equipmentTitle: 'Clean-Air Equipment Assets',
+    equipmentDesc: 'Tell AirSaathi what equipment is installed in your home to receive realistic operation instructions.',
+    hasHepaLabel: 'True HEPA Air Purifier',
+    hasKitchenExhaustLabel: 'Kitchen Chimney / Exhaust Fan',
+    hasIndoorMonitorLabel: 'Indoor Air Quality Monitor',
+    activityWindowsTitle: 'Daily Exposure Windows',
+    morningWindowLabel: 'Morning Outdoor Routine',
+    schoolCommuteLabel: 'Daily School Commute',
+    officeCommuteLabel: 'Daily Office Commute',
+    eveningWindowLabel: 'Evening Outdoor Routine',
+    advisorySectionTitle: 'Personalized Smog Advisory & Exposure Shield',
+    advisorySectionDesc: 'Real-time, rule-governed atmospheric mitigation actions tailored to current local air quality.',
+    telemetryActive: 'Live Telemetry Active',
+    telemetryDemo: 'Demonstration Benchmark',
+    telemetryUnavailable: 'Station Telemetry Unavailable',
+    activeSafeguardsTitle: 'Active Household Safeguards',
+    priorityUrgent: 'Urgent Action',
+    priorityCaution: 'Caution Advised',
+    priorityAdvisory: 'Advisory Guidance',
+    priorityGood: 'Optimal Conditions',
+    scientificRationaleLabel: 'Scientific Rationale',
+    targetGroupLabel: 'Target Group',
+    disclaimerLabel: 'Non-Medical Advisory Disclaimer',
+    savePreferencesBtn: 'Save Family Preferences',
+    preferencesSaved: 'Preferences Synced to Cloud',
+    preferencesGuestNotice: 'In guest mode, preferences are retained in local session memory.',
   },
   hi: {
     appName: 'एयरसाथी AI',
@@ -771,6 +863,52 @@ export const translations: Record<SupportedLanguage, Translations> = {
     impactCancelBtn: 'रद्द करें',
     impactMethodologyTitle: 'गणना कार्यप्रणाली व मानक',
     impactMethodologySubtitle: 'सत्यापित वैज्ञानिक मानक, ग्रिड कारक और पारदर्शी उत्सर्जन लेखा नियम',
+    // Module 7 Family Profile & Personalization
+    familyTabTitle: 'पारिवारिक प्रोफ़ाइल व अनुकूलन',
+    familyHeaderSubtitle: 'परिवार के सदस्यों, संवेदनशीलता सीमा और वायु शोधन उपकरणों के आधार पर वैज्ञानिक जोखिम निवारण।',
+    householdSectionTitle: 'पारिवारिक संरचना व जनसांख्यिकी',
+    householdSizeLabel: 'परिवार में सदस्यों की संख्या',
+    householdSizeDesc: 'घर में रहने वाले कुल सदस्यों की संख्या',
+    demographicsTitle: 'आयु वर्ग संवेदनशीलता',
+    demographicsDesc: 'अनुकूलित सुरक्षा मार्गदर्शन सक्रिय करने के लिए अपने परिवार में उपस्थित आयु वर्ग चुनें।',
+    hasInfantsLabel: 'शिशु (0–2 वर्ष)',
+    hasChildrenLabel: 'बच्चे (3–11 वर्ष)',
+    hasTeensLabel: 'किशोर (12–17 वर्ष)',
+    hasAdultsLabel: 'वयस्क (18–59 वर्ष)',
+    hasSeniorsLabel: 'वरिष्ठ नागरिक (60+ वर्ष)',
+    preferencesSectionTitle: 'संवेदनशीलता सीमा व पर्यावरणीय प्राथमिकताएं',
+    alertThresholdTitle: 'AQI अलर्ट संवेदनशीलता सीमा',
+    alertThresholdDesc: 'वह वायु गुणवत्ता सीमा जिस पर उन्नत चेतावनी और सुरक्षा प्रोटोकॉल सक्रिय होते हैं।',
+    thresholdSensitive: 'अति संवेदनशील (AQI > 100)',
+    thresholdStandard: 'मानक (AQI > 200)',
+    thresholdHighTolerance: 'उच्च सहनशीलता (AQI > 300)',
+    preferredTransitTitle: 'प्राथमिक परिवहन साधन',
+    equipmentTitle: 'स्वच्छ वायु उपकरण संपत्ति',
+    equipmentDesc: 'अपने घर में मौजूद उपकरणों का चयन करें ताकि सटीक उपयोग मार्गदर्शन मिल सके।',
+    hasHepaLabel: 'सच्चा HEPA एयर प्यूरीफायर',
+    hasKitchenExhaustLabel: 'रसोई चिमनी / एग्जॉस्ट फैन',
+    hasIndoorMonitorLabel: 'इनडोर वायु गुणवत्ता मॉनिटर',
+    activityWindowsTitle: 'दैनिक बाहरी जोखिम समय',
+    morningWindowLabel: 'सुबह की बाहरी गतिविधि',
+    schoolCommuteLabel: 'दैनिक स्कूल यात्रा',
+    officeCommuteLabel: 'दैनिक ऑफिस यात्रा',
+    eveningWindowLabel: 'शाम की बाहरी गतिविधि',
+    advisorySectionTitle: 'व्यक्तिगत स्मॉग सुरक्षा व जोखिम निवारण परामर्श',
+    advisorySectionDesc: 'वर्तमान स्थानीय वायु गुणवत्ता और आपकी प्रोफ़ाइल पर आधारित वास्तविक समय सुरक्षा परामर्श।',
+    telemetryActive: 'लाइव टेलीमेट्री सक्रिय',
+    telemetryDemo: 'प्रदर्शन बेंचमार्क डेटा',
+    telemetryUnavailable: 'स्टेशन डेटा अनुपलब्ध',
+    activeSafeguardsTitle: 'सक्रिय पारिवारिक सुरक्षा उपाय',
+    priorityUrgent: 'तत्काल कार्रवाई',
+    priorityCaution: 'सतर्कता आवश्यक',
+    priorityAdvisory: 'परामर्श मार्गदर्शन',
+    priorityGood: 'अनुकूल स्थिति',
+    scientificRationaleLabel: 'वैज्ञानिक आधार',
+    targetGroupLabel: 'लक्षित समूह',
+    disclaimerLabel: 'गैर-चिकित्सीय परामर्श अस्वीकरण',
+    savePreferencesBtn: 'प्राथमिकताएं सहेजें',
+    preferencesSaved: 'प्राथमिकताएं क्लाउड पर सहेजी गईं',
+    preferencesGuestNotice: 'अतिथि मोड में प्राथमिकताएं केवल वर्तमान सत्र के लिए स्थानीय मेमोरी में सुरक्षित रहेंगी।',
   },
 };
 

@@ -146,6 +146,17 @@ export const Navbar: React.FC = () => {
               <Leaf className="w-3.5 h-3.5" />
               <span>{t.impactTabTitle}</span>
             </button>
+            <button
+              onClick={() => setActiveTab('family')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'family'
+                  ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/20'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>{t.familyTabTitle}</span>
+            </button>
           </nav>
 
           {/* Mobile Refresh Button */}
@@ -178,15 +189,20 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Active Family Sensitivity Pill */}
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-xs text-slate-300">
-            <Users className="w-3.5 h-3.5 text-indigo-400" />
+          <button
+            type="button"
+            onClick={() => setActiveTab('family')}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-700/80 hover:border-cyan-500/50 text-xs text-slate-300 transition-all cursor-pointer"
+            title="Open Family Profile & Personalization"
+          >
+            <Users className="w-3.5 h-3.5 text-cyan-400" />
             <span>
               {t.familyPillLabel}{' '}
-              <strong className="text-indigo-300">
+              <strong className="text-cyan-300">
                 {activeSensitivitiesCount} {t.activeCount}
               </strong>
             </span>
-          </div>
+          </button>
 
           {/* Language Toggle (Hindi / English) */}
           <button
@@ -314,6 +330,17 @@ export const Navbar: React.FC = () => {
         >
           <Leaf className="w-3.5 h-3.5" />
           <span className="truncate">{t.impactTabTitle}</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('family')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'family'
+              ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/20'
+              : 'bg-slate-900 text-slate-400 border border-slate-800'
+          }`}
+        >
+          <Users className="w-3.5 h-3.5" />
+          <span className="truncate">{t.familyTabTitle}</span>
         </button>
       </div>
     </header>

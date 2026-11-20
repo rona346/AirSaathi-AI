@@ -29,6 +29,9 @@ const MobilityAssistant = React.lazy(() =>
 const ImpactTracker = React.lazy(() =>
   import('./components/impact/ImpactTracker').then((m) => ({ default: m.ImpactTracker }))
 );
+const FamilyProfileAssistant = React.lazy(() =>
+  import('./components/family/FamilyProfileAssistant').then((m) => ({ default: m.FamilyProfileAssistant }))
+);
 
 const ModuleFallback: React.FC = () => (
   <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 text-center">
@@ -142,6 +145,11 @@ const MainContent: React.FC = () => {
       {activeTab === 'impact' && (
         <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
           <ImpactTracker />
+        </main>
+      )}
+      {activeTab === 'family' && (
+        <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
+          <FamilyProfileAssistant />
         </main>
       )}
       {activeTab === 'dashboard' && <DashboardContent />}

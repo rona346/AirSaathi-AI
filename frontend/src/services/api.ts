@@ -4,9 +4,11 @@ import { HouseholdInput, IndoorAssessmentResponse } from '../types/indoor';
 import { ChatRequest, ChatResponse } from '../types/chat';
 import { MobilityPlanResponse, MobilityRequest } from '../types/mobility';
 import {
+  FamilyPreferencesData,
   PersistedChatSession,
   PersistedRoutineRecord,
   PersistedSavedRoute,
+  PersonalizedAdvisoryResponse,
   UserProfile,
   UserProfileUpdate,
 } from '../types/user';
@@ -28,6 +30,7 @@ import {
   getMockImpactSummary,
   getMockIndoorAssessment,
   getMockMobilityPlan,
+  getMockPersonalizedAdvisory,
   getMockRoutinePlan,
 } from './mockData';
 
@@ -260,6 +263,46 @@ export async function updateUserProfile(
   } catch (err) {
     console.warn('Failed to update user profile in Cloud Firestore:', err);
     return null;
+  }
+}
+
+export async function fetchPersonalizedAdvisory(
+  token?: string | null,
+  stationId?: string,
+  guestFamilyData?: FamilyPreferencesData
+): Promise<{ data: PersonalizedAdvisoryResponse; isDemo: boolean }> {
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  let url = `${API_BASE}/user/me/personalized-advisory`;
+  if (stationId) url += `?station_id=${encodeURIComponent(stationId)}`;
+
+  try {
+    if (!token) {
+      // Guest mode - memory only, use offline simulated baseline
+      return {
+        data: getMockPersonalizedAdvisory(stationId, guestFamilyData),
+        isDemo: true,
+      };
+    }
+
+    const res = await fetch(url, { headers });
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      const errorMsg =
+        errJson.detail ||
+        `Server error (${res.status}): Failed to retrieve personalized advisory.`;
+      throw new Error(errorMsg);
+    }
+    const json = await res.json();
+    return { data: json.data, isDemo: json.is_demo_data };
+  } catch (err: any) {
+    if (token) {
+      console.warn('Authenticated personalized advisory request failed:', err);
+      throw err;
+    }
+    console.info('Backend unreachable for guest user, serving offline demonstration advisory:', err);
+    return { data: getMockPersonalizedAdvisory(stationId, guestFamilyData), isDemo: true };
   }
 }
 
