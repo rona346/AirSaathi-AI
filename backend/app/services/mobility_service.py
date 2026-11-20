@@ -2,9 +2,9 @@ import json
 import logging
 from datetime import datetime
 from typing import List, Optional, Tuple
-import httpx
 
 from backend.app.core.config import settings
+from backend.app.core.gemini import generate_gemini_text
 from backend.app.models.aqi import CurrentAqiResponse
 from backend.app.models.mobility import (
     AccessibilityNeed,
@@ -319,11 +319,7 @@ class MobilityService:
         active_advisory: str,
         current_daily_g: float,
     ) -> Optional[str]:
-        """Invokes Google Gemini API with commute parameters and AQI telemetry."""
-        model_id = getattr(settings, "GEMINI_MODEL_ID", "gemini-2.5-flash") or "gemini-2.5-flash"
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={settings.GEMINI_API_KEY}"
-        headers = {"Content-Type": "application/json"}
-
+        """Invokes Google GenAI Interactions API with commute parameters and AQI telemetry."""
         lang_instr = "Respond in fluent Hindi (Devanagari script)" if request.language == "hi" else "Respond in fluent English"
 
         has_metro, metro_status, metro_reason_en, metro_reason_hi = TransitService.check_metro_availability(city)
@@ -357,37 +353,16 @@ class MobilityService:
         )
 
         prompt = f"Please advise on sustainable, clean-air commuting for a {request.distance_km} km commute in {city} under current {outdoor.category.value} air quality."
+        full_prompt = f"{system_instruction}\n\nUser: {prompt}"
 
-        payload = {
-            "contents": [
-                {
-                    "role": "user",
-                    "parts": [{"text": f"{system_instruction}\n\nUser: {prompt}"}],
-                }
-            ],
-            "generationConfig": {
-                "temperature": 0.3,
-                "maxOutputTokens": 800,
-            },
-        }
-
-        with httpx.Client(timeout=15.0) as client:
-            res = client.post(url, json=payload, headers=headers)
-            if res.status_code != 200:
-                logger.warning(f"Gemini Mobility returned HTTP {res.status_code}")
+        try:
+            raw_text = generate_gemini_text(full_prompt)
+            if not raw_text or not raw_text.strip():
                 return None
-
-            data = res.json()
-            candidates = data.get("candidates", [])
-            if not candidates:
-                return None
-
-            text = ""
-            for part in candidates[0].get("content", {}).get("parts", []):
-                if isinstance(part, dict) and "text" in part and part["text"]:
-                    text += part["text"]
-
-            return text.strip() if text.strip() else None
+            return raw_text.strip()
+        except Exception as e:
+            logger.warning(f"Error calling Gemini in mobility service: {e}")
+            return None
 
     @classmethod
     def _generate_expert_fallback_text(

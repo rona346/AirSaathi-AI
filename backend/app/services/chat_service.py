@@ -11,9 +11,9 @@ import logging
 import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-import httpx
 
 from backend.app.core.config import settings
+from backend.app.core.gemini import generate_gemini_text
 from backend.app.models.aqi import CurrentAqiResponse
 from backend.app.models.chat import (
     ChatContextInfo,
@@ -78,91 +78,51 @@ class ChatService:
         context_info: ChatContextInfo,
         language: str,
     ) -> Optional[ChatResponse]:
-        """Calls Google Gemini API with conversational history and ambient context."""
-        model_id = getattr(settings, "GEMINI_MODEL_ID", "gemini-2.5-flash") or "gemini-2.5-flash"
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={settings.GEMINI_API_KEY}"
-        headers = {"Content-Type": "application/json"}
-
+        """Calls Google GenAI Interactions API via shared helper with conversational context."""
         system_instruction = cls._build_system_instruction(outdoor, request.family_profile, request.household, language)
 
-        # Convert bounded history (last 6 messages) into Gemini contents format
-        contents = []
         bounded_history = request.history[-6:] if request.history else []
+        prompt_lines = [system_instruction]
 
-        # First user message includes system context
-        is_first = True
-        for msg in bounded_history:
-            role = "model" if msg.role == ChatRole.ASSISTANT else "user"
-            content_text = msg.content
-            if is_first and role == "user":
-                content_text = f"{system_instruction}\n\nUser: {content_text}"
-                is_first = False
-            contents.append({
-                "role": role,
-                "parts": [{"text": content_text}],
-            })
+        if bounded_history:
+            prompt_lines.append("\nCONVERSATION HISTORY:")
+            for msg in bounded_history:
+                role_label = "AirSaathi" if msg.role == ChatRole.ASSISTANT else "User"
+                prompt_lines.append(f"{role_label}: {msg.content}")
 
-        # Append current user message
-        current_text = request.message
-        if is_first:
-            current_text = f"{system_instruction}\n\nUser: {current_text}"
+        prompt_lines.append(f"\nUser: {request.message}")
+        prompt_lines.append("AirSaathi:")
 
-        contents.append({
-            "role": "user",
-            "parts": [{"text": current_text}],
-        })
-
-        payload = {
-            "contents": contents,
-            "generationConfig": {
-                "temperature": 0.4,
-                "maxOutputTokens": 1024,
-            },
-        }
+        full_prompt = "\n".join(prompt_lines)
 
         try:
-            with httpx.Client(timeout=15.0) as client:
-                res = client.post(url, json=payload, headers=headers)
-                if res.status_code != 200:
-                    logger.warning(f"Gemini Chat returned HTTP {res.status_code}: {res.text[:200]}")
-                    return None
+            raw_text = generate_gemini_text(full_prompt)
+            if not raw_text or not raw_text.strip():
+                return None
 
-                data = res.json()
-                candidates = data.get("candidates", [])
-                if not candidates:
-                    return None
+            clean_text = raw_text.strip()
 
-                # Extract text across parts (handling reasoning/thinking parts)
-                raw_text = ""
-                for part in candidates[0].get("content", {}).get("parts", []):
-                    if isinstance(part, dict) and "text" in part and part["text"]:
-                        raw_text += part["text"]
+            # Generate follow-up suggestions
+            followups = cls._generate_followups(request.message, language)
 
-                raw_text = raw_text.strip()
-                if not raw_text:
-                    return None
+            disclaimer = (
+                "चिकित्सीय अस्वीकरण: यह चैटबॉट केवल पर्यावरणीय स्वास्थ्य जानकारी व जोखिम न्यूनीकरण सुझाव प्रदान करता है, चिकित्सीय परामर्श या बीमारी का उपचार नहीं। व्यक्तिगत स्वास्थ्य चिंताओं के लिए चिकित्सक से परामर्श लें।"
+                if language == "hi"
+                else "Medical Disclaimer: This assistant provides environmental health guidance and exposure reduction advice, not medical diagnosis or treatment. Sensitive individuals and patients should consult their physician."
+            )
 
-                # Generate follow-up suggestions
-                followups = cls._generate_followups(request.message, language)
-
-                disclaimer = (
-                    "चिकित्सीय अस्वीकरण: यह चैटबॉट केवल पर्यावरणीय स्वास्थ्य जानकारी व जोखिम न्यूनीकरण सुझाव प्रदान करता है, चिकित्सीय परामर्श या बीमारी का उपचार नहीं। व्यक्तिगत स्वास्थ्य चिंताओं के लिए चिकित्सक से परामर्श लें।"
-                    if language == "hi"
-                    else "Medical Disclaimer: This assistant provides environmental health guidance and exposure reduction advice, not medical diagnosis or treatment. Sensitive individuals and patients should consult their physician."
-                )
-
-                return ChatResponse(
-                    message=raw_text,
-                    language=language,
-                    ai_provider="google-gemini",
-                    ai_generated=True,
-                    context_used=context_info,
-                    suggested_followups=followups,
-                    disclaimer=disclaimer,
-                    timestamp=datetime.utcnow(),
-                )
+            return ChatResponse(
+                message=clean_text,
+                language=language,
+                ai_provider="google-gemini",
+                ai_generated=True,
+                context_used=context_info,
+                suggested_followups=followups,
+                disclaimer=disclaimer,
+                timestamp=datetime.utcnow(),
+            )
         except Exception as e:
-            logger.warning(f"Error calling Gemini Chat: {e}")
+            logger.warning(f"Error calling Gemini Chat: {type(e).__name__}")
             return None
 
     @classmethod

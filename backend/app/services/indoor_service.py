@@ -10,9 +10,9 @@ import json
 import logging
 from datetime import datetime
 from typing import Dict, List, Optional
-import httpx
 
 from backend.app.core.config import settings
+from backend.app.core.gemini import generate_gemini_text
 from backend.app.models.aqi import CurrentAqiResponse
 from backend.app.models.indoor import (
     CadrRecommendation,
@@ -78,81 +78,48 @@ class IndoorAirService:
         household: HouseholdInput,
         language: str,
     ) -> Optional[IndoorAssessmentResponse]:
-        """Calls Google Gemini API requesting strict structured JSON."""
+        """Calls Google GenAI Interactions API requesting strict structured JSON."""
         prompt = cls._build_gemini_prompt(outdoor, household, language)
 
-        model_id = getattr(settings, "GEMINI_MODEL_ID", "gemini-2.5-flash") or "gemini-2.5-flash"
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={settings.GEMINI_API_KEY}"
-        headers = {"Content-Type": "application/json"}
-        payload = {
-            "contents": [
-                {
-                    "role": "user",
-                    "parts": [{"text": prompt}],
-                }
-            ],
-            "generationConfig": {
-                "temperature": 0.2,
-                "response_mime_type": "application/json",
-            },
-        }
-
         try:
-            with httpx.Client(timeout=15.0) as client:
-                res = client.post(url, json=payload, headers=headers)
-                if res.status_code != 200:
-                    logger.warning(f"Gemini API returned HTTP {res.status_code}: {res.text[:200]}")
-                    return None
+            raw_text = generate_gemini_text(prompt)
+            if not raw_text or not raw_text.strip():
+                return None
 
-                data = res.json()
-                candidates = data.get("candidates", [])
-                if not candidates:
-                    return None
+            clean_json = cls._sanitize_json_text(raw_text)
+            parsed = json.loads(clean_json)
 
-                # Extract text across all parts (supporting thinking and text parts)
-                raw_text = ""
-                for part in candidates[0].get("content", {}).get("parts", []):
-                    if isinstance(part, dict) and "text" in part and part["text"]:
-                        raw_text += part["text"]
+            if not isinstance(parsed, dict):
+                return None
 
-                raw_text = raw_text.strip()
-                if not raw_text:
-                    return None
+            # Inject verified outdoor provenance and disclosure
+            parsed["station_id"] = outdoor.station.id
+            parsed["station_name"] = outdoor.station.name
+            parsed["city"] = outdoor.station.city
+            parsed["outdoor_aqi"] = outdoor.aqi
+            parsed["outdoor_category"] = outdoor.category.value
+            parsed["outdoor_is_demo"] = outdoor.is_demo_data
+            parsed["outdoor_data_source"] = outdoor.data_source
+            parsed["outdoor_observed_at"] = outdoor.last_updated.isoformat()
+            parsed["language"] = language
+            parsed["ai_provider"] = "google-gemini"
+            parsed["ai_generated"] = True
+            parsed["has_connected_indoor_sensor"] = False
+            parsed["generated_at"] = datetime.utcnow().isoformat()
 
-                clean_json = cls._sanitize_json_text(raw_text)
-                parsed = json.loads(clean_json)
+            parsed["sensor_notice"] = (
+                "सेंसर प्रकटीकरण: यह मूल्यांकन आपकी घरेलू आदतों और बाहरी CPCB प्रदूषण के आधार पर एक अनुमानित गुणात्मक जोखिम विश्लेषण है। बिना प्रमाणित इनडोर सेंसर के वास्तविक इनडोर AQI संख्या प्रदर्शित नहीं की जाती है।"
+                if language == "hi"
+                else "Sensor Disclosure: This qualitative risk evaluation is modeled from reported household practices and outdoor CPCB ambient infiltration. Without physical in-situ air sensors, AirSaathi AI never fabricates synthetic indoor AQI numbers."
+            )
 
-                if not isinstance(parsed, dict):
-                    return None
+            parsed["disclaimer"] = (
+                "चिकित्सीय अस्वीकरण: यह इनडोर वायु सहायक जोखिम न्यूनीकरण सुझाव प्रदान करता है, बीमारी का निदान या उपचार नहीं। HEPA प्यूरीफायर या N95 मास्क 100% सुरक्षा की गारंटी नहीं देते।"
+                if language == "hi"
+                else "Medical Disclaimer: This indoor air assistant provides environmental hazard reduction guidance, not medical diagnosis or treatment. Air purifiers and N95 masks reduce particulate mass but do not provide absolute immunity."
+            )
 
-                # Inject verified outdoor provenance and disclosure
-                parsed["station_id"] = outdoor.station.id
-                parsed["station_name"] = outdoor.station.name
-                parsed["city"] = outdoor.station.city
-                parsed["outdoor_aqi"] = outdoor.aqi
-                parsed["outdoor_category"] = outdoor.category.value
-                parsed["outdoor_is_demo"] = outdoor.is_demo_data
-                parsed["outdoor_data_source"] = outdoor.data_source
-                parsed["outdoor_observed_at"] = outdoor.last_updated.isoformat()
-                parsed["language"] = language
-                parsed["ai_provider"] = "google-gemini"
-                parsed["ai_generated"] = True
-                parsed["has_connected_indoor_sensor"] = False
-                parsed["generated_at"] = datetime.utcnow().isoformat()
-
-                parsed["sensor_notice"] = (
-                    "सेंसर प्रकटीकरण: यह मूल्यांकन आपकी घरेलू आदतों और बाहरी CPCB प्रदूषण के आधार पर एक अनुमानित गुणात्मक जोखिम विश्लेषण है। बिना प्रमाणित इनडोर सेंसर के वास्तविक इनडोर AQI संख्या प्रदर्शित नहीं की जाती है।"
-                    if language == "hi"
-                    else "Sensor Disclosure: This qualitative risk evaluation is modeled from reported household practices and outdoor CPCB ambient infiltration. Without physical in-situ air sensors, AirSaathi AI never fabricates synthetic indoor AQI numbers."
-                )
-
-                parsed["disclaimer"] = (
-                    "चिकित्सीय अस्वीकरण: यह इनडोर वायु सहायक जोखिम न्यूनीकरण सुझाव प्रदान करता है, बीमारी का निदान या उपचार नहीं। HEPA प्यूरीफायर या N95 मास्क 100% सुरक्षा की गारंटी नहीं देते।"
-                    if language == "hi"
-                    else "Medical Disclaimer: This indoor air assistant provides environmental hazard reduction guidance, not medical diagnosis or treatment. Air purifiers and N95 masks reduce particulate mass but do not provide absolute immunity."
-                )
-
-                return IndoorAssessmentResponse.model_validate(parsed)
+            return IndoorAssessmentResponse.model_validate(parsed)
         except Exception as e:
             logger.warning(f"Error parsing Gemini indoor response: {e}")
             return None

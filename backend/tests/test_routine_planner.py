@@ -336,154 +336,140 @@ def test_sanitize_json_text_markdown_fences():
     assert RoutinePlannerService._sanitize_json_text(raw_spaced) == '{"key": "value"}'
 
 
-def test_gemini_multipart_thinking_extraction(sample_aqi_reading):
+VALID_ROUTINE_SCHEDULE = {
+    "morning": [],
+    "afternoon": [],
+    "evening": [],
+    "school_commute": {
+        "title": "School Commute",
+        "recommended_time": "07:30 AM",
+        "status": "Caution",
+        "risk_level": "High",
+        "advice": "Wear N95",
+        "rationale": "Inversion layer",
+        "indoor_alternative": None,
+        "precautions": [],
+    },
+    "office_commute": {
+        "title": "Office Commute",
+        "recommended_time": "09:00 AM",
+        "status": "Caution",
+        "risk_level": "High",
+        "advice": "Metro preferred",
+        "rationale": "High NO2",
+        "indoor_alternative": None,
+        "precautions": [],
+    },
+    "exercise_plan": {
+        "title": "Exercise",
+        "recommended_time": "01:00 PM",
+        "status": "Indoor Alternative",
+        "risk_level": "Critical",
+        "advice": "Indoor yoga only",
+        "rationale": "Lung strain",
+        "indoor_alternative": "Yoga",
+        "precautions": [],
+    },
+    "chores_plan": {
+        "title": "Chores",
+        "recommended_time": "02:00 PM",
+        "status": "Caution",
+        "risk_level": "Moderate",
+        "advice": "Dry clothes indoors",
+        "rationale": "Soot on damp fabric",
+        "indoor_alternative": None,
+        "precautions": [],
+    },
+    "family_precautions": ["Keep children indoors"],
+}
+
+
+def test_gemini_successful_structured_json(sample_aqi_reading):
     from backend.app.core.config import settings
 
-    valid_schedule = {
-        "morning": [],
-        "afternoon": [],
-        "evening": [],
-        "school_commute": {
-            "title": "School Commute",
-            "recommended_time": "07:30 AM",
-            "status": "Caution",
-            "risk_level": "High",
-            "advice": "Wear N95",
-            "rationale": "Inversion layer",
-            "indoor_alternative": None,
-            "precautions": [],
-        },
-        "office_commute": {
-            "title": "Office Commute",
-            "recommended_time": "09:00 AM",
-            "status": "Caution",
-            "risk_level": "High",
-            "advice": "Metro preferred",
-            "rationale": "High NO2",
-            "indoor_alternative": None,
-            "precautions": [],
-        },
-        "exercise_plan": {
-            "title": "Exercise",
-            "recommended_time": "01:00 PM",
-            "status": "Indoor Alternative",
-            "risk_level": "Critical",
-            "advice": "Indoor yoga only",
-            "rationale": "Lung strain",
-            "indoor_alternative": "Yoga",
-            "precautions": [],
-        },
-        "chores_plan": {
-            "title": "Chores",
-            "recommended_time": "02:00 PM",
-            "status": "Caution",
-            "risk_level": "Moderate",
-            "advice": "Dry clothes indoors",
-            "rationale": "Soot on damp fabric",
-            "indoor_alternative": None,
-            "precautions": [],
-        },
-        "family_precautions": ["Keep children indoors"],
-    }
+    with patch("backend.app.services.routine_planner_service.get_active_aqi_provider") as mock_get_provider:
+        mock_provider = MagicMock()
+        mock_provider.get_current_aqi.return_value = sample_aqi_reading
+        mock_get_provider.return_value = mock_provider
 
-    # Simulate multi-part response with thought part followed by text part (as in Gemini 3)
-    mock_multipart_response = {
-        "candidates": [
-            {
-                "content": {
-                    "parts": [
-                        {"thought": "Analyzing CPCB PM2.5 levels, diurnal temperature inversion and pediatric vulnerability..."},
-                        {"text": "```json\n" + json.dumps(valid_schedule) + "\n```"},
-                    ]
-                }
-            }
-        ]
-    }
-
-    mock_client = MagicMock()
-    mock_post = MagicMock()
-    mock_post.status_code = 200
-    mock_post.json.return_value = mock_multipart_response
-    mock_client.post.return_value = mock_post
-    mock_client.__enter__.return_value = mock_client
-    mock_client.__exit__.return_value = None
-
-    with patch("httpx.Client", return_value=mock_client):
-        with patch.object(settings, "GEMINI_API_KEY", "test-key"):
-            plan = RoutinePlannerService._call_gemini_api(
-                aqi_data=sample_aqi_reading,
-                family=FamilyVulnerabilityInput(),
-                preferences=RoutinePreferencesInput(),
-                language="en",
-            )
-
-            assert plan is not None
-            assert plan.ai_provider == "google-gemini"
-            assert plan.ai_generated is True
-            assert plan.school_commute.title == "School Commute"
-            assert plan.is_demo_data is False
-            assert plan.data_source == sample_aqi_reading.data_source
-
-
-def test_gemini_model_id_config_and_dynamic_url(sample_aqi_reading):
-    from backend.app.core.config import settings
-
-    mock_client = MagicMock()
-    mock_post = MagicMock()
-    mock_post.status_code = 500  # Intentionally fail so we inspect URL called
-    mock_client.post.return_value = mock_post
-    mock_client.__enter__.return_value = mock_client
-    mock_client.__exit__.return_value = None
-
-    with patch("httpx.Client", return_value=mock_client):
-        with patch.object(settings, "GEMINI_API_KEY", "test-key"):
-            with patch.object(settings, "GEMINI_MODEL_ID", "gemini-2.5-flash"):
-                RoutinePlannerService._call_gemini_api(
-                    aqi_data=sample_aqi_reading,
-                    family=FamilyVulnerabilityInput(),
-                    preferences=RoutinePreferencesInput(),
-                    language="en",
-                )
-                called_url = mock_client.post.call_args[0][0]
-                assert "gemini-2.5-flash:generateContent" in called_url
-
-            with patch.object(settings, "GEMINI_MODEL_ID", "gemini-3.8-flash"):
-                RoutinePlannerService._call_gemini_api(
-                    aqi_data=sample_aqi_reading,
-                    family=FamilyVulnerabilityInput(),
-                    preferences=RoutinePreferencesInput(),
-                    language="en",
-                )
-                called_url = mock_client.post.call_args[0][0]
-                assert "gemini-3.8-flash:generateContent" in called_url
-
-
-def test_gemini_missing_text_and_malformed_json_fallback(sample_aqi_reading):
-    from backend.app.core.config import settings
-
-    # Case 1: Candidates array empty
-    empty_cand = {"candidates": []}
-    # Case 2: Parts array has no text
-    no_text_parts = {"candidates": [{"content": {"parts": [{"thought": "only thoughts"}]}}]}
-    # Case 3: Malformed JSON text
-    bad_json = {"candidates": [{"content": {"parts": [{"text": "{invalid json ..."}]}}]}
-
-    for payload in [empty_cand, no_text_parts, bad_json]:
-        mock_client = MagicMock()
-        mock_post = MagicMock()
-        mock_post.status_code = 200
-        mock_post.json.return_value = payload
-        mock_client.post.return_value = mock_post
-        mock_client.__enter__.return_value = mock_client
-        mock_client.__exit__.return_value = None
-
-        with patch("httpx.Client", return_value=mock_client):
+        with patch("backend.app.services.routine_planner_service.generate_gemini_text") as mock_gen:
+            mock_gen.return_value = json.dumps(VALID_ROUTINE_SCHEDULE)
             with patch.object(settings, "GEMINI_API_KEY", "test-key"):
-                res = RoutinePlannerService._call_gemini_api(
-                    aqi_data=sample_aqi_reading,
-                    family=FamilyVulnerabilityInput(),
-                    preferences=RoutinePreferencesInput(),
-                    language="en",
-                )
-                assert res is None, "Must return None on empty/missing/malformed response"
+                req = RoutinePlanRequest(station_id="delhi-anand-vihar", language="en")
+                plan = RoutinePlannerService.generate_routine_plan(req)
+
+                assert plan.ai_provider == "google-gemini"
+                assert plan.ai_generated is True
+                assert plan.station_id == "delhi-anand-vihar"
+                assert plan.aqi == 379
+                assert plan.school_commute.title == "School Commute"
+                assert plan.office_commute.status == "Caution"
+                mock_gen.assert_called_once()
+
+
+def test_gemini_markdown_fenced_json(sample_aqi_reading):
+    from backend.app.core.config import settings
+
+    with patch("backend.app.services.routine_planner_service.get_active_aqi_provider") as mock_get_provider:
+        mock_provider = MagicMock()
+        mock_provider.get_current_aqi.return_value = sample_aqi_reading
+        mock_get_provider.return_value = mock_provider
+
+        fenced = f"```json\n{json.dumps(VALID_ROUTINE_SCHEDULE)}\n```"
+
+        with patch("backend.app.services.routine_planner_service.generate_gemini_text") as mock_gen:
+            mock_gen.return_value = fenced
+            with patch.object(settings, "GEMINI_API_KEY", "test-key"):
+                req = RoutinePlanRequest(station_id="delhi-anand-vihar", language="en")
+                plan = RoutinePlannerService.generate_routine_plan(req)
+
+                assert plan.ai_provider == "google-gemini"
+                assert plan.ai_generated is True
+                assert plan.school_commute.title == "School Commute"
+
+
+def test_gemini_fallback_modes(sample_aqi_reading):
+    from backend.app.core.config import settings
+
+    with patch("backend.app.services.routine_planner_service.get_active_aqi_provider") as mock_get_provider:
+        mock_provider = MagicMock()
+        mock_provider.get_current_aqi.return_value = sample_aqi_reading
+        mock_get_provider.return_value = mock_provider
+
+        req = RoutinePlanRequest(station_id="delhi-anand-vihar", language="en")
+
+        # Case 1: None output
+        with patch("backend.app.services.routine_planner_service.generate_gemini_text", return_value=None):
+            with patch.object(settings, "GEMINI_API_KEY", "test-key"):
+                plan_none = RoutinePlannerService.generate_routine_plan(req)
+                assert plan_none.ai_provider == "expert-rules-fallback"
+                assert plan_none.ai_generated is False
+
+        # Case 2: Empty/whitespace output
+        with patch("backend.app.services.routine_planner_service.generate_gemini_text", return_value="   "):
+            with patch.object(settings, "GEMINI_API_KEY", "test-key"):
+                plan_empty = RoutinePlannerService.generate_routine_plan(req)
+                assert plan_empty.ai_provider == "expert-rules-fallback"
+                assert plan_empty.ai_generated is False
+
+        # Case 3: Malformed JSON
+        with patch("backend.app.services.routine_planner_service.generate_gemini_text", return_value="{malformed json ..."):
+            with patch.object(settings, "GEMINI_API_KEY", "test-key"):
+                plan_bad = RoutinePlannerService.generate_routine_plan(req)
+                assert plan_bad.ai_provider == "expert-rules-fallback"
+                assert plan_bad.ai_generated is False
+
+        # Case 4: Non-dict JSON (e.g. JSON array)
+        with patch("backend.app.services.routine_planner_service.generate_gemini_text", return_value='["not", "a", "dict"]'):
+            with patch.object(settings, "GEMINI_API_KEY", "test-key"):
+                plan_arr = RoutinePlannerService.generate_routine_plan(req)
+                assert plan_arr.ai_provider == "expert-rules-fallback"
+                assert plan_arr.ai_generated is False
+
+        # Case 5: API Exception
+        with patch("backend.app.services.routine_planner_service.generate_gemini_text", side_effect=RuntimeError("Google GenAI API failure")):
+            with patch.object(settings, "GEMINI_API_KEY", "test-key"):
+                plan_exc = RoutinePlannerService.generate_routine_plan(req)
+                assert plan_exc.ai_provider == "expert-rules-fallback"
+                assert plan_exc.ai_generated is False
 

@@ -1,6 +1,5 @@
 from datetime import datetime
 from unittest.mock import MagicMock, patch
-import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -339,21 +338,70 @@ def test_demo_versus_live_data_labelling():
         assert plan_live.city == "Mumbai"
 
 
-def test_api_fallback_behaviour(mock_cpcb_reading_severe):
-    """Test 6: Validates seamless expert-rule fallback when Gemini API fails."""
+def test_gemini_mobility_successful_response(mock_cpcb_reading_severe):
+    """Validates successful Gemini generation, prompt structure, and provider attribution."""
     mock_provider = MagicMock()
     mock_provider.get_current_aqi.return_value = mock_cpcb_reading_severe
+
+    sample_gemini_response = (
+        "### Sustainable Commute Strategy (Delhi - Anand Vihar)\n\n"
+        "- **Mode Switch:** Switch from private car to Delhi Metro at Anand Vihar station to reduce personal carbon emissions by ~86%.\n"
+        "- **Respiratory Protection:** Given Severe AQI (425), wear an N95 mask while walking to the station.\n"
+        "- **Cabin Protocol:** If carpooling, ensure air recirculation is active.\n"
+        "- *Medical Disclaimer:* Reduces particulate dose, not 100% immune."
+    )
+
     with patch("backend.app.services.mobility_service.get_active_aqi_provider", return_value=mock_provider):
         with patch("backend.app.core.config.settings.GEMINI_API_KEY", "mock-key"):
-            with patch("httpx.Client.post") as mock_post:
-                mock_post.return_value = MagicMock(status_code=500, text="Internal Server Error")
+            with patch("backend.app.services.mobility_service.generate_gemini_text") as mock_gen:
+                mock_gen.return_value = sample_gemini_response
 
-                req = MobilityRequest(distance_km=8.0, current_mode=TransportMode.PETROL_CAR, city="Delhi")
+                req = MobilityRequest(distance_km=12.0, current_mode=TransportMode.PETROL_CAR, city="Delhi", language="en")
                 plan = MobilityService.generate_mobility_plan(req)
 
-                assert plan.ai_provider == "expert-rules-fallback"
-                assert plan.ai_generated is False
-                assert "Sustainable Mobility Strategy (Delhi" in plan.ai_recommendation
+                assert plan.ai_provider == "google-gemini"
+                assert plan.ai_generated is True
+                assert plan.ai_recommendation == sample_gemini_response
+                assert plan.recommended_mode == TransportMode.METRO
+
+                # Verify prompt passed to generate_gemini_text preserved all context
+                mock_gen.assert_called_once()
+                called_prompt = mock_gen.call_args[0][0]
+                assert "City: Delhi" in called_prompt
+                assert "Distance: 12.0 km" in called_prompt
+                assert "AQI: 425 (Severe)" in called_prompt
+                assert "STRICT RULES:" in called_prompt
+                assert "Sustainable Mobility Specialist" in called_prompt
+
+
+def test_api_fallback_behaviour(mock_cpcb_reading_severe):
+    """Test 6: Validates seamless expert-rule fallback when Gemini returns None, empty text, or raises an API exception."""
+    mock_provider = MagicMock()
+    mock_provider.get_current_aqi.return_value = mock_cpcb_reading_severe
+    req = MobilityRequest(distance_km=8.0, current_mode=TransportMode.PETROL_CAR, city="Delhi")
+
+    with patch("backend.app.services.mobility_service.get_active_aqi_provider", return_value=mock_provider):
+        with patch("backend.app.core.config.settings.GEMINI_API_KEY", "mock-key"):
+            # Case 1: None returned
+            with patch("backend.app.services.mobility_service.generate_gemini_text", return_value=None):
+                plan_none = MobilityService.generate_mobility_plan(req)
+                assert plan_none.ai_provider == "expert-rules-fallback"
+                assert plan_none.ai_generated is False
+                assert "Sustainable Mobility Strategy (Delhi" in plan_none.ai_recommendation
+
+            # Case 2: Empty / whitespace string returned
+            with patch("backend.app.services.mobility_service.generate_gemini_text", return_value="   "):
+                plan_empty = MobilityService.generate_mobility_plan(req)
+                assert plan_empty.ai_provider == "expert-rules-fallback"
+                assert plan_empty.ai_generated is False
+                assert "Sustainable Mobility Strategy (Delhi" in plan_empty.ai_recommendation
+
+            # Case 3: Exception raised by generate_gemini_text
+            with patch("backend.app.services.mobility_service.generate_gemini_text", side_effect=RuntimeError("GenAI connection error")):
+                plan_exc = MobilityService.generate_mobility_plan(req)
+                assert plan_exc.ai_provider == "expert-rules-fallback"
+                assert plan_exc.ai_generated is False
+                assert "Sustainable Mobility Strategy (Delhi" in plan_exc.ai_recommendation
 
 
 def test_mobility_api_endpoints(mock_cpcb_reading_severe):

@@ -1,7 +1,6 @@
 import json
 from datetime import datetime
 from unittest.mock import MagicMock, patch
-import httpx
 import pytest
 
 from backend.app.models.aqi import AqiCategory, CurrentAqiResponse, HealthAdvisory, PollutantDetail, StationInfo
@@ -179,6 +178,106 @@ def test_plant_myth_clarification(mock_outdoor_cpcb):
         assert "replace" in myth_text or "substitute" in myth_text
 
 
+MOCK_GEMINI_PAYLOAD = {
+    "qualitative_risk": "High",
+    "risk_score_numeric": 72,
+    "risk_summary": "High particulate infiltration with indoor cooking emissions.",
+    "ventilation": {
+        "action": "Seal",
+        "optimal_window": "01:00 PM - 02:00 PM",
+        "duration_minutes": 15,
+        "rationale": "Peak boundary layer dispersion window.",
+        "precautions": ["Keep windows sealed at night", "Run kitchen exhaust"],
+    },
+    "purifier_guidance": {
+        "room_area_sqft": 150.0,
+        "recommended_min_cadr_m3h": 250,
+        "recommended_min_cadr_cfm": 150,
+        "target_ach": 4.5,
+        "filter_type_guidance": "True HEPA H13/H14 filter.",
+        "placement_tips": ["Place 1 meter away from walls", "Avoid corners"],
+        "maintenance_schedule": "Vacuum pre-filter bi-weekly.",
+    },
+    "kitchen_guidance": {
+        "risk_summary": "High PM2.5 spike during tadka.",
+        "chimney_exhaust_guidance": "Run exhaust 2 mins prior to cooking.",
+        "cooking_habits_advice": ["Cover pans with lids", "Avoid dry roasting spices unventilated"],
+        "combustion_safety": "Check for blue flame on LPG burner.",
+    },
+    "room_recommendations": {
+        "bedroom": {
+            "room_name": "Bedroom",
+            "primary_threats": ["Nocturnal particulate settling"],
+            "immediate_actions": ["Seal windows", "Run purifier on sleep mode"],
+            "night_protocol": "Keep purifier 2m from bed",
+            "lifestyle_adjustments": ["Wet mop floor before sleeping"],
+        },
+        "kitchen": {
+            "room_name": "Kitchen",
+            "primary_threats": ["Acrolein and ultrafine particulates"],
+            "immediate_actions": ["Run chimney on maximum"],
+            "night_protocol": None,
+            "lifestyle_adjustments": ["Isolate kitchen door while frying"],
+        },
+    },
+    "actionable_checklist": [
+        "Seal windows during night inversion",
+        "Operate ducted chimney during cooking",
+        "Use wet mopping instead of dry brooming",
+        "Run HEPA purifier at target ACH",
+    ],
+    "plant_myth_clarification": "Potted plants cannot replace mechanical HEPA filtration in real homes.",
+}
+
+
+def test_gemini_successful_json(mock_outdoor_cpcb):
+    from backend.app.core.config import settings
+
+    with patch("backend.app.services.indoor_service.get_active_aqi_provider") as mock_get_provider:
+        mock_provider = MagicMock()
+        mock_provider.get_current_aqi.return_value = mock_outdoor_cpcb
+        mock_get_provider.return_value = mock_provider
+
+        with patch("backend.app.services.indoor_service.generate_gemini_text") as mock_gen:
+            mock_gen.return_value = json.dumps(MOCK_GEMINI_PAYLOAD)
+            with patch.object(settings, "GEMINI_API_KEY", "test-key"):
+                res = IndoorAirService.evaluate_indoor_air(IndoorAssessmentRequest())
+
+                assert res.ai_provider == "google-gemini"
+                assert res.ai_generated is True
+                assert res.has_connected_indoor_sensor is False
+                assert res.qualitative_risk == QualitativeRiskLevel.HIGH
+                assert res.risk_score_numeric == 72
+                assert res.station_id == "delhi-anand-vihar"
+                assert res.outdoor_aqi == 379
+                assert res.purifier_guidance.recommended_min_cadr_m3h == 250
+                assert "bedroom" in res.room_recommendations
+                assert len(res.actionable_checklist) == 4
+                mock_gen.assert_called_once()
+
+
+def test_gemini_markdown_fenced_json(mock_outdoor_cpcb):
+    from backend.app.core.config import settings
+
+    with patch("backend.app.services.indoor_service.get_active_aqi_provider") as mock_get_provider:
+        mock_provider = MagicMock()
+        mock_provider.get_current_aqi.return_value = mock_outdoor_cpcb
+        mock_get_provider.return_value = mock_provider
+
+        fenced_payload = f"```json\n{json.dumps(MOCK_GEMINI_PAYLOAD)}\n```"
+
+        with patch("backend.app.services.indoor_service.generate_gemini_text") as mock_gen:
+            mock_gen.return_value = fenced_payload
+            with patch.object(settings, "GEMINI_API_KEY", "test-key"):
+                res = IndoorAirService.evaluate_indoor_air(IndoorAssessmentRequest())
+
+                assert res.ai_provider == "google-gemini"
+                assert res.ai_generated is True
+                assert res.qualitative_risk == QualitativeRiskLevel.HIGH
+                assert res.risk_score_numeric == 72
+                assert res.has_connected_indoor_sensor is False
+
+
 def test_gemini_fallback_on_api_error_and_malformed(mock_outdoor_cpcb):
     from backend.app.core.config import settings
 
@@ -187,48 +286,41 @@ def test_gemini_fallback_on_api_error_and_malformed(mock_outdoor_cpcb):
         mock_provider.get_current_aqi.return_value = mock_outdoor_cpcb
         mock_get_provider.return_value = mock_provider
 
-        # Test HTTP 429
-        mock_client = MagicMock()
-        mock_post = MagicMock()
-        mock_post.status_code = 429
-        mock_post.text = "Quota exceeded"
-        mock_client.post.return_value = mock_post
-        mock_client.__enter__.return_value = mock_client
-        mock_client.__exit__.return_value = None
-
-        with patch("httpx.Client", return_value=mock_client):
+        # Test None output
+        with patch("backend.app.services.indoor_service.generate_gemini_text", return_value=None):
             with patch.object(settings, "GEMINI_API_KEY", "test-key"):
-                res = IndoorAirService.evaluate_indoor_air(IndoorAssessmentRequest())
-                assert res.ai_provider == "expert-rules-fallback"
-                assert res.ai_generated is False
-                assert res.has_connected_indoor_sensor is False
+                res_none = IndoorAirService.evaluate_indoor_air(IndoorAssessmentRequest())
+                assert res_none.ai_provider == "expert-rules-fallback"
+                assert res_none.ai_generated is False
+                assert res_none.has_connected_indoor_sensor is False
 
-        # Test Timeout
-        mock_client_timeout = MagicMock()
-        mock_client_timeout.post.side_effect = httpx.TimeoutException("Timed out")
-        mock_client_timeout.__enter__.return_value = mock_client_timeout
-        mock_client_timeout.__exit__.return_value = None
-
-        with patch("httpx.Client", return_value=mock_client_timeout):
+        # Test Empty output
+        with patch("backend.app.services.indoor_service.generate_gemini_text", return_value="   "):
             with patch.object(settings, "GEMINI_API_KEY", "test-key"):
-                res_to = IndoorAirService.evaluate_indoor_air(IndoorAssessmentRequest())
-                assert res_to.ai_provider == "expert-rules-fallback"
+                res_empty = IndoorAirService.evaluate_indoor_air(IndoorAssessmentRequest())
+                assert res_empty.ai_provider == "expert-rules-fallback"
+                assert res_empty.ai_generated is False
+
+        # Test API Exception
+        with patch("backend.app.services.indoor_service.generate_gemini_text", side_effect=RuntimeError("Google GenAI API failure")):
+            with patch.object(settings, "GEMINI_API_KEY", "test-key"):
+                res_exc = IndoorAirService.evaluate_indoor_air(IndoorAssessmentRequest())
+                assert res_exc.ai_provider == "expert-rules-fallback"
+                assert res_exc.ai_generated is False
 
         # Test Malformed JSON
-        mock_client_bad = MagicMock()
-        mock_post_bad = MagicMock()
-        mock_post_bad.status_code = 200
-        mock_post_bad.json.return_value = {
-            "candidates": [{"content": {"parts": [{"text": "{malformed json ..."}]}}]
-        }
-        mock_client_bad.post.return_value = mock_post_bad
-        mock_client_bad.__enter__.return_value = mock_client_bad
-        mock_client_bad.__exit__.return_value = None
-
-        with patch("httpx.Client", return_value=mock_client_bad):
+        with patch("backend.app.services.indoor_service.generate_gemini_text", return_value="{malformed json ..."):
             with patch.object(settings, "GEMINI_API_KEY", "test-key"):
                 res_bad = IndoorAirService.evaluate_indoor_air(IndoorAssessmentRequest())
                 assert res_bad.ai_provider == "expert-rules-fallback"
+                assert res_bad.ai_generated is False
+
+        # Test Non-dict JSON (e.g., JSON array)
+        with patch("backend.app.services.indoor_service.generate_gemini_text", return_value='["not", "a", "dict"]'):
+            with patch.object(settings, "GEMINI_API_KEY", "test-key"):
+                res_arr = IndoorAirService.evaluate_indoor_air(IndoorAssessmentRequest())
+                assert res_arr.ai_provider == "expert-rules-fallback"
+                assert res_arr.ai_generated is False
 
 
 def test_indoor_api_endpoints(mock_outdoor_cpcb):

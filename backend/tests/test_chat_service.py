@@ -173,44 +173,65 @@ def test_gemini_api_call_and_fallback(mock_cpcb_reading):
         mock_provider.get_current_aqi.return_value = mock_cpcb_reading
         mock_get_provider.return_value = mock_provider
 
-        # Success case with Gemini API mock
-        mock_client = MagicMock()
-        mock_post = MagicMock()
-        mock_post.status_code = 200
-        mock_post.json.return_value = {
-            "candidates": [
-                {
-                    "content": {
-                        "parts": [
-                            {"thought": "Evaluating user query about morning exercise..."},
-                            {"text": "Exercising outdoors in current Very Poor AQI (379) is hazardous to lungs."},
-                        ]
-                    }
-                }
-            ]
-        }
-        mock_client.post.return_value = mock_post
-        mock_client.__enter__.return_value = mock_client
-        mock_client.__exit__.return_value = None
-
-        with patch("httpx.Client", return_value=mock_client):
+        # Success case with generate_gemini_text mock
+        with patch("backend.app.services.chat_service.generate_gemini_text") as mock_gen:
+            mock_gen.return_value = "Exercising outdoors in current Very Poor AQI (379) is hazardous to lungs."
             with patch.object(settings, "GEMINI_API_KEY", "test-key"):
                 res_gemini = ChatService.process_chat_message(ChatRequest(message="Exercise advice?"))
                 assert res_gemini.ai_provider == "google-gemini"
                 assert res_gemini.ai_generated is True
                 assert "379" in res_gemini.message
 
-        # Error case: HTTP 429
-        mock_post_429 = MagicMock()
-        mock_post_429.status_code = 429
-        mock_post_429.text = "Quota exceeded"
-        mock_client.post.return_value = mock_post_429
-
-        with patch("httpx.Client", return_value=mock_client):
+        # Error case: None / Empty text triggers fallback
+        with patch("backend.app.services.chat_service.generate_gemini_text") as mock_gen:
+            mock_gen.return_value = None
             with patch.object(settings, "GEMINI_API_KEY", "test-key"):
                 res_fallback = ChatService.process_chat_message(ChatRequest(message="Exercise advice?"))
                 assert res_fallback.ai_provider == "expert-rules-fallback"
                 assert res_fallback.ai_generated is False
+
+        # Error case: Exception does not crash chatbot
+        with patch("backend.app.services.chat_service.generate_gemini_text") as mock_gen:
+            mock_gen.side_effect = RuntimeError("API connection failure")
+            with patch.object(settings, "GEMINI_API_KEY", "test-key"):
+                res_fallback_exc = ChatService.process_chat_message(ChatRequest(message="Exercise advice?"))
+                assert res_fallback_exc.ai_provider == "expert-rules-fallback"
+                assert res_fallback_exc.ai_generated is False
+
+
+def test_gemini_chat_prompt_context_and_history(mock_cpcb_reading):
+    from backend.app.core.config import settings
+
+    with patch("backend.app.services.chat_service.get_active_aqi_provider") as mock_get_provider:
+        mock_provider = MagicMock()
+        mock_provider.get_current_aqi.return_value = mock_cpcb_reading
+        mock_get_provider.return_value = mock_provider
+
+        history = [
+            ChatMessage(role=ChatRole.USER, content="Hello"),
+            ChatMessage(role=ChatRole.ASSISTANT, content="Hi! How can I help?"),
+        ]
+
+        with patch("backend.app.services.chat_service.generate_gemini_text") as mock_gen:
+            mock_gen.return_value = "Stay indoors today."
+            with patch.object(settings, "GEMINI_API_KEY", "test-key"):
+                req = ChatRequest(
+                    message="Is walking safe?",
+                    history=history,
+                    language="en",
+                )
+                res = ChatService.process_chat_message(req)
+                assert res.ai_provider == "google-gemini"
+                assert res.message == "Stay indoors today."
+
+                mock_gen.assert_called_once()
+                prompt_arg = mock_gen.call_args[0][0]
+                assert "Anand Vihar" in prompt_arg
+                assert "379" in prompt_arg
+                assert "CONVERSATION HISTORY:" in prompt_arg
+                assert "User: Hello" in prompt_arg
+                assert "AirSaathi: Hi! How can I help?" in prompt_arg
+                assert "User: Is walking safe?" in prompt_arg
 
 
 def test_chat_api_endpoint_validation():
