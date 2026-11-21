@@ -43,28 +43,73 @@ const ModuleFallback: React.FC = () => (
   </div>
 );
 
+const DashboardSkeleton: React.FC<{ loadingTitle: string; loadingSubtitle: string }> = ({
+  loadingTitle,
+  loadingSubtitle,
+}) => (
+  <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6 space-y-8 animate-pulse" aria-busy="true" aria-label={loadingTitle}>
+    {/* Loading indicator bar */}
+    <div className="flex items-center justify-between pb-2 border-b border-slate-800/60">
+      <div className="flex items-center gap-2.5">
+        <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" />
+        <span className="text-xs font-semibold text-slate-300">{loadingTitle}</span>
+      </div>
+      <span className="text-[11px] text-slate-500">{loadingSubtitle}</span>
+    </div>
+
+    {/* Hero AQI Card Skeleton */}
+    <div className="glass-panel rounded-3xl p-6 lg:p-8 border border-slate-800 space-y-6">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+        <div className="space-y-3 w-full lg:w-1/2">
+          <div className="h-4 w-32 bg-slate-800 rounded-md" />
+          <div className="h-8 w-64 bg-slate-800 rounded-lg" />
+          <div className="flex items-baseline gap-4 pt-2">
+            <div className="h-16 w-28 bg-slate-800 rounded-2xl" />
+            <div className="h-8 w-36 bg-slate-800 rounded-xl" />
+          </div>
+        </div>
+        <div className="w-full lg:w-72 h-36 bg-slate-900/80 rounded-2xl border border-slate-800/90" />
+      </div>
+      <div className="pt-4 border-t border-slate-800/80 space-y-2">
+        <div className="h-3 w-full bg-slate-800 rounded-full" />
+      </div>
+    </div>
+
+    {/* Hourly Trend Skeleton */}
+    <div className="glass-panel rounded-3xl p-6 lg:p-8 border border-slate-800 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="h-5 w-48 bg-slate-800 rounded-md" />
+          <div className="h-3 w-64 bg-slate-800 rounded-md" />
+        </div>
+        <div className="h-10 w-44 bg-slate-800 rounded-xl hidden sm:block" />
+      </div>
+      <div className="h-64 w-full bg-slate-900/60 rounded-2xl border border-slate-800/60" />
+    </div>
+
+    {/* Pollutant Breakdown Grid Skeleton */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div key={i} className="glass-card rounded-2xl p-5 border border-slate-800 h-44 space-y-3">
+          <div className="flex justify-between">
+            <div className="h-5 w-16 bg-slate-800 rounded" />
+            <div className="h-5 w-20 bg-slate-800 rounded-full" />
+          </div>
+          <div className="h-8 w-24 bg-slate-800 rounded-lg" />
+          <div className="h-3 w-full bg-slate-800 rounded mt-4" />
+        </div>
+      ))}
+    </div>
+  </main>
+);
+
 const DashboardContent: React.FC = () => {
   const { loading, error, refreshData, currentAqi, language } = useApp();
   const t = translations[language];
 
-  // Loading State
+  // Loading State - Dashboard Skeleton prevents layout shift
   if (loading && !currentAqi) {
-    return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-4 text-center px-4">
-        <div className="relative">
-          <Loader2 className="w-12 h-12 text-emerald-400 animate-spin" />
-          <div className="absolute inset-0 rounded-full blur-md bg-emerald-500/20 pointer-events-none" />
-        </div>
-        <div>
-          <h2 className="text-lg font-bold text-white">
-            {t.loadingTitle}
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            {t.loadingSubtitle}
-          </p>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton loadingTitle={t.loadingTitle} loadingSubtitle={t.loadingSubtitle} />;
   }
 
   // Error State

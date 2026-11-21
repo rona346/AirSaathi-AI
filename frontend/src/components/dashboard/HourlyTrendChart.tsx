@@ -15,7 +15,19 @@ import { getAqiCategoryLabel } from '../../utils/aqiUtils';
 import { translations } from '../../utils/translations';
 
 export const HourlyTrendChart: React.FC = () => {
-  const { forecast, language, isDemoData } = useApp();
+  const { forecast, language } = useApp();
+
+  const [isMobile, setIsMobile] = React.useState<boolean>(() => {
+    return typeof window !== 'undefined' ? window.innerWidth < 640 : false;
+  });
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (!forecast || !forecast.forecast_24h || forecast.forecast_24h.length === 0) {
     return null;
@@ -53,12 +65,6 @@ export const HourlyTrendChart: React.FC = () => {
               <TrendingUp className="w-5 h-5 text-emerald-400" />
               <span>{t.diurnalTitle}</span>
             </h2>
-            {isDemoData && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
-                <ShieldCheck className="w-3 h-3" />
-                {t.demoMode}
-              </span>
-            )}
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
             {t.diurnalSubtitle}
@@ -114,10 +120,40 @@ export const HourlyTrendChart: React.FC = () => {
               ticks={[50, 100, 200, 300, 400, 500]}
             />
             <Tooltip content={<CustomTooltip />} />
-            {/* National threshold reference line */}
-            <ReferenceLine y={200} stroke="#EAB308" strokeDasharray="3 3" label={{ value: t.moderateLimit, fill: '#EAB308', fontSize: 10 }} />
-            <ReferenceLine y={300} stroke="#F97316" strokeDasharray="3 3" label={{ value: t.poorLimit, fill: '#F97316', fontSize: 10 }} />
-            <ReferenceLine y={400} stroke="#EF4444" strokeDasharray="3 3" label={{ value: t.severeLimit, fill: '#EF4444', fontSize: 10 }} />
+            {/* National threshold reference lines with collision-safe labels */}
+            <ReferenceLine
+              y={200}
+              stroke="#EAB308"
+              strokeDasharray="3 3"
+              label={{
+                value: isMobile ? '200' : t.moderateLimit,
+                fill: '#EAB308',
+                fontSize: 10,
+                position: isMobile ? 'insideTopLeft' : 'insideTopRight',
+              }}
+            />
+            <ReferenceLine
+              y={300}
+              stroke="#F97316"
+              strokeDasharray="3 3"
+              label={{
+                value: isMobile ? '300' : t.poorLimit,
+                fill: '#F97316',
+                fontSize: 10,
+                position: isMobile ? 'insideTopLeft' : 'insideTopRight',
+              }}
+            />
+            <ReferenceLine
+              y={400}
+              stroke="#EF4444"
+              strokeDasharray="3 3"
+              label={{
+                value: isMobile ? '400' : t.severeLimit,
+                fill: '#EF4444',
+                fontSize: 10,
+                position: isMobile ? 'insideTopLeft' : 'insideTopRight',
+              }}
+            />
             <Area
               type="monotone"
               dataKey="aqi"

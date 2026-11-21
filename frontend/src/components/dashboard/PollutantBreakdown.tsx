@@ -1,11 +1,11 @@
 import React from 'react';
-import { Activity, ShieldCheck } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { getAqiBadgeClasses, getAqiCategoryLabel } from '../../utils/aqiUtils';
 import { translations, pollutantDescriptions } from '../../utils/translations';
 
 export const PollutantBreakdown: React.FC = () => {
-  const { currentAqi, language, isDemoData } = useApp();
+  const { currentAqi, language } = useApp();
 
   if (!currentAqi) return null;
 
@@ -22,12 +22,6 @@ export const PollutantBreakdown: React.FC = () => {
               <Activity className="w-5 h-5 text-emerald-400" />
               <span>{t.pollutantBreakdownTitle}</span>
             </h2>
-            {isDemoData && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
-                <ShieldCheck className="w-3 h-3" />
-                {t.demoMode}
-              </span>
-            )}
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
             {t.pollutantBreakdownSubtitle}
@@ -58,7 +52,7 @@ export const PollutantBreakdown: React.FC = () => {
           return (
             <div
               key={p.name}
-              className="glass-card rounded-2xl p-5 border border-slate-800 hover:border-slate-700/80 transition-all hover:shadow-xl relative overflow-hidden"
+              className="glass-card rounded-2xl p-5 border border-slate-800 hover:border-slate-700/80 transition-all hover:shadow-xl relative overflow-hidden flex flex-col justify-between h-full"
             >
               {/* Highlight top banner for toxic PM2.5 / PM10 */}
               {isAboveSafe && (
@@ -68,7 +62,7 @@ export const PollutantBreakdown: React.FC = () => {
               <div className="flex items-start justify-between">
                 <div>
                   <span className="text-lg font-extrabold text-white tracking-tight">{p.name}</span>
-                  <span className="text-[11px] text-slate-400 block">{desc}</span>
+                  <span className="text-[11px] text-slate-400 block min-h-[30px] leading-tight">{desc}</span>
                 </div>
 
                 <span

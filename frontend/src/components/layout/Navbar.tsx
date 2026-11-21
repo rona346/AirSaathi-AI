@@ -63,7 +63,7 @@ export const Navbar: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-                  {t.appName}{' '}
+                  {t.appName.replace(/\s*AI$/, '')}{' '}
                   <span className="text-emerald-400 font-semibold text-xs px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
                     AI
                   </span>
@@ -264,83 +264,83 @@ export const Navbar: React.FC = () => {
       </div>
 
       {/* Mobile Tab Switcher */}
-      <div className="flex lg:hidden items-center justify-center gap-2 mt-3 pt-2.5 border-t border-slate-800/60">
+      <div className="flex lg:hidden items-center gap-2 mt-3 pt-2.5 border-t border-slate-800/60 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-1 px-1">
         <button
           onClick={() => setActiveTab('dashboard')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+          className={`shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
             activeTab === 'dashboard'
               ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
           }`}
         >
           <LayoutDashboard className="w-3.5 h-3.5" />
-          <span className="truncate">{t.dashboardTabTitle}</span>
+          <span>{t.dashboardTabTitle}</span>
         </button>
         <button
           onClick={() => setActiveTab('planner')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+          className={`shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
             activeTab === 'planner'
               ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
           }`}
         >
           <Calendar className="w-3.5 h-3.5" />
-          <span className="truncate">{t.plannerTabTitle}</span>
+          <span>{t.plannerTabTitle}</span>
         </button>
         <button
           onClick={() => setActiveTab('indoor')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+          className={`shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
             activeTab === 'indoor'
               ? 'bg-teal-600 text-white shadow-md shadow-teal-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
           }`}
         >
           <Home className="w-3.5 h-3.5" />
-          <span className="truncate">{t.indoorTabTitle}</span>
+          <span>{t.indoorTabTitle}</span>
         </button>
         <button
           onClick={() => setActiveTab('chat')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+          className={`shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
             activeTab === 'chat'
               ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
           }`}
         >
           <MessageSquare className="w-3.5 h-3.5" />
-          <span className="truncate">{t.chatTabTitle}</span>
+          <span>{t.chatTabTitle}</span>
         </button>
         <button
           onClick={() => setActiveTab('mobility')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+          className={`shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
             activeTab === 'mobility'
               ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
           }`}
         >
           <Navigation className="w-3.5 h-3.5" />
-          <span className="truncate">{t.mobilityTabTitle}</span>
+          <span>{t.mobilityTabTitle}</span>
         </button>
         <button
           onClick={() => setActiveTab('impact')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+          className={`shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
             activeTab === 'impact'
               ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
           }`}
         >
           <Leaf className="w-3.5 h-3.5" />
-          <span className="truncate">{t.impactTabTitle}</span>
+          <span>{t.impactTabTitle}</span>
         </button>
         <button
           onClick={() => setActiveTab('family')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+          className={`shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
             activeTab === 'family'
               ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
           }`}
         >
           <Users className="w-3.5 h-3.5" />
-          <span className="truncate">{t.familyTabTitle}</span>
+          <span>{t.familyTabTitle}</span>
         </button>
       </div>
     </header>

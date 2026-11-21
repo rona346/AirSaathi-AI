@@ -16,6 +16,8 @@ export const AqiCard: React.FC = () => {
 
   // Calculate percentage along 0-500 scale for the indicator pointer (capped at 100%)
   const percentage = Math.min(100, Math.max(0, (aqi / 500) * 100));
+  // Safe clamped visual position (4% - 96%) to keep the pointer badge within bounds at scale extremes
+  const visualMarkerLeft = Math.min(96, Math.max(4, percentage));
 
   return (
     <div className="glass-panel rounded-3xl p-6 lg:p-8 relative overflow-hidden border border-slate-800 shadow-2xl">
@@ -229,7 +231,7 @@ export const AqiCard: React.FC = () => {
         <div className="relative w-full mt-1.5">
           <div
             className="absolute -top-3 transform -translate-x-1/2 flex flex-col items-center transition-all duration-500"
-            style={{ left: `${percentage}%` }}
+            style={{ left: `${visualMarkerLeft}%` }}
           >
             <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-white" />
             <span className="text-[10px] font-bold text-white bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700 shadow-md">

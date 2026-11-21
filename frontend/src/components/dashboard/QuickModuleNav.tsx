@@ -121,7 +121,7 @@ export const QuickModuleNav: React.FC = () => {
               </div>
 
               <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 group-hover:text-slate-200 transition-colors">
-                <span>{m.isAvailable ? (language === 'hi' ? 'प्लानर खोलें' : 'Launch Planner') : t.viewArchitecture}</span>
+                <span>{m.isAvailable ? (language === 'hi' ? 'मॉड्यूल खोलें' : 'Open Module') : t.viewArchitecture}</span>
                 <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
