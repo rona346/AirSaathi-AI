@@ -20,6 +20,7 @@ import {
   PaginatedImpactLogs,
   TimeframeFilter,
 } from '../types/impact';
+import { getCurrentIdToken } from './firebase';
 import {
   MOCK_IMPACT_METHODOLOGY,
   MOCK_STATIONS,
@@ -436,9 +437,20 @@ export async function fetchImpactSummary(
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   try {
-    const res = await fetch(`${API_BASE}/impact/summary?timeframe=${encodeURIComponent(timeframe)}`, {
+    let res = await fetch(`${API_BASE}/impact/summary?timeframe=${encodeURIComponent(timeframe)}`, {
       headers,
     });
+
+    // Reactive retry on 401: If authenticated request failed with 401, force-refresh token once
+    if (res.status === 401 && token) {
+      const freshToken = await getCurrentIdToken(true);
+      if (freshToken) {
+        res = await fetch(`${API_BASE}/impact/summary?timeframe=${encodeURIComponent(timeframe)}`, {
+          headers: { ...headers, Authorization: `Bearer ${freshToken}` },
+        });
+      }
+    }
+
     if (!res.ok) {
       const errJson = await res.json().catch(() => ({}));
       const errorMsg =
@@ -473,7 +485,18 @@ export async function fetchImpactLogs(
   if (timeframe) url += `&timeframe=${encodeURIComponent(timeframe)}`;
 
   try {
-    const res = await fetch(url, { headers });
+    let res = await fetch(url, { headers });
+
+    // Reactive retry on 401: If authenticated request failed with 401, force-refresh token once
+    if (res.status === 401 && token) {
+      const freshToken = await getCurrentIdToken(true);
+      if (freshToken) {
+        res = await fetch(url, {
+          headers: { ...headers, Authorization: `Bearer ${freshToken}` },
+        });
+      }
+    }
+
     if (!res.ok) {
       const errJson = await res.json().catch(() => ({}));
       const errorMsg =
@@ -498,7 +521,7 @@ export async function createImpactLog(
   payload: ImpactLogCreate
 ): Promise<{ data: ImpactLogRecord; error?: string }> {
   try {
-    const res = await fetch(`${API_BASE}/impact/logs`, {
+    let res = await fetch(`${API_BASE}/impact/logs`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -507,6 +530,22 @@ export async function createImpactLog(
       },
       body: JSON.stringify(payload),
     });
+
+    if (res.status === 401 && token) {
+      const freshToken = await getCurrentIdToken(true);
+      if (freshToken) {
+        res = await fetch(`${API_BASE}/impact/logs`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${freshToken}`,
+          },
+          body: JSON.stringify(payload),
+        });
+      }
+    }
+
     if (!res.ok) {
       const errJson = await res.json().catch(() => ({}));
       throw new Error(errJson.detail || `HTTP error ${res.status}`);
@@ -524,13 +563,27 @@ export async function deleteImpactLog(
   logId: string
 ): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/impact/logs/${encodeURIComponent(logId)}`, {
+    let res = await fetch(`${API_BASE}/impact/logs/${encodeURIComponent(logId)}`, {
       method: 'DELETE',
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,
       },
     });
+
+    if (res.status === 401 && token) {
+      const freshToken = await getCurrentIdToken(true);
+      if (freshToken) {
+        res = await fetch(`${API_BASE}/impact/logs/${encodeURIComponent(logId)}`, {
+          method: 'DELETE',
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${freshToken}`,
+          },
+        });
+      }
+    }
+
     if (!res.ok) {
       const errJson = await res.json().catch(() => ({}));
       throw new Error(errJson.detail || `HTTP error ${res.status}`);

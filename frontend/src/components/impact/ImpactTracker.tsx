@@ -40,6 +40,7 @@ import {
   ChevronRight,
   X,
   ShieldAlert,
+  Loader2,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import {
@@ -78,7 +79,7 @@ const MODE_COLORS: Record<string, string> = {
 };
 
 export const ImpactTracker: React.FC = () => {
-  const { language, user, setAuthModalOpen } = useApp();
+  const { language, user, authLoading, setAuthModalOpen } = useApp();
   const t = translations[language];
   const isHi = language === 'hi';
 
@@ -115,10 +116,15 @@ export const ImpactTracker: React.FC = () => {
 
   // Load Data
   const loadData = useCallback(async () => {
+    // Wait for authentication initialization to complete before loading records
+    if (authLoading) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      const token = user ? await getCurrentIdToken() : null;
+      const token = user ? (await getCurrentIdToken()) || user.token : null;
       const [sumRes, logsRes, methData] = await Promise.all([
         fetchImpactSummary(token, timeframe),
         fetchImpactLogs(token, timeframe, pageSize, page * pageSize),
@@ -138,7 +144,7 @@ export const ImpactTracker: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, timeframe, page]);
+  }, [user, authLoading, timeframe, page]);
 
   useEffect(() => {
     loadData();
@@ -264,7 +270,7 @@ export const ImpactTracker: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const token = await getCurrentIdToken();
+      const token = (await getCurrentIdToken()) || user?.token;
       if (!token) throw new Error('Authentication token unavailable.');
 
       const payload: ImpactLogCreate = {
@@ -307,7 +313,7 @@ export const ImpactTracker: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const token = await getCurrentIdToken();
+      const token = (await getCurrentIdToken()) || user?.token;
       if (!token) throw new Error('Authentication token unavailable.');
 
       await deleteImpactLog(token, logId);
@@ -471,7 +477,14 @@ export const ImpactTracker: React.FC = () => {
         )}
       </div>
 
-      {error && !summary && user ? (
+      {authLoading || (loading && !summary && !error) ? (
+        <div className="glass-panel rounded-3xl p-12 border border-slate-800 text-center flex flex-col items-center justify-center gap-3">
+          <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+          <p className="text-xs text-slate-400 font-medium">
+            {isHi ? 'पर्यावरणीय प्रभाव रिकॉर्ड लोड हो रहे हैं...' : 'Loading environmental impact records...'}
+          </p>
+        </div>
+      ) : error && !summary && user ? (
         <div className="glass-panel rounded-3xl p-8 border border-rose-500/30 bg-rose-500/5 text-center space-y-4">
           <div className="p-3.5 rounded-2xl bg-rose-500/10 text-rose-400 w-fit mx-auto border border-rose-500/20">
             <AlertCircle className="w-8 h-8" />
