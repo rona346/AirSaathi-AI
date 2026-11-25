@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, Tuple
 
 from backend.app.core.config import settings
@@ -159,7 +159,7 @@ class MobilityService:
             ai_generated=ai_generated,
             methodology_notes=methodology_notes,
             disclaimer=disclaimer,
-            generated_at=datetime.utcnow(),
+            generated_at=datetime.now(timezone.utc),
         )
 
     @classmethod

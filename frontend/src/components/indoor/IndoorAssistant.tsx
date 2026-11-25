@@ -238,7 +238,7 @@ export const IndoorAssistant: React.FC = () => {
         {/* Room Type Selector */}
         <div className="space-y-2">
           <label className="text-xs font-semibold text-slate-300 block">{t.roomTypeLabel}</label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+          <div role="radiogroup" aria-label={t.roomTypeLabel} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             {[
               { id: 'bedroom', label: t.roomBedroom },
               { id: 'kitchen', label: t.roomKitchen },
@@ -248,6 +248,8 @@ export const IndoorAssistant: React.FC = () => {
             ].map((rm) => (
               <button
                 key={rm.id}
+                role="radio"
+                aria-checked={householdInput.room_type === rm.id}
                 onClick={() => updateHouseholdInput({ room_type: rm.id as RoomType })}
                 className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border ${
                   householdInput.room_type === rm.id
@@ -267,10 +269,12 @@ export const IndoorAssistant: React.FC = () => {
           <label className="text-xs font-semibold text-slate-300 block">
             {t.roomAreaLabel} <strong className="text-emerald-400">{householdInput.room_area_sqft} sq ft</strong>
           </label>
-          <div className="flex items-center flex-wrap gap-2">
+          <div role="radiogroup" aria-label={t.roomAreaLabel} className="flex items-center flex-wrap gap-2">
             {[100, 150, 200, 300, 500].map((sqft) => (
               <button
                 key={sqft}
+                role="radio"
+                aria-checked={householdInput.room_area_sqft === sqft}
                 onClick={() => updateHouseholdInput({ room_area_sqft: sqft })}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border ${
                   householdInput.room_area_sqft === sqft
@@ -288,6 +292,7 @@ export const IndoorAssistant: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
           {/* Heavy Tadka / Frying */}
           <button
+            aria-pressed={householdInput.heavy_frying_or_tadka}
             onClick={() => updateHouseholdInput({ heavy_frying_or_tadka: !householdInput.heavy_frying_or_tadka })}
             className={`p-3 rounded-xl border text-left flex items-start justify-between gap-2 transition-all ${
               householdInput.heavy_frying_or_tadka
@@ -304,6 +309,7 @@ export const IndoorAssistant: React.FC = () => {
 
           {/* Kitchen Chimney */}
           <button
+            aria-pressed={householdInput.has_kitchen_chimney}
             onClick={() => updateHouseholdInput({ has_kitchen_chimney: !householdInput.has_kitchen_chimney })}
             className={`p-3 rounded-xl border text-left flex items-start justify-between gap-2 transition-all ${
               householdInput.has_kitchen_chimney
@@ -320,6 +326,7 @@ export const IndoorAssistant: React.FC = () => {
 
           {/* Incense / Agarbatti */}
           <button
+            aria-pressed={householdInput.burns_agarbatti_or_dhoop}
             onClick={() => updateHouseholdInput({ burns_agarbatti_or_dhoop: !householdInput.burns_agarbatti_or_dhoop })}
             className={`p-3 rounded-xl border text-left flex items-start justify-between gap-2 transition-all ${
               householdInput.burns_agarbatti_or_dhoop
@@ -336,6 +343,7 @@ export const IndoorAssistant: React.FC = () => {
 
           {/* Indoor Smoking */}
           <button
+            aria-pressed={householdInput.indoor_smoking}
             onClick={() => updateHouseholdInput({ indoor_smoking: !householdInput.indoor_smoking })}
             className={`p-3 rounded-xl border text-left flex items-start justify-between gap-2 transition-all ${
               householdInput.indoor_smoking
@@ -352,6 +360,7 @@ export const IndoorAssistant: React.FC = () => {
 
           {/* Cleaning Method */}
           <button
+            aria-pressed={householdInput.cleaning_method === 'wet_mopping'}
             onClick={() =>
               updateHouseholdInput({
                 cleaning_method:
@@ -377,6 +386,7 @@ export const IndoorAssistant: React.FC = () => {
 
           {/* Air Purifier Present */}
           <button
+            aria-pressed={householdInput.has_air_purifier}
             onClick={() => updateHouseholdInput({ has_air_purifier: !householdInput.has_air_purifier })}
             className={`p-3 rounded-xl border text-left flex items-start justify-between gap-2 transition-all ${
               householdInput.has_air_purifier

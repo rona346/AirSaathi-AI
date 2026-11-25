@@ -60,10 +60,14 @@ MOCK_OPEN_METEO_PAYLOAD = {
 
 @pytest.fixture(autouse=True)
 def clean_cache():
-    """Ensure weather cache is empty before and after each test."""
+    """Ensure weather cache is empty before and after each test and mock mode is controlled."""
     from backend.app.services.weather_service import weather_service
+    from backend.app.core.config import settings
+    old_mock = settings.MOCK_MODE
+    settings.MOCK_MODE = False
     weather_service.clear_cache()
     yield
+    settings.MOCK_MODE = old_mock
     weather_service.clear_cache()
 
 

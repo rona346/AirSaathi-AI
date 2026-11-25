@@ -1,5 +1,6 @@
 from typing import Optional
 from fastapi import APIRouter, Body, Query
+from backend.app.core.utils import resolve_query_param
 from backend.app.models.response import ApiResponse
 from backend.app.models.routine import (
     FamilyVulnerabilityInput,
@@ -45,18 +46,13 @@ def get_routine_plan_get(
     """
     Convenience GET endpoint for fetching a personalized routine plan with URL query parameters.
     """
-    def _resolve(val, default):
-        if hasattr(val, "default"):
-            return val.default
-        return val if val is not None else default
-
-    resolved_station_id = str(_resolve(station_id, "delhi-anand-vihar"))
-    resolved_lang = str(_resolve(language, "en"))
-    resolved_children = bool(_resolve(has_children, False))
-    resolved_seniors = bool(_resolve(has_seniors, False))
-    resolved_resp = bool(_resolve(has_respiratory, False))
-    resolved_pregnant = bool(_resolve(is_pregnant, False))
-    resolved_exercise = str(_resolve(exercise_type, "walk"))
+    resolved_station_id = str(resolve_query_param(station_id, "delhi-anand-vihar"))
+    resolved_lang = str(resolve_query_param(language, "en"))
+    resolved_children = bool(resolve_query_param(has_children, False))
+    resolved_seniors = bool(resolve_query_param(has_seniors, False))
+    resolved_resp = bool(resolve_query_param(has_respiratory, False))
+    resolved_pregnant = bool(resolve_query_param(is_pregnant, False))
+    resolved_exercise = str(resolve_query_param(exercise_type, "walk"))
 
     family = FamilyVulnerabilityInput(
         has_children=resolved_children,

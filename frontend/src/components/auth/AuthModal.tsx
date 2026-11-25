@@ -52,8 +52,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-md p-6 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn"
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onClose();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
+        className="relative w-full max-w-md p-6 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden"
+      >
         {/* Glow ambient background */}
         <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
 
@@ -63,7 +73,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">
+              <h3 id="auth-modal-title" className="text-lg font-bold text-white">
                 {isRegisterMode ? 'Create AirSaathi Account' : 'Sign in to AirSaathi'}
               </h3>
               <p className="text-xs text-slate-400">
@@ -75,6 +85,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </div>
           <button
             onClick={onClose}
+            aria-label="Close authentication dialog"
             className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
           >
             <X className="w-5 h-5" />
@@ -91,10 +102,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </div>
         )}
 
-        {/* Tab switch */}
+        {/* Mode switch */}
         <div className="flex rounded-xl bg-slate-800/60 p-1 mt-4">
           <button
             type="button"
+            aria-pressed={!isRegisterMode}
             onClick={() => {
               setIsRegisterMode(false);
               setErrorMsg(null);
@@ -107,6 +119,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </button>
           <button
             type="button"
+            aria-pressed={isRegisterMode}
             onClick={() => {
               setIsRegisterMode(true);
               setErrorMsg(null);
@@ -129,10 +142,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         <form onSubmit={handleSubmit} className="mt-4 space-y-3.5">
           {isRegisterMode && (
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">Your Name</label>
+              <label htmlFor="auth-display-name" className="block text-xs font-medium text-slate-400 mb-1">Your Name</label>
               <div className="relative">
                 <User className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
                 <input
+                  id="auth-display-name"
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
@@ -144,10 +158,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           )}
 
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Email Address</label>
+            <label htmlFor="auth-email" className="block text-xs font-medium text-slate-400 mb-1">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
               <input
+                id="auth-email"
                 type="email"
                 required
                 value={email}
@@ -159,10 +174,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Password</label>
+            <label htmlFor="auth-password" className="block text-xs font-medium text-slate-400 mb-1">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
               <input
+                id="auth-password"
                 type="password"
                 required
                 value={password}
@@ -175,10 +191,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
           {isRegisterMode && (
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">Confirm Password</label>
+              <label htmlFor="auth-confirm-password" className="block text-xs font-medium text-slate-400 mb-1">Confirm Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
                 <input
+                  id="auth-confirm-password"
                   type="password"
                   required
                   value={confirmPassword}

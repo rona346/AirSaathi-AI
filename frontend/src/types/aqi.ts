@@ -61,6 +61,19 @@ export interface WeatherData {
   is_demo_data?: boolean;
 }
 
+export type GrapStage = 'None' | 'Stage I' | 'Stage II' | 'Stage III' | 'Stage IV';
+
+export interface GrapStatus {
+  applicable: boolean;
+  stage: GrapStage;
+  stage_name: string;
+  aqi_threshold: string;
+  status_type: 'indicative_aqi_based' | 'official_order';
+  is_official_order: boolean;
+  curbs_summary: string[];
+  notice: string;
+}
+
 export interface CurrentAqiData {
   station: StationInfo;
   aqi: number;
@@ -72,6 +85,7 @@ export interface CurrentAqiData {
   data_source: string;
   last_updated: string;
   is_demo_data: boolean;
+  grap_status?: GrapStatus;
 }
 
 export interface ForecastData {

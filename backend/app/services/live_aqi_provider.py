@@ -13,7 +13,7 @@ Official CPCB Methodology:
 
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 import urllib.parse
 import httpx
@@ -32,6 +32,7 @@ from backend.app.services.cpcb_calculator import (
     calculate_subindex,
     get_aqi_category_from_value,
 )
+from backend.app.services.grap_service import evaluate_grap
 from backend.app.services.weather_service import weather_service
 
 logger = logging.getLogger(__name__)
@@ -74,17 +75,20 @@ def normalize_pollutant_name(raw_name: str) -> str:
 def parse_cpcb_timestamp(ts_str: Optional[str]) -> datetime:
     """Parse CPCB timestamp format DD-MM-YYYY HH:MM:SS or fallback to UTC now."""
     if not ts_str:
-        return datetime.utcnow()
+        return datetime.now(timezone.utc)
     cleaned = ts_str.strip()
     for fmt in ("%d-%m-%Y %H:%M:%S", "%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M:%S"):
         try:
-            return datetime.strptime(cleaned, fmt)
+            return datetime.strptime(cleaned, fmt).replace(tzinfo=timezone.utc)
         except ValueError:
             continue
     try:
-        return datetime.fromisoformat(cleaned)
+        dt = datetime.fromisoformat(cleaned)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
     except Exception:
-        return datetime.utcnow()
+        return datetime.now(timezone.utc)
 
 
 class BaseAqiProvider(ABC):
@@ -234,6 +238,12 @@ class DataGovInProvider(BaseAqiProvider):
             station_name=station.name,
         )
 
+        grap_status = evaluate_grap(
+            aqi=overall_aqi,
+            city=station.city,
+            state=station.state,
+        )
+
         return CurrentAqiResponse(
             station=station,
             aqi=overall_aqi,
@@ -243,8 +253,9 @@ class DataGovInProvider(BaseAqiProvider):
             health_advisory=health_adv,
             weather=weather_detail,
             data_source="Central Pollution Control Board (CPCB) - data.gov.in CAAQMS Live",
-            last_updated=parsed_timestamp or datetime.utcnow(),
+            last_updated=parsed_timestamp or datetime.now(timezone.utc),
             is_demo_data=False,
+            grap_status=grap_status,
         )
 
     def fetch_live_records(
@@ -318,7 +329,9 @@ class DataGovInProvider(BaseAqiProvider):
         # 1. Check in-memory cache
         if station.id in self._cache:
             cached_time, cached_res = self._cache[station.id]
-            if datetime.utcnow() - cached_time < timedelta(seconds=self.cache_ttl):
+            if cached_time.tzinfo is None:
+                cached_time = cached_time.replace(tzinfo=timezone.utc)
+            if datetime.now(timezone.utc) - cached_time < timedelta(seconds=self.cache_ttl):
                 return cached_res
 
         # 2. Determine exact station filter for data.gov.in
@@ -342,7 +355,7 @@ class DataGovInProvider(BaseAqiProvider):
         # 3. Parse records
         live_res = self.parse_records(records, station)
         if live_res:
-            self._cache[station.id] = (datetime.utcnow(), live_res)
+            self._cache[station.id] = (datetime.now(timezone.utc), live_res)
             return live_res
 
         # 4. If previous cache exists, return it even if slightly aged

@@ -1,3 +1,4 @@
+from unittest.mock import patch
 from backend.app.api.v1.endpoints.health import check_health
 from backend.app.api.v1.endpoints.aqi import list_stations, get_current_aqi, get_forecast
 from backend.app.services.aqi_service import get_aqi_category
@@ -31,18 +32,21 @@ def test_stations_endpoint():
 
 
 def test_current_aqi_endpoint():
-    res = get_current_aqi("delhi-anand-vihar")
-    assert res.success is True
-    data = res.data
-    assert data.station.name == "Anand Vihar"
-    assert data.aqi == 368
-    assert data.category.value == "Very Poor"
-    assert "PM2.5" in data.pollutants
-    assert data.pollutants["PM2.5"].value > 0
-    # Ensure CPCB sub-index was computed correctly
-    assert data.pollutants["PM2.5"].sub_index == 368
-    assert data.is_demo_data is True
-    assert "Central Pollution Control Board" in data.data_source
+    with patch("backend.app.api.v1.endpoints.aqi.get_active_aqi_provider") as mock_prov_fn:
+        from backend.app.services.aqi_service import AqiService
+        mock_prov_fn.return_value = AqiService
+        res = get_current_aqi("delhi-anand-vihar")
+        assert res.success is True
+        data = res.data
+        assert data.station.name == "Anand Vihar"
+        assert data.aqi == 368
+        assert data.category.value == "Very Poor"
+        assert "PM2.5" in data.pollutants
+        assert data.pollutants["PM2.5"].value > 0
+        # Ensure CPCB sub-index was computed correctly
+        assert data.pollutants["PM2.5"].sub_index == 368
+        assert data.is_demo_data is True
+        assert "Central Pollution Control Board" in data.data_source
 
 
 def test_forecast_endpoint():

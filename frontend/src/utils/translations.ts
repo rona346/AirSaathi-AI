@@ -293,6 +293,10 @@ export interface Translations {
   savePreferencesBtn: string;
   preferencesSaved: string;
   preferencesGuestNotice: string;
+  grapTitle: string;
+  grapIndicativeTag: string;
+  grapCurbsActive: string;
+  grapNonNcrNotice: string;
 }
 
 export const translations: Record<SupportedLanguage, Translations> = {
@@ -602,6 +606,11 @@ export const translations: Record<SupportedLanguage, Translations> = {
     savePreferencesBtn: 'Save Family Preferences',
     preferencesSaved: 'Preferences Synced to Cloud',
     preferencesGuestNotice: 'In guest mode, preferences are retained in local session memory.',
+    grapTitle: 'CAQM Graded Response Action Plan (GRAP)',
+    grapIndicativeTag: 'Indicative AQI-Based (Delhi-NCR)',
+    grapCurbsActive: 'Key Mitigation Measures & Curbs:',
+    grapNonNcrNotice:
+      'CAQM GRAP framework is statutory only for the National Capital Region (Delhi-NCR). Standard CPCB NAQI protocols apply.',
   },
   hi: {
     appName: 'एयरसाथी AI',
@@ -909,6 +918,11 @@ export const translations: Record<SupportedLanguage, Translations> = {
     savePreferencesBtn: 'प्राथमिकताएं सहेजें',
     preferencesSaved: 'प्राथमिकताएं क्लाउड पर सहेजी गईं',
     preferencesGuestNotice: 'अतिथि मोड में प्राथमिकताएं केवल वर्तमान सत्र के लिए स्थानीय मेमोरी में सुरक्षित रहेंगी।',
+    grapTitle: 'सीएक्यूएम ग्रैप (GRAP) कार्ययोजना',
+    grapIndicativeTag: 'वायु गुणवत्ता आधारित सांकेतिक स्थिति (दिल्ली-एनसीआर)',
+    grapCurbsActive: 'प्रमुख रोकथाम उपाय एवं प्रतिबंध:',
+    grapNonNcrNotice:
+      'सीएक्यूएम ग्रैप (GRAP) केवल राष्ट्रीय राजधानी क्षेत्र (दिल्ली-एनसीआर) के लिए वैधानिक है। यहां मानक सीपीसीबी एनएक्यूआई दिशानिर्देश लागू हैं।',
   },
 };
 

@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 from pydantic import BaseModel, Field
+from backend.app.core.utils import get_utc_now
 
 from backend.app.models.indoor import HouseholdInput
 from backend.app.models.routine import FamilyVulnerabilityInput
@@ -16,7 +17,7 @@ class ChatRole(str, Enum):
 class ChatMessage(BaseModel):
     role: ChatRole = Field(..., description="Message author role: user, assistant, or system")
     content: str = Field(..., min_length=1, max_length=1500, description="Message text content")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=get_utc_now)
 
 
 class ChatContextInfo(BaseModel):
@@ -48,4 +49,4 @@ class ChatResponse(BaseModel):
     context_used: ChatContextInfo
     suggested_followups: List[str] = Field(default_factory=list, description="Quick follow-up query suggestions")
     disclaimer: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=get_utc_now)

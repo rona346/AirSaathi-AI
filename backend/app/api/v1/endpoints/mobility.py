@@ -1,5 +1,6 @@
 from typing import Optional
 from fastapi import APIRouter, Body, HTTPException, Query
+from backend.app.core.utils import resolve_query_param
 from backend.app.models.mobility import (
     AccessibilityNeed,
     CommuteFrequency,
@@ -51,20 +52,15 @@ def plan_sustainable_commute_get(
     occupancy: int = Query(1, ge=1, le=6, description="Vehicle occupancy"),
 ):
     """GET endpoint for sustainable commute planning with query parameters."""
-    def _resolve(val, default):
-        if hasattr(val, "default"):
-            return val.default
-        return val if val is not None else default
-
-    res_distance = float(_resolve(distance_km, 10.0))
-    res_station_id = str(_resolve(station_id, "delhi-anand-vihar"))
-    res_city = _resolve(city, None)
-    res_language = str(_resolve(language, "en"))
-    res_mode = str(_resolve(current_mode, "petrol_car"))
-    res_frequency = str(_resolve(frequency, "daily_round_trip"))
-    res_purpose = str(_resolve(purpose, "office"))
-    res_accessibility = str(_resolve(accessibility, "none"))
-    res_occupancy = int(_resolve(occupancy, 1))
+    res_distance = float(resolve_query_param(distance_km, 10.0))
+    res_station_id = str(resolve_query_param(station_id, "delhi-anand-vihar"))
+    res_city = resolve_query_param(city, None)
+    res_language = str(resolve_query_param(language, "en"))
+    res_mode = str(resolve_query_param(current_mode, "petrol_car"))
+    res_frequency = str(resolve_query_param(frequency, "daily_round_trip"))
+    res_purpose = str(resolve_query_param(purpose, "office"))
+    res_accessibility = str(resolve_query_param(accessibility, "none"))
+    res_occupancy = int(resolve_query_param(occupancy, 1))
 
     try:
         mode_enum = TransportMode(res_mode)

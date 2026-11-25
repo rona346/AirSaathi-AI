@@ -9,7 +9,7 @@ with strict zero-hallucination and medical safety guardrails.
 import json
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from backend.app.core.config import settings
@@ -119,7 +119,7 @@ class ChatService:
                 context_used=context_info,
                 suggested_followups=followups,
                 disclaimer=disclaimer,
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(timezone.utc),
             )
         except Exception as e:
             logger.warning(f"Error calling Gemini Chat: {type(e).__name__}")
@@ -344,7 +344,7 @@ I am AirSaathi AI's Environmental Assistant. I can assist you with real-time pol
             context_used=context,
             suggested_followups=followups,
             disclaimer=disclaimer,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
         )
 
     @classmethod

@@ -16,6 +16,49 @@ class AqiCategory(str, Enum):
     SEVERE_PLUS = "Severe+"
 
 
+class GrapStage(str, Enum):
+    NONE = "None"
+    STAGE_1 = "Stage I"
+    STAGE_2 = "Stage II"
+    STAGE_3 = "Stage III"
+    STAGE_4 = "Stage IV"
+
+
+class GrapStatus(BaseModel):
+    applicable: bool = Field(
+        ...,
+        description="Whether CAQM GRAP framework applies to this region (Delhi-NCR only)",
+    )
+    stage: GrapStage = Field(
+        ...,
+        description="Indicative GRAP stage based on AQI or None",
+    )
+    stage_name: str = Field(
+        ...,
+        description="Full descriptive title of the stage according to the CAQM schedule",
+    )
+    aqi_threshold: str = Field(
+        ...,
+        description="Official AQI bracket under CAQM schedule (e.g. '201-300', '> 450')",
+    )
+    status_type: str = Field(
+        "indicative_aqi_based",
+        description="Type of status: indicative_aqi_based or official_order",
+    )
+    is_official_order: bool = Field(
+        False,
+        description="Whether this stage is verified by an active statutory CAQM executive order",
+    )
+    curbs_summary: List[str] = Field(
+        default_factory=list,
+        description="Key mitigation measures and citizen/municipal curbs active under this stage",
+    )
+    notice: str = Field(
+        ...,
+        description="Statutory context and legal/advisory notice",
+    )
+
+
 class PollutantDetail(BaseModel):
     name: str = Field(..., description="Chemical or pollutant name (e.g. PM2.5, NO2)")
     value: float = Field(..., description="Observed concentration value")
@@ -66,6 +109,7 @@ class CurrentAqiResponse(BaseModel):
     data_source: str
     last_updated: datetime
     is_demo_data: bool = True
+    grap_status: Optional[GrapStatus] = None
 
 
 class ForecastResponse(BaseModel):

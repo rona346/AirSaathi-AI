@@ -88,7 +88,8 @@ def test_invalid_token_raises_401():
             with pytest.raises(HTTPException) as exc:
                 get_current_user(cred)
             assert exc.value.status_code == 401
-            assert "Invalid or expired" in exc.value.detail
+            assert exc.value.detail == "Invalid or expired authentication token."
+            assert "Token has expired" not in exc.value.detail
 
 
 def test_optional_user_returns_none_when_unauthenticated():

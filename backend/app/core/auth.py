@@ -53,10 +53,10 @@ def get_current_user(
     try:
         decoded_claims = verify_id_token(token)
     except Exception as exc:
-        logger.warning(f"Failed to verify Firebase ID token: {exc}")
+        logger.warning(f"Failed to verify Firebase ID token: {type(exc).__name__} - {str(exc)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid or expired authentication token: {str(exc)}",
+            detail="Invalid or expired authentication token.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

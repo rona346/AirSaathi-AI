@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 from backend.app.models.aqi import StationInfo
 from backend.app.services.live_aqi_provider import (
     DataGovInProvider,
@@ -213,7 +213,7 @@ def test_provider_caching():
     provider = DataGovInProvider("dummy-key", cache_ttl=300)
     # Pre-populate cache
     dummy_res = provider.parse_records(SAMPLE_7_POLLUTANTS_FIXTURE, SAMPLE_STATION)
-    provider._cache[SAMPLE_STATION.id] = (datetime.utcnow(), dummy_res)
+    provider._cache[SAMPLE_STATION.id] = (datetime.now(timezone.utc), dummy_res)
 
     # Calling get_current_aqi should return cached without HTTP call
     retrieved = provider.get_current_aqi(SAMPLE_STATION.id)

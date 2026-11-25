@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import { TrendingUp, Clock, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { AqiCategory } from '../../types/aqi';
 import { getAqiCategoryLabel } from '../../utils/aqiUtils';
 import { translations } from '../../utils/translations';
 
@@ -36,7 +37,23 @@ export const HourlyTrendChart: React.FC = () => {
   const t = translations[language];
   const { forecast_24h, peak_aqi_window, safest_outdoor_window } = forecast;
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  interface HourlyTooltipPayload {
+    category: AqiCategory;
+    aqi: number;
+    pm25: number;
+    pm10: number;
+    [key: string]: unknown;
+  }
+
+  interface CustomTooltipProps {
+    active?: boolean;
+    payload?: Array<{
+      payload: HourlyTooltipPayload;
+    }>;
+    label?: string;
+  }
+
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       const localizedCat = getAqiCategoryLabel(data.category, language);

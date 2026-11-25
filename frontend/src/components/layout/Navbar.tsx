@@ -79,8 +79,9 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Module Navigation Tabs */}
-          <nav className="hidden lg:flex items-center bg-slate-900/90 p-1 rounded-2xl border border-slate-800 ml-2">
+          <nav aria-label="Main Navigation Modules" className="hidden lg:flex items-center bg-slate-900/90 p-1 rounded-2xl border border-slate-800 ml-2">
             <button
+              aria-current={activeTab === 'dashboard' ? 'page' : undefined}
               onClick={() => setActiveTab('dashboard')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'dashboard'
@@ -92,6 +93,7 @@ export const Navbar: React.FC = () => {
               <span>{t.dashboardTabTitle}</span>
             </button>
             <button
+              aria-current={activeTab === 'planner' ? 'page' : undefined}
               onClick={() => setActiveTab('planner')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'planner'
@@ -103,6 +105,7 @@ export const Navbar: React.FC = () => {
               <span>{t.plannerTabTitle}</span>
             </button>
             <button
+              aria-current={activeTab === 'indoor' ? 'page' : undefined}
               onClick={() => setActiveTab('indoor')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'indoor'
@@ -114,6 +117,7 @@ export const Navbar: React.FC = () => {
               <span>{t.indoorTabTitle}</span>
             </button>
             <button
+              aria-current={activeTab === 'chat' ? 'page' : undefined}
               onClick={() => setActiveTab('chat')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'chat'
@@ -125,6 +129,7 @@ export const Navbar: React.FC = () => {
               <span>{t.chatTabTitle}</span>
             </button>
             <button
+              aria-current={activeTab === 'mobility' ? 'page' : undefined}
               onClick={() => setActiveTab('mobility')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'mobility'
@@ -136,6 +141,7 @@ export const Navbar: React.FC = () => {
               <span>{t.mobilityTabTitle}</span>
             </button>
             <button
+              aria-current={activeTab === 'impact' ? 'page' : undefined}
               onClick={() => setActiveTab('impact')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'impact'
@@ -147,6 +153,7 @@ export const Navbar: React.FC = () => {
               <span>{t.impactTabTitle}</span>
             </button>
             <button
+              aria-current={activeTab === 'family' ? 'page' : undefined}
               onClick={() => setActiveTab('family')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'family'
@@ -163,6 +170,7 @@ export const Navbar: React.FC = () => {
           <button
             onClick={refreshData}
             disabled={loading}
+            aria-label={t.refreshBtn}
             className="md:hidden p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
             title={t.refreshBtn}
           >
@@ -176,6 +184,8 @@ export const Navbar: React.FC = () => {
           <div className="relative flex items-center bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-1.5 shadow-inner w-full sm:w-auto">
             <MapPin className="w-4 h-4 text-emerald-400 mr-2 shrink-0" />
             <select
+              id="station-selector"
+              aria-label="Select Air Quality Monitoring Station"
               value={selectedStationId}
               onChange={(e) => setSelectedStationId(e.target.value)}
               className="bg-transparent text-sm text-slate-200 font-medium focus:outline-none cursor-pointer pr-2 w-full sm:w-auto"
@@ -207,6 +217,7 @@ export const Navbar: React.FC = () => {
           {/* Language Toggle (Hindi / English) */}
           <button
             onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
+            aria-label={`Switch language to ${language === 'en' ? 'Hindi' : 'English'}`}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-xs font-semibold text-slate-200 transition-colors"
             title="Switch Language"
           >
@@ -233,6 +244,7 @@ export const Navbar: React.FC = () => {
               </span>
               <button
                 onClick={logout}
+                aria-label={t.signOut}
                 className="p-1 hover:text-rose-400 rounded transition text-slate-400 ml-0.5"
                 title={t.signOut}
               >
@@ -254,6 +266,7 @@ export const Navbar: React.FC = () => {
           <button
             onClick={refreshData}
             disabled={loading}
+            aria-label={t.refreshBtn}
             className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700/60 text-xs font-medium text-slate-200 transition-colors disabled:opacity-50"
             title={t.refreshBtn}
           >
@@ -263,9 +276,10 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Tab Switcher */}
-      <div className="flex lg:hidden items-center gap-2 mt-3 pt-2.5 border-t border-slate-800/60 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-1 px-1">
+      {/* Mobile Navigation Modules */}
+      <nav aria-label="Mobile Navigation Modules" className="flex lg:hidden items-center gap-2 mt-3 pt-2.5 border-t border-slate-800/60 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-1 px-1">
         <button
+          aria-current={activeTab === 'dashboard' ? 'page' : undefined}
           onClick={() => setActiveTab('dashboard')}
           className={`shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
             activeTab === 'dashboard'
@@ -277,6 +291,7 @@ export const Navbar: React.FC = () => {
           <span>{t.dashboardTabTitle}</span>
         </button>
         <button
+          aria-current={activeTab === 'planner' ? 'page' : undefined}
           onClick={() => setActiveTab('planner')}
           className={`shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
             activeTab === 'planner'
@@ -288,6 +303,7 @@ export const Navbar: React.FC = () => {
           <span>{t.plannerTabTitle}</span>
         </button>
         <button
+          aria-current={activeTab === 'indoor' ? 'page' : undefined}
           onClick={() => setActiveTab('indoor')}
           className={`shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
             activeTab === 'indoor'
@@ -299,6 +315,7 @@ export const Navbar: React.FC = () => {
           <span>{t.indoorTabTitle}</span>
         </button>
         <button
+          aria-current={activeTab === 'chat' ? 'page' : undefined}
           onClick={() => setActiveTab('chat')}
           className={`shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
             activeTab === 'chat'
@@ -310,6 +327,7 @@ export const Navbar: React.FC = () => {
           <span>{t.chatTabTitle}</span>
         </button>
         <button
+          aria-current={activeTab === 'mobility' ? 'page' : undefined}
           onClick={() => setActiveTab('mobility')}
           className={`shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
             activeTab === 'mobility'
@@ -321,6 +339,7 @@ export const Navbar: React.FC = () => {
           <span>{t.mobilityTabTitle}</span>
         </button>
         <button
+          aria-current={activeTab === 'impact' ? 'page' : undefined}
           onClick={() => setActiveTab('impact')}
           className={`shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
             activeTab === 'impact'
@@ -332,6 +351,7 @@ export const Navbar: React.FC = () => {
           <span>{t.impactTabTitle}</span>
         </button>
         <button
+          aria-current={activeTab === 'family' ? 'page' : undefined}
           onClick={() => setActiveTab('family')}
           className={`shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
             activeTab === 'family'
@@ -342,7 +362,7 @@ export const Navbar: React.FC = () => {
           <Users className="w-3.5 h-3.5" />
           <span>{t.familyTabTitle}</span>
         </button>
-      </div>
+      </nav>
     </header>
   );
 };

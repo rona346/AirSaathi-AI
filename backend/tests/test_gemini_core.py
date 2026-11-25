@@ -8,9 +8,13 @@ from backend.app.core.gemini import (
     generate_gemini_text,
     get_gemini_client,
     reset_gemini_client,
+    sanitize_json_output,
     set_mock_gemini_client,
 )
 from backend.app.core.config import settings
+from backend.app.core.utils import get_utc_now, resolve_query_param
+from backend.app.core.utils import get_utc_now, resolve_query_param
+from backend.app.core.utils import get_utc_now, resolve_query_param
 
 
 @pytest.fixture(autouse=True)
@@ -152,3 +156,15 @@ def test_client_singleton_reuse():
     c2 = get_gemini_client()
     assert c1 is c2
     assert c1 is mock_client
+
+
+def test_sanitize_json_output():
+    """Verify JSON fence stripping across various markdown wrappers."""
+    assert sanitize_json_output('{"key": "value"}') == '{"key": "value"}'
+    assert sanitize_json_output('```json\n{"key": "value"}\n```') == '{"key": "value"}'
+    assert sanitize_json_output('```\n{"key": "value"}\n```') == '{"key": "value"}'
+    assert sanitize_json_output('   ```json   \n   {"key": "value"}   \n   ```   ') == '{"key": "value"}'
+
+    # Markdown with surrounding whitespace
+    raw_spaced = '   ```json   \n   {"a": 1}   \n   ```   '
+    assert sanitize_json_output(raw_spaced) == '{"a": 1}'

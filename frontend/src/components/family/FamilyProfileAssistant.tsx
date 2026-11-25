@@ -148,6 +148,7 @@ export const FamilyProfileAssistant: React.FC = () => {
             {/* Station dropdown */}
             <div className="relative">
               <select
+                aria-label="Select Monitoring Station"
                 value={selectedStationId}
                 onChange={(e) => setSelectedStationId(e.target.value)}
                 className="appearance-none bg-slate-900/90 text-sm text-slate-200 border border-slate-700/80 rounded-xl px-4 py-2 pr-9 font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
@@ -202,6 +203,7 @@ export const FamilyProfileAssistant: React.FC = () => {
               type="button"
               onClick={() => refreshPersonalizedAdvisory()}
               disabled={advisoryLoading}
+              aria-label={t.refreshBtn}
               className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 border border-slate-700/80 transition-all disabled:opacity-50"
               title={t.refreshBtn}
             >
@@ -278,6 +280,7 @@ export const FamilyProfileAssistant: React.FC = () => {
               {/* Infants */}
               <button
                 type="button"
+                aria-pressed={!!demographics.has_infants}
                 onClick={() => updateDemographics({ has_infants: !demographics.has_infants })}
                 className={`p-3.5 rounded-xl border text-left transition-all flex items-center justify-between ${
                   demographics.has_infants
@@ -298,6 +301,7 @@ export const FamilyProfileAssistant: React.FC = () => {
               {/* Children */}
               <button
                 type="button"
+                aria-pressed={!!demographics.has_children}
                 onClick={() => updateDemographics({ has_children: !demographics.has_children })}
                 className={`p-3.5 rounded-xl border text-left transition-all flex items-center justify-between ${
                   demographics.has_children
@@ -318,6 +322,7 @@ export const FamilyProfileAssistant: React.FC = () => {
               {/* Teens */}
               <button
                 type="button"
+                aria-pressed={!!demographics.has_teens}
                 onClick={() => updateDemographics({ has_teens: !demographics.has_teens })}
                 className={`p-3.5 rounded-xl border text-left transition-all flex items-center justify-between ${
                   demographics.has_teens
@@ -338,6 +343,7 @@ export const FamilyProfileAssistant: React.FC = () => {
               {/* Adults */}
               <button
                 type="button"
+                aria-pressed={!!demographics.has_adults}
                 onClick={() => updateDemographics({ has_adults: !demographics.has_adults })}
                 className={`p-3.5 rounded-xl border text-left transition-all flex items-center justify-between ${
                   demographics.has_adults
@@ -358,6 +364,7 @@ export const FamilyProfileAssistant: React.FC = () => {
               {/* Seniors */}
               <button
                 type="button"
+                aria-pressed={!!demographics.has_seniors}
                 onClick={() => updateDemographics({ has_seniors: !demographics.has_seniors })}
                 className={`p-3.5 rounded-xl border text-left transition-all flex items-center justify-between sm:col-span-2 ${
                   demographics.has_seniors
@@ -387,10 +394,12 @@ export const FamilyProfileAssistant: React.FC = () => {
               <p className="text-xs text-slate-400">{t.alertThresholdDesc}</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-2.5">
+            <div role="radiogroup" aria-label={t.alertThresholdTitle} className="grid grid-cols-1 gap-2.5">
               {/* Sensitive */}
               <button
                 type="button"
+                role="radio"
+                aria-checked={cleanAirPreferences.alert_threshold === 'sensitive'}
                 onClick={() => handleThresholdChange('sensitive')}
                 className={`p-3.5 rounded-xl border text-left transition-all flex items-start justify-between ${
                   cleanAirPreferences.alert_threshold === 'sensitive'
@@ -417,6 +426,8 @@ export const FamilyProfileAssistant: React.FC = () => {
               {/* Standard */}
               <button
                 type="button"
+                role="radio"
+                aria-checked={cleanAirPreferences.alert_threshold === 'standard' || !cleanAirPreferences.alert_threshold}
                 onClick={() => handleThresholdChange('standard')}
                 className={`p-3.5 rounded-xl border text-left transition-all flex items-start justify-between ${
                   cleanAirPreferences.alert_threshold === 'standard' || !cleanAirPreferences.alert_threshold
@@ -443,6 +454,8 @@ export const FamilyProfileAssistant: React.FC = () => {
               {/* High Tolerance */}
               <button
                 type="button"
+                role="radio"
+                aria-checked={cleanAirPreferences.alert_threshold === 'high_tolerance'}
                 onClick={() => handleThresholdChange('high_tolerance')}
                 className={`p-3.5 rounded-xl border text-left transition-all flex items-start justify-between ${
                   cleanAirPreferences.alert_threshold === 'high_tolerance'
@@ -482,6 +495,7 @@ export const FamilyProfileAssistant: React.FC = () => {
               {/* True HEPA Purifier */}
               <button
                 type="button"
+                aria-pressed={!!cleanAirPreferences.has_hepa_purifier}
                 onClick={() =>
                   updateCleanAirPreferences({ has_hepa_purifier: !cleanAirPreferences.has_hepa_purifier })
                 }
@@ -504,6 +518,7 @@ export const FamilyProfileAssistant: React.FC = () => {
               {/* Kitchen Chimney / Exhaust */}
               <button
                 type="button"
+                aria-pressed={!!cleanAirPreferences.has_kitchen_exhaust}
                 onClick={() =>
                   updateCleanAirPreferences({ has_kitchen_exhaust: !cleanAirPreferences.has_kitchen_exhaust })
                 }
@@ -526,6 +541,7 @@ export const FamilyProfileAssistant: React.FC = () => {
               {/* Indoor Monitor */}
               <button
                 type="button"
+                aria-pressed={!!cleanAirPreferences.has_indoor_monitor}
                 onClick={() =>
                   updateCleanAirPreferences({ has_indoor_monitor: !cleanAirPreferences.has_indoor_monitor })
                 }
@@ -558,6 +574,8 @@ export const FamilyProfileAssistant: React.FC = () => {
 
             <div>
               <select
+                id="preferred-transit-mode"
+                aria-label={t.preferredTransitTitle}
                 value={cleanAirPreferences.preferred_transit_mode || 'public_transit'}
                 onChange={handleTransitModeChange}
                 className="w-full bg-slate-900/80 text-sm text-slate-200 border border-slate-700 rounded-xl px-4 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
@@ -580,6 +598,7 @@ export const FamilyProfileAssistant: React.FC = () => {
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <button
                   type="button"
+                  aria-pressed={!!cleanAirPreferences.morning_outdoor_window}
                   onClick={() =>
                     updateCleanAirPreferences({
                       morning_outdoor_window: !cleanAirPreferences.morning_outdoor_window,
@@ -597,6 +616,7 @@ export const FamilyProfileAssistant: React.FC = () => {
 
                 <button
                   type="button"
+                  aria-pressed={!!cleanAirPreferences.school_commute_active}
                   onClick={() =>
                     updateCleanAirPreferences({
                       school_commute_active: !cleanAirPreferences.school_commute_active,
@@ -614,6 +634,7 @@ export const FamilyProfileAssistant: React.FC = () => {
 
                 <button
                   type="button"
+                  aria-pressed={!!cleanAirPreferences.office_commute_active}
                   onClick={() =>
                     updateCleanAirPreferences({
                       office_commute_active: !cleanAirPreferences.office_commute_active,
@@ -631,6 +652,7 @@ export const FamilyProfileAssistant: React.FC = () => {
 
                 <button
                   type="button"
+                  aria-pressed={!!cleanAirPreferences.evening_outdoor_window}
                   onClick={() =>
                     updateCleanAirPreferences({
                       evening_outdoor_window: !cleanAirPreferences.evening_outdoor_window,

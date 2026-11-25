@@ -1,6 +1,7 @@
 from datetime import datetime
 from fastapi import APIRouter
 from backend.app.core.config import settings
+from backend.app.core.utils import get_utc_now
 from backend.app.models.response import ApiResponse
 
 router = APIRouter()
@@ -17,7 +18,7 @@ def check_health():
             "environment": settings.ENVIRONMENT,
             "mock_mode": settings.MOCK_MODE,
             "status": "online",
-            "server_time": datetime.utcnow().isoformat(),
+            "server_time": get_utc_now().isoformat(),
         },
         is_demo_data=False,
     )

@@ -1,12 +1,14 @@
 import { CurrentAqiData, ForecastData, StationInfo } from '../types/aqi';
 import { ChatResponse } from '../types/chat';
+import { IndoorAssessmentResponse, HouseholdInput } from '../types/indoor';
 import { MobilityPlanResponse, MobilityRequest, ModeEmissionDetail, TransportMode } from '../types/mobility';
+import { RoutinePlan } from '../types/routine';
 import {
   FamilyPreferencesData,
   PersonalizedActionItem,
   PersonalizedAdvisoryResponse,
 } from '../types/user';
-import { getAqiCategory, concentrationFromSubindex, calculateSubindex } from '../utils/aqiUtils';
+import { getAqiCategory, concentrationFromSubindex, calculateSubindex, evaluateGrapFrontend } from '../utils/aqiUtils';
 
 export const MOCK_STATIONS: StationInfo[] = [
   {
@@ -216,6 +218,7 @@ export const getMockCurrentAqi = (stationId: string = 'delhi-anand-vihar'): Curr
     data_source: 'Central Pollution Control Board (CPCB) - CAAQMS Mock Baseline',
     last_updated: new Date().toISOString(),
     is_demo_data: true,
+    grap_status: evaluateGrapFrontend(aqi, station.city, station.state),
   };
 };
 
@@ -259,7 +262,7 @@ export const getMockForecast = (stationId: string = 'delhi-anand-vihar'): Foreca
 export const getMockRoutinePlan = (
   stationId: string = 'delhi-anand-vihar',
   language: 'en' | 'hi' = 'en'
-): any => {
+): RoutinePlan => {
   const station = MOCK_STATIONS.find((s) => s.id === stationId) || MOCK_STATIONS[0];
   const hi = language === 'hi';
 
@@ -457,8 +460,8 @@ export const getMockRoutinePlan = (
 export const getMockIndoorAssessment = (
   stationId: string = 'delhi-anand-vihar',
   language: 'en' | 'hi' = 'en',
-  household?: any
-): any => {
+  household?: Partial<HouseholdInput>
+): IndoorAssessmentResponse => {
   const station = MOCK_STATIONS.find((s) => s.id === stationId) || MOCK_STATIONS[0];
   const hi = language === 'hi';
   const area = household?.room_area_sqft || 150;

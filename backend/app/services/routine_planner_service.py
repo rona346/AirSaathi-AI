@@ -7,11 +7,11 @@ and Google Gemini structured JSON outputs with an intelligent rule-based fallbac
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from backend.app.core.config import settings
-from backend.app.core.gemini import generate_gemini_text
+from backend.app.core.gemini import generate_gemini_text, sanitize_json_output
 from backend.app.models.aqi import CurrentAqiResponse
 from backend.app.models.routine import (
     ActivityTimeWindow,
@@ -28,18 +28,8 @@ logger = logging.getLogger(__name__)
 class RoutinePlannerService:
     """Orchestrates AI-powered daily routine generation with fallback resilience."""
 
-    @classmethod
-    def _sanitize_json_text(cls, raw: str) -> str:
-        """
-        Strips optional Markdown code fences (e.g. ```json ... ``` or ``` ... ```)
-        from raw model output to prevent JSONDecodeError.
-        """
-        clean = raw.strip()
-        if clean.startswith("```"):
-            clean = clean.split("\n", 1)[-1] if "\n" in clean else clean.lstrip("`")
-        if clean.endswith("```"):
-            clean = clean.rsplit("```", 1)[0]
-        return clean.strip()
+    # Backward-compatible alias delegating to shared core utility
+    _sanitize_json_text = staticmethod(sanitize_json_output)
 
     @classmethod
     def generate_routine_plan(cls, request: RoutinePlanRequest) -> RoutinePlanResponse:
@@ -87,7 +77,7 @@ class RoutinePlannerService:
                 return None
 
             # Strip optional markdown JSON fences before json.loads
-            clean_json_str = cls._sanitize_json_text(raw_text)
+            clean_json_str = sanitize_json_output(raw_text)
             parsed_json = json.loads(clean_json_str)
 
             if not isinstance(parsed_json, dict):
@@ -107,7 +97,7 @@ class RoutinePlannerService:
             parsed_json["language"] = language
             parsed_json["ai_provider"] = "google-gemini"
             parsed_json["ai_generated"] = True
-            parsed_json["generated_at"] = datetime.utcnow().isoformat()
+            parsed_json["generated_at"] = datetime.now(timezone.utc).isoformat()
 
             # Ensure disclaimer is always present and medically conservative
             parsed_json["disclaimer"] = (
@@ -632,5 +622,5 @@ Output a strictly valid JSON object matching this schema:
             chores_plan=chores_plan,
             family_precautions=family_precautions,
             disclaimer=disclaimer,
-            generated_at=datetime.utcnow(),
+            generated_at=datetime.now(timezone.utc),
         )

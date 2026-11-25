@@ -7,6 +7,7 @@ and graceful fallback to calibrated demonstration baselines.
 
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
+from backend.app.core.utils import resolve_query_param
 
 from backend.app.models.response import ApiResponse
 from backend.app.models.weather import WeatherDetail
@@ -27,12 +28,9 @@ def get_current_weather(
     Resolves coordinates from explicit (latitude, longitude) query or from the specified station_id.
     """
     # Resolve FastAPI Query defaults when invoked directly as a Python function
-    if hasattr(latitude, "default"):
-        latitude = latitude.default
-    if hasattr(longitude, "default"):
-        longitude = longitude.default
-    if hasattr(station_id, "default"):
-        station_id = station_id.default
+    latitude = resolve_query_param(latitude, None)
+    longitude = resolve_query_param(longitude, None)
+    station_id = resolve_query_param(station_id, None)
 
     target_lat: float
     target_lon: float

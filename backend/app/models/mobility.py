@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 from pydantic import BaseModel, Field
+from backend.app.core.utils import get_utc_now
 
 from backend.app.models.routine import FamilyVulnerabilityInput
 
@@ -113,4 +114,4 @@ class MobilityPlanResponse(BaseModel):
     ai_generated: bool
     methodology_notes: List[str]
     disclaimer: str
-    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    generated_at: datetime = Field(default_factory=get_utc_now)

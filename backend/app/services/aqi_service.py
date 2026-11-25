@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 from backend.app.models.aqi import (
     AqiCategory,
@@ -14,6 +14,7 @@ from backend.app.services.cpcb_calculator import (
     calculate_subindex,
     get_aqi_category_from_value,
 )
+from backend.app.services.grap_service import evaluate_grap
 from backend.app.services.weather_service import weather_service
 
 STATIONS: List[StationInfo] = [
@@ -331,6 +332,12 @@ class AqiService:
             else "Central Pollution Control Board (CPCB) - CAAQMS Mock Baseline"
         )
 
+        grap_status = evaluate_grap(
+            aqi=aqi,
+            city=station.city,
+            state=station.state,
+        )
+
         return CurrentAqiResponse(
             station=station,
             aqi=aqi,
@@ -340,8 +347,9 @@ class AqiService:
             health_advisory=health_adv,
             weather=weather_detail,
             data_source=source_label,
-            last_updated=datetime.utcnow(),
+            last_updated=datetime.now(timezone.utc),
             is_demo_data=True,
+            grap_status=grap_status,
         )
 
     @classmethod
@@ -356,7 +364,7 @@ class AqiService:
             0.76, 0.72, 0.74, 0.80, 0.88, 0.98, 1.08, 1.15, 1.20, 1.18, 1.10, 1.02,
         ]
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         points: List[HourlyAqiPoint] = []
 
         for i in range(24):

@@ -1,7 +1,7 @@
 import { FamilyProfile, SupportedLanguage } from './aqi';
-import { RoutinePreferences } from './routine';
+import { RoutinePlan, RoutinePreferences } from './routine';
 import { HouseholdInput } from './indoor';
-import { MobilityRequest } from './mobility';
+import { MobilityRequest, ModeEmissionDetail } from './mobility';
 
 export interface LocationPreferences {
   default_station_id: string;
@@ -94,7 +94,7 @@ export interface PersistedRoutineRecord {
   routine_id: string;
   station_id: string;
   date_str: string;
-  plan: any;
+  plan: RoutinePlan;
   saved_at?: string;
 }
 
@@ -105,7 +105,7 @@ export interface PersistedSavedRoute {
   destination?: string;
   distance_km: number;
   current_mode: string;
-  recommended_option?: any;
+  recommended_option?: ModeEmissionDetail;
   created_at?: string;
 }
 

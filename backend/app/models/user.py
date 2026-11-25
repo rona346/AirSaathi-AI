@@ -14,6 +14,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, Field
+from backend.app.core.utils import get_utc_now
 
 from backend.app.models.routine import FamilyVulnerabilityInput, RoutinePreferencesInput
 from backend.app.models.indoor import HouseholdInput
@@ -145,8 +146,8 @@ class UserProfile(BaseModel):
     routine: RoutinePreferencesData = Field(default_factory=RoutinePreferencesData)
     household: Optional[HouseholdInput] = Field(default_factory=HouseholdInput)
     mobility: Optional[MobilityRequest] = Field(default_factory=default_mobility_request)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=get_utc_now)
+    updated_at: datetime = Field(default_factory=get_utc_now)
 
 
 class UserProfileUpdate(BaseModel):
@@ -164,7 +165,7 @@ class PersistedRoutineRecord(BaseModel):
     station_id: str = Field(..., description="Station ID used when routine was generated")
     date_str: str = Field(..., description="Date of the routine (YYYY-MM-DD)")
     plan: Dict[str, Any] = Field(..., description="Complete RoutinePlan data")
-    saved_at: datetime = Field(default_factory=datetime.utcnow)
+    saved_at: datetime = Field(default_factory=get_utc_now)
 
 
 class PersistedChatSession(BaseModel):
@@ -172,8 +173,8 @@ class PersistedChatSession(BaseModel):
     title: str = Field("Environmental Consultation", description="Session title")
     messages: List[Dict[str, Any]] = Field(default_factory=list, description="Chat message history")
     station_id: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=get_utc_now)
+    updated_at: datetime = Field(default_factory=get_utc_now)
 
 
 class PersistedSavedRoute(BaseModel):
@@ -184,7 +185,7 @@ class PersistedSavedRoute(BaseModel):
     distance_km: float
     current_mode: str
     recommended_option: Optional[Dict[str, Any]] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=get_utc_now)
 
 
 class PersistedIndoorDevice(BaseModel):
@@ -194,7 +195,7 @@ class PersistedIndoorDevice(BaseModel):
     room: str = Field("living_room")
     filter_type: Optional[str] = Field("HEPA H13")
     filter_installed_date: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=get_utc_now)
 
 
 class PersistedImpactLog(BaseModel):
@@ -203,7 +204,7 @@ class PersistedImpactLog(BaseModel):
     emission_saved_kg_co2: float = 0.0
     exposure_avoided_score: float = 0.0
     notes: Optional[str] = None
-    recorded_at: datetime = Field(default_factory=datetime.utcnow)
+    recorded_at: datetime = Field(default_factory=get_utc_now)
 
 
 class PersonalizedActionItem(BaseModel):

@@ -54,6 +54,19 @@ def reset_gemini_client() -> None:
     _client = None
 
 
+def sanitize_json_output(raw_text: str) -> str:
+    """
+    Strips optional Markdown code fences (e.g. ```json ... ``` or ``` ... ```)
+    from raw model output to prevent JSONDecodeError.
+    """
+    clean = raw_text.strip()
+    if clean.startswith("```"):
+        clean = clean.split("\n", 1)[-1] if "\n" in clean else clean.lstrip("`")
+    if clean.endswith("```"):
+        clean = clean.rsplit("```", 1)[0]
+    return clean.strip()
+
+
 def generate_gemini_text(
     prompt: str,
     timeout: float = DEFAULT_GEMINI_TIMEOUT_SECONDS,

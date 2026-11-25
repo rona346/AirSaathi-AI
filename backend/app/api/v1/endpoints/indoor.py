@@ -1,5 +1,6 @@
 from typing import Optional
 from fastapi import APIRouter, Body, Query
+from backend.app.core.utils import resolve_query_param
 from backend.app.models.indoor import (
     CleaningMethod,
     CookingFuel,
@@ -52,22 +53,17 @@ def assess_indoor_air_get(
     """
     Convenience GET endpoint for qualitative indoor air evaluation with URL query parameters.
     """
-    def _resolve(val, default):
-        if hasattr(val, "default"):
-            return val.default
-        return val if val is not None else default
-
-    res_station_id = str(_resolve(station_id, "delhi-anand-vihar"))
-    res_lang = str(_resolve(language, "en"))
-    res_room = str(_resolve(room_type, "living_room"))
-    res_area = float(_resolve(room_area_sqft, 150.0))
-    res_frying = bool(_resolve(heavy_frying, True))
-    res_chimney = bool(_resolve(has_chimney, True))
-    res_exhaust = bool(_resolve(has_exhaust, True))
-    res_incense = bool(_resolve(burns_incense, True))
-    res_smoking = bool(_resolve(indoor_smoking, False))
-    res_purifier = bool(_resolve(has_purifier, False))
-    res_hepa = bool(_resolve(purifier_has_hepa, True))
+    res_station_id = str(resolve_query_param(station_id, "delhi-anand-vihar"))
+    res_lang = str(resolve_query_param(language, "en"))
+    res_room = str(resolve_query_param(room_type, "living_room"))
+    res_area = float(resolve_query_param(room_area_sqft, 150.0))
+    res_frying = bool(resolve_query_param(heavy_frying, True))
+    res_chimney = bool(resolve_query_param(has_chimney, True))
+    res_exhaust = bool(resolve_query_param(has_exhaust, True))
+    res_incense = bool(resolve_query_param(burns_incense, True))
+    res_smoking = bool(resolve_query_param(indoor_smoking, False))
+    res_purifier = bool(resolve_query_param(has_purifier, False))
+    res_hepa = bool(resolve_query_param(purifier_has_hepa, True))
 
     # Match room_type enum safely
     valid_rooms = {r.value: r for r in RoomType}

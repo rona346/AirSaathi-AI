@@ -8,11 +8,11 @@ without physical in-situ sensors.
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 from backend.app.core.config import settings
-from backend.app.core.gemini import generate_gemini_text
+from backend.app.core.gemini import generate_gemini_text, sanitize_json_output
 from backend.app.models.aqi import CurrentAqiResponse
 from backend.app.models.indoor import (
     CadrRecommendation,
@@ -34,15 +34,8 @@ logger = logging.getLogger(__name__)
 class IndoorAirService:
     """Orchestrates qualitative indoor air assessments and smart guidance."""
 
-    @classmethod
-    def _sanitize_json_text(cls, raw: str) -> str:
-        """Strips optional Markdown code fences from raw model output."""
-        clean = raw.strip()
-        if clean.startswith("```"):
-            clean = clean.split("\n", 1)[-1] if "\n" in clean else clean.lstrip("`")
-        if clean.endswith("```"):
-            clean = clean.rsplit("```", 1)[0]
-        return clean.strip()
+    # Backward-compatible alias delegating to shared core utility
+    _sanitize_json_text = staticmethod(sanitize_json_output)
 
     @classmethod
     def evaluate_indoor_air(cls, request: IndoorAssessmentRequest) -> IndoorAssessmentResponse:
@@ -86,7 +79,7 @@ class IndoorAirService:
             if not raw_text or not raw_text.strip():
                 return None
 
-            clean_json = cls._sanitize_json_text(raw_text)
+            clean_json = sanitize_json_output(raw_text)
             parsed = json.loads(clean_json)
 
             if not isinstance(parsed, dict):
@@ -105,7 +98,7 @@ class IndoorAirService:
             parsed["ai_provider"] = "google-gemini"
             parsed["ai_generated"] = True
             parsed["has_connected_indoor_sensor"] = False
-            parsed["generated_at"] = datetime.utcnow().isoformat()
+            parsed["generated_at"] = datetime.now(timezone.utc).isoformat()
 
             parsed["sensor_notice"] = (
                 "सेंसर प्रकटीकरण: यह मूल्यांकन आपकी घरेलू आदतों और बाहरी CPCB प्रदूषण के आधार पर एक अनुमानित गुणात्मक जोखिम विश्लेषण है। बिना प्रमाणित इनडोर सेंसर के वास्तविक इनडोर AQI संख्या प्रदर्शित नहीं की जाती है।"
@@ -555,5 +548,5 @@ Output a strictly valid JSON object matching this schema:
             actionable_checklist=actionable_checklist,
             plant_myth_clarification=plant_myth,
             disclaimer=disclaimer,
-            generated_at=datetime.utcnow(),
+            generated_at=datetime.now(timezone.utc),
         )

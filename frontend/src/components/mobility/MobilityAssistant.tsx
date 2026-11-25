@@ -205,7 +205,7 @@ export const MobilityAssistant: React.FC = () => {
         {/* Distance Controls & Presets */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold text-slate-300">
+            <label htmlFor="mobility-distance" className="text-xs font-semibold text-slate-300">
               {t.distanceKmLabel}
             </label>
             <div className="flex items-center gap-2">
@@ -220,10 +220,15 @@ export const MobilityAssistant: React.FC = () => {
 
           <div className="flex items-center gap-3">
             <input
+              id="mobility-distance"
               type="range"
               min="0.5"
               max="60"
               step="0.5"
+              aria-label={t.distanceKmLabel}
+              aria-valuemin={0.5}
+              aria-valuemax={60}
+              aria-valuenow={mobilityRequest.distance_km}
               value={mobilityRequest.distance_km}
               onChange={(e) => handleDistanceChange(parseFloat(e.target.value))}
               className="flex-1 accent-emerald-500 cursor-pointer"
@@ -251,7 +256,7 @@ export const MobilityAssistant: React.FC = () => {
           <label className="text-xs font-semibold text-slate-300">
             {t.currentModeLabel}
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+          <div role="radiogroup" aria-label={t.currentModeLabel} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
             {[
               { id: 'petrol_car', label: isHi ? 'पेट्रोल कार' : 'Petrol Car', icon: Car },
               { id: 'two_wheeler', label: isHi ? 'पेट्रोल बाइक' : '2-Wheeler', icon: Bike },
@@ -265,6 +270,9 @@ export const MobilityAssistant: React.FC = () => {
               return (
                 <button
                   key={m.id}
+                  role="radio"
+                  aria-checked={isSelected}
+                  aria-label={m.label}
                   onClick={() =>
                     updateMobilityRequest({ current_mode: m.id as TransportMode })
                   }
@@ -290,10 +298,11 @@ export const MobilityAssistant: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
           {/* Purpose */}
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-slate-400">
+            <label htmlFor="commute-purpose" className="text-[11px] font-semibold text-slate-400">
               {t.commutePurposeLabel}
             </label>
             <select
+              id="commute-purpose"
               value={mobilityRequest.purpose || 'office'}
               onChange={(e) =>
                 updateMobilityRequest({ purpose: e.target.value as CommutePurpose })
@@ -312,10 +321,11 @@ export const MobilityAssistant: React.FC = () => {
 
           {/* Frequency */}
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-slate-400">
+            <label htmlFor="commute-frequency" className="text-[11px] font-semibold text-slate-400">
               {t.commuteFrequencyLabel}
             </label>
             <select
+              id="commute-frequency"
               value={mobilityRequest.frequency || 'daily_round_trip'}
               onChange={(e) =>
                 updateMobilityRequest({ frequency: e.target.value as CommuteFrequency })
@@ -337,10 +347,11 @@ export const MobilityAssistant: React.FC = () => {
 
           {/* Accessibility */}
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-slate-400">
+            <label htmlFor="commute-accessibility" className="text-[11px] font-semibold text-slate-400">
               {t.accessibilityLabel}
             </label>
             <select
+              id="commute-accessibility"
               value={mobilityRequest.accessibility || 'none'}
               onChange={(e) =>
                 updateMobilityRequest({
@@ -367,10 +378,11 @@ export const MobilityAssistant: React.FC = () => {
 
           {/* Occupancy */}
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-slate-400">
+            <label htmlFor="vehicle-occupancy" className="text-[11px] font-semibold text-slate-400">
               {t.vehicleOccupancyLabel}
             </label>
             <select
+              id="vehicle-occupancy"
               value={mobilityRequest.occupancy || 1}
               onChange={(e) =>
                 updateMobilityRequest({ occupancy: parseInt(e.target.value, 10) })
@@ -706,6 +718,8 @@ export const MobilityAssistant: React.FC = () => {
         <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden">
           <button
             onClick={() => setShowMethodology(!showMethodology)}
+            aria-expanded={showMethodology}
+            aria-controls="methodology-notes-panel"
             className="w-full flex items-center justify-between p-4 text-left text-xs font-semibold text-slate-300 hover:text-white transition-colors"
           >
             <div className="flex items-center gap-2">
@@ -720,7 +734,7 @@ export const MobilityAssistant: React.FC = () => {
           </button>
 
           {showMethodology && (
-            <div className="p-4 pt-0 space-y-2 border-t border-slate-800/60 text-xs text-slate-400 leading-relaxed">
+            <div id="methodology-notes-panel" className="p-4 pt-0 space-y-2 border-t border-slate-800/60 text-xs text-slate-400 leading-relaxed">
               <ul className="space-y-1.5 pl-4 list-disc marker:text-emerald-400">
                 {plan.methodology_notes.map((note, idx) => (
                   <li key={idx}>{note}</li>

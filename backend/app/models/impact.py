@@ -13,6 +13,7 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, field_validator
+from backend.app.core.utils import get_utc_now
 
 from backend.app.models.mobility import TransportMode
 
@@ -78,7 +79,7 @@ class ImpactLogRecord(BaseModel):
     exposure_avoided_score: float = Field(default=0.0, ge=0.0, description="Qualitative health exposure mitigation score")
     activity_date: str = Field(..., description="Activity date string (YYYY-MM-DD)")
     notes: Optional[str] = Field(None, description="User notes")
-    recorded_at: datetime = Field(default_factory=datetime.utcnow, description="Record creation timestamp")
+    recorded_at: datetime = Field(default_factory=get_utc_now, description="Record creation timestamp")
     data_provenance: str = Field(default="modeled_estimate", description="Data source indicator: 'modeled_estimate' or 'simulated_demo'")
     methodology_notes: Optional[str] = Field(None, description="Transparent statement of calculation assumptions")
 

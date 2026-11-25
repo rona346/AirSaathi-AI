@@ -370,6 +370,7 @@ export const ChatAssistant: React.FC = () => {
 
           <button
             onClick={handleResetChat}
+            aria-label={t.chatClearTitle}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700/60 transition-colors ml-auto sm:ml-0"
             title={t.chatClearTitle}
           >
@@ -541,11 +542,13 @@ export const ChatAssistant: React.FC = () => {
         <div className="relative flex items-center gap-2">
           <input
             ref={inputRef}
+            id="chat-input-field"
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t.chatPlaceholder}
+            aria-label={t.chatPlaceholder}
             disabled={sending}
             maxLength={1000}
             className="flex-1 bg-slate-900 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-purple-500/60 focus:ring-1 focus:ring-purple-500/50 disabled:opacity-50 transition-all"
@@ -554,6 +557,7 @@ export const ChatAssistant: React.FC = () => {
           <button
             onClick={() => handleSendMessage()}
             disabled={!inputMessage.trim() || sending}
+            aria-label={t.chatSendBtn}
             className="px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs flex items-center gap-1.5 shadow-lg shadow-purple-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all shrink-0"
           >
             {sending ? (
