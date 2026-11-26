@@ -138,6 +138,11 @@ def get_firestore_client():
 def verify_id_token(token: str) -> Dict[str, Any]:
     """
     Verify Firebase ID token and return decoded claims.
+    Uses stateless cryptographic verification against Google's public keys.
+    check_revoked is set to False to avoid requiring elevated Firebase Admin IAM
+    permissions (e.g. Identity Toolkit Admin) on the Cloud Run runtime service
+    account, and to prevent latency-inducing network round-trips on every call.
+    Revoked tokens remain valid until their short-lived ID token expires (max 1 hour).
     Raises ValueError, auth.InvalidIdTokenError, or auth.ExpiredIdTokenError on failure.
     """
     if not is_firebase_available():
@@ -145,7 +150,7 @@ def verify_id_token(token: str) -> Dict[str, Any]:
 
     from firebase_admin import auth
 
-    return auth.verify_id_token(token, check_revoked=True)
+    return auth.verify_id_token(token, check_revoked=False)
 
 
 def set_mock_firebase(app_mock=None, firestore_mock=None) -> None:
